@@ -653,68 +653,116 @@
   }
   .save-btn:hover { background: #5577dd; transform: translateY(-1px); }
 
-  .history-panel {
-    background: var(--surface);
+  .history-btn {
+    background: transparent;
+    color: var(--text-muted);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-  }
-  .history-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-  .history-icon { font-size: 14px; }
-  .history-title {
+    padding: 8px 18px;
+    border-radius: 6px;
     font-family: 'DM Mono', monospace;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 1px;
+    cursor: pointer;
     text-transform: uppercase;
-    color: var(--text-muted);
+    transition: all 0.15s;
   }
-  .history-empty {
-    font-size: 12px;
-    color: var(--text-muted);
-    line-height: 1.6;
-    text-align: center;
-    padding: 8px 0;
+  .history-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+
+  /* ── History Full Page ── */
+  .history-page {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 200;
+    overflow-y: auto;
   }
-  .history-item {
+  .history-page-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    gap: 8px;
+    padding: 24px 40px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
-  .history-item:last-child { border-bottom: none; }
-  .history-item-label {
+  .history-page-body {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 40px;
+  }
+  .history-page-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 60px 0;
+    line-height: 1.8;
+  }
+  .history-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    transition: border-color 0.15s;
+  }
+  .history-card:hover { border-color: #555; }
+  .history-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .history-card-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .history-card-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .history-card-meals {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .history-card-meal {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
     font-size: 12px;
-    color: var(--text);
-    flex: 1;
-    cursor: pointer;
   }
-  .history-item-label:hover { color: var(--accent); }
-  .history-item-date {
+  .history-card-meal-day {
+    font-family: 'DM Mono', monospace;
     font-size: 10px;
     color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 2px;
   }
-  .history-item-actions { display: flex; gap: 6px; }
-  .history-action-btn {
-    font-size: 11px;
+  .history-card-meal-name { color: var(--text); }
+  .history-card-actions { display: flex; gap: 8px; }
+  .hca-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
     background: none;
     border: 1px solid var(--border);
     color: var(--text-muted);
-    border-radius: 4px;
-    padding: 2px 7px;
+    border-radius: 6px;
+    padding: 6px 14px;
     cursor: pointer;
     transition: all 0.15s;
   }
-  .history-action-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .history-action-btn.del:hover { border-color: #cc4444; color: #cc4444; }
-
+  .hca-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .hca-btn.del:hover { border-color: #cc4444; color: #cc4444; }
   .add-library-btn {
     background: transparent;
     color: var(--text-muted);
@@ -871,6 +919,7 @@
     <button class="nav-btn" onclick="changeWeek(1)">›</button>
     <button class="generate-btn" onclick="generateWeek()">↻ Generate</button>
     <button class="save-btn" onclick="saveWeekSnapshot()" title="Save this week to history">💾 Save Week</button>
+    <button class="history-btn" onclick="showHistoryPage()">📋 Saved Weeks</button>
   </div>
 </header>
 
@@ -889,6 +938,7 @@
     <div class="sidebar-section">
       <h3>🛒 Grocery List</h3>
       <div id="groceryList"></div>
+      <button class="confirm-btn" style="width:100%;margin-top:12px" onclick="confirmPlan()">✓ Confirm & Send to Groceries</button>
     </div>
     <div class="sidebar-section">
       <div class="alexa-panel">
@@ -900,21 +950,23 @@
         <button class="copy-all-btn" onclick="copyAllCommands()">📋 Copy All Commands</button>
       </div>
     </div>
-    <div class="sidebar-section">
-      <div class="history-panel">
-        <div class="history-header">
-          <span class="history-icon">📋</span>
-          <span class="history-title">Saved Weeks</span>
-        </div>
-        <div id="historyList"><div class="history-empty">No saved weeks yet.<br>Hit 💾 Save Week to archive a plan.</div></div>
-      </div>
-    </div>
   </div>
 </div>
 
-<div class="confirm-bar" id="confirmBar">
-  <div class="confirm-text">Plan looks good? <strong id="confirmCount">0</strong> items ready to add to Our Groceries.</div>
-  <button class="confirm-btn" onclick="confirmPlan()">✓ Confirm & Send to Groceries</button>
+
+
+<!-- Full-page History View -->
+<div class="history-page" id="historyPage" style="display:none">
+  <div class="history-page-header">
+    <div>
+      <div class="logo-title" style="font-size:18px">Saved Weeks</div>
+      <div class="logo-sub" style="margin-top:2px">Your archived meal plans</div>
+    </div>
+    <button class="nav-btn" style="font-size:18px;padding:6px 16px" onclick="hideHistoryPage()">← Back</button>
+  </div>
+  <div class="history-page-body">
+    <div id="historyPageList"></div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="quickAddModal" onclick="closeQuickAddModal(event)">
@@ -1674,23 +1726,74 @@ function saveWeekSnapshot() {
   showToast('Week saved to history!');
 }
 
-function renderHistory() {
-  const el = document.getElementById('historyList');
+function showHistoryPage() {
+  document.getElementById('historyPage').style.display = 'block';
+  renderHistoryPage();
+}
+
+function hideHistoryPage() {
+  document.getElementById('historyPage').style.display = 'none';
+}
+
+function renderHistory() {} // no-op, sidebar version removed
+
+function renderHistoryPage() {
+  const el = document.getElementById('historyPageList');
   if (!savedWeeks.length) {
-    el.innerHTML = '<div class="history-empty">No saved weeks yet.<br>Hit 💾 Save Week to archive a plan.</div>';
+    el.innerHTML = '<div class="history-page-empty">No saved weeks yet.<br><br>Head back and hit <strong>💾 Save Week</strong> to archive a plan.</div>';
     return;
   }
-  el.innerHTML = savedWeeks.map(s => `
-    <div class="history-item">
-      <div>
-        <div class="history-item-label" onclick="viewSnapshot(${s.id})">${s.label}</div>
-        <div class="history-item-date">Saved ${s.savedOn}</div>
-      </div>
-      <div class="history-item-actions">
-        <button class="history-action-btn" onclick="viewSnapshot(${s.id})">View</button>
-        <button class="history-action-btn del" onclick="deleteSnapshot(${s.id})">✕</button>
-      </div>
-    </div>`).join('');
+
+  const STORE_INFO = [
+    { key:'tj', label:"Trader Joe's", cls:'tj' },
+    { key:'costco', label:'Costco', cls:'costco' },
+    { key:'wf', label:'Whole Foods', cls:'wf' },
+    { key:'safeway', label:'Safeway', cls:'safeway' },
+  ];
+
+  el.innerHTML = savedWeeks.map(s => {
+    const mealsHtml = s.meals.map(m => `
+      <div class="history-card-meal">
+        <div class="history-card-meal-day">${m.day}</div>
+        <div class="history-card-meal-name">${m.name}</div>
+      </div>`).join('');
+
+    const groceryHtml = STORE_INFO.filter(si => s.grocery[si.key]?.length).map(si => `
+      <div class="snapshot-store-group">
+        <div class="snapshot-store-name ${si.cls}">${si.label}</div>
+        ${s.grocery[si.key].map(item => `<div class="snapshot-ing">· ${item}</div>`).join('')}
+      </div>`).join('');
+
+    return `
+      <div class="history-card">
+        <div class="history-card-header">
+          <div>
+            <div class="history-card-title">${s.label}</div>
+            <div class="history-card-meta">Saved ${s.savedOn}</div>
+          </div>
+          <div class="history-card-actions">
+            <button class="hca-btn" onclick="viewSnapshotFromPage(${s.id})">🖨 Print</button>
+            <button class="hca-btn del" onclick="deleteSnapshotFromPage(${s.id})">✕ Delete</button>
+          </div>
+        </div>
+        <div class="history-card-meals">${mealsHtml}</div>
+        <details style="margin-top:4px">
+          <summary style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);cursor:pointer;user-select:none;">Grocery List</summary>
+          <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:16px">${groceryHtml}</div>
+        </details>
+      </div>`;
+  }).join('');
+}
+
+function viewSnapshotFromPage(id) {
+  viewSnapshot(id);
+}
+
+function deleteSnapshotFromPage(id) {
+  savedWeeks = savedWeeks.filter(s => s.id !== id);
+  persistHistory();
+  renderHistoryPage();
+  showToast('Removed from history');
 }
 
 function viewSnapshot(id) {
@@ -1734,7 +1837,7 @@ function closeSnapshotModal(e) {
 function deleteSnapshot(id) {
   savedWeeks = savedWeeks.filter(s => s.id !== id);
   persistHistory();
-  renderHistory();
+  if (document.getElementById('historyPage').style.display !== 'none') renderHistoryPage();
   showToast('Removed from history');
 }
 
