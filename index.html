@@ -971,7 +971,7 @@
       <div class="logo-title" style="font-size:18px">Saved Weeks</div>
       <div class="logo-sub" style="margin-top:2px">Your archived meal plans</div>
     </div>
-    <button class="nav-btn" onclick="hideHistoryPage()">← Back</button>
+    <button class="generate-btn" style="background:transparent;color:var(--text-muted);border:1px solid var(--border)" onclick="hideHistoryPage()">← Back</button>
   </div>
   <div class="history-page-body">
     <div id="historyPageList"></div>
@@ -1577,7 +1577,7 @@ function renderRotationGrid() {
   const el = document.getElementById('rotationGrid');
   const cats = Object.keys(CAT_LABELS).sort((a,b) => CAT_LABELS[a].localeCompare(CAT_LABELS[b]));
   el.innerHTML = cats.map(cat => {
-    const recipes = (RECIPES[cat] || []);
+    const recipes = (RECIPES[cat] || []).slice().sort((a,b) => a.name.localeCompare(b.name));
     if (!recipes.length) return '';
     return `
       <div class="rot-category">
@@ -1664,14 +1664,25 @@ let customRecipes = [];
 let quickAddDayIndex = null;
 
 function loadCustomRecipes() {
-  try {
-    const raw = localStorage.getItem('mealos-custom-recipes');
-    customRecipes = raw ? JSON.parse(raw) : [];
-  } catch(e) { customRecipes = []; }
+  customRecipes = [];
+  window.storage.get('mealos-custom-recipes').then(result => {
+    if (result) {
+      try {
+        customRecipes = JSON.parse(result.value);
+        customRecipes.forEach(({ name, cat }) => {
+          if (!RECIPES[cat]) RECIPES[cat] = [];
+          if (!RECIPES[cat].find(r => r.name === name)) {
+            RECIPES[cat].push({ name, tags:[cat,'custom'], shop:null, ingredients:[], custom:true });
+          }
+        });
+        renderRotationGrid();
+      } catch(e) {}
+    }
+  }).catch(() => {});
 }
 
 function persistCustomRecipes() {
-  try { localStorage.setItem('mealos-custom-recipes', JSON.stringify(customRecipes)); } catch(e) {}
+  window.storage.set('mealos-custom-recipes', JSON.stringify(customRecipes)).catch(() => {});
 }
 
 function openQuickAddModal(dayIndex) {
@@ -1732,15 +1743,16 @@ function confirmAddLibrary() {
 let savedWeeks = [];
 
 function loadHistory() {
-  try {
-    const raw = localStorage.getItem('mealos-history');
-    savedWeeks = raw ? JSON.parse(raw) : [];
-  } catch(e) { savedWeeks = []; }
-  renderHistory();
+  savedWeeks = [];
+  window.storage.get('mealos-history').then(result => {
+    if (result) {
+      try { savedWeeks = JSON.parse(result.value); } catch(e) {}
+    }
+  }).catch(() => {});
 }
 
 function persistHistory() {
-  try { localStorage.setItem('mealos-history', JSON.stringify(savedWeeks)); } catch(e) {}
+  window.storage.set('mealos-history', JSON.stringify(savedWeeks)).catch(() => {});
 }
 
 function saveWeekSnapshot() {
@@ -1928,13 +1940,6 @@ function printSnapshot() {
 renderWeek();
 loadHistory();
 loadCustomRecipes();
-// Re-inject any saved custom recipes back into RECIPES
-customRecipes.forEach(({ name, cat }) => {
-  if (!RECIPES[cat]) RECIPES[cat] = [];
-  if (!RECIPES[cat].find(r => r.name === name)) {
-    RECIPES[cat].push({ name, tags:[cat,'custom'], shop:null, ingredients:[], custom:true });
-  }
-});
 </script>
 </body>
 </html>
