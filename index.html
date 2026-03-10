@@ -1268,6 +1268,7 @@ function generateWeekPlan() {
 // ─── RENDER ──────────────────────────────────────────────────────────────────
 
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+const SHORT_DAYS = ['Mon','Tue','Wed','Thu','Fri'];
 
 function getWeekKey(offset) { return `w${offset}`; }
 
@@ -1663,10 +1664,8 @@ function deleteRecipeFromLibrary(name, cat) {
 }
 
 
+function openDayPickerModal(recipeName) {
   const recipe = getAllRecipes().find(r => r.name === recipeName);
-  if (!recipe) return;
-  document.getElementById('dayPickerTitle').textContent = `Add "${recipeName}" to…`;
-  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
   const safeName = recipeName.replace(/'/g, "\\'");
   document.getElementById('dayPickerBtns').innerHTML = DAYS.map((d, i) =>
     `<button class="day-pick-btn" onclick="assignRecipeToDay('${safeName}', ${i})">${d}</button>`
@@ -1686,7 +1685,6 @@ function assignRecipeToDay(recipeName, dayIndex) {
   document.getElementById('dayPickerModal').classList.remove('open');
   persistWeekPlans();
   renderWeek();
-  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
   showToast(`${recipeName} → ${DAYS[dayIndex]}!`);
 }
 
@@ -1739,7 +1737,6 @@ function persistCustomRecipes() {
 
 function openQuickAddModal(dayIndex) {
   quickAddDayIndex = dayIndex;
-  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
   document.getElementById('quickAddDay').textContent = `What are you making ${DAYS[dayIndex]}?`;
   const key = getWeekKey(currentWeekOffset);
   const existing = weekPlans[key]?.[dayIndex];
@@ -1830,13 +1827,12 @@ function saveWeekSnapshot() {
     });
   });
 
-  const DAYS = ['Mon','Tue','Wed','Thu','Fri'];
   const snapshot = {
     id: Date.now(),
     weekKey: key,
     label: document.getElementById('weekLabel').textContent,
     savedOn: new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }),
-    meals: plan.map((m, i) => ({ day: DAYS[i], name: m?.name || '—' })),
+    meals: plan.map((m, i) => ({ day: SHORT_DAYS[i], name: m?.name || '—' })),
     grocery: byStore
   };
 
