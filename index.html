@@ -1813,14 +1813,14 @@ function saveWeekSnapshot() {
     return;
   }
 
-  // Build grocery snapshot with current store overrides
+  // Build grocery snapshot with current store overrides, excluding checked items
   const byStore = { tj:[], costco:[], wf:[], safeway:[] };
   const seen = new Set();
   plan.forEach(meal => {
     (meal?.ingredients || []).forEach(ing => {
-      if (!seen.has(ing.item)) {
+      const itemKey = `${key}-${ing.item}`;
+      if (!seen.has(ing.item) && !checkedIngredients[itemKey]) {
         seen.add(ing.item);
-        const itemKey = `${key}-${ing.item}`;
         const store = getEffectiveStore(itemKey, ing);
         (byStore[store] || byStore.tj).push(ing.item);
       }
