@@ -1288,8 +1288,7 @@ function renderWeek() {
           ${meal.shop ? `<div class="shop-tag shop-${meal.shop}">📍 ${shopName(meal.shop)}</div>` : ''}
           <div class="meal-actions">
             <button class="action-btn btn-swap" onclick="openSwapModal(${i})">⇄ Swap</button>
-            <button class="action-btn btn-swap" onclick="openQuickAddModal(${i})">✎ Edit</button>
-            <button class="action-btn btn-alexa" onclick="alexaForMeal(${i})">◎ Alexa</button>
+            <button class="action-btn btn-swap" onclick="openQuickAddModal(${i})">＋ Add</button>
           </div>
         </div>
       `;
