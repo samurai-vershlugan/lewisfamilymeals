@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lewis Family Meal OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0b;
+    --surface: #1a1915;
+    --surface2: #242320;
+    --border: #2e2c28;
+    --accent: #e8b84b;
+    --accent2: #c97b3a;
+    --text: #f0ece3;
+    --text-muted: #8a8578;
+    --green: #5a8f6a;
+    --red: #c45c3a;
+    --blue: #4a7fa5;
+    --tag-chicken: #a05c2a;
+    --tag-taco: #4a7a3a;
+    --tag-fish: #2a5a7a;
+    --tag-pasta: #6a4a8a;
+    --tag-burger: #7a3a3a;
+    --tag-shabbat: #8a7a2a;
+    --tag-veg: #3a7a5a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .logo-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    color: var(--accent);
+  }
+
+  .logo-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .week-nav {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .week-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    min-width: 140px;
+    text-align: center;
+  }
+
+  .nav-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .nav-btn:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
+
+  .generate-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .generate-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 0;
+    min-height: calc(100vh - 73px);
+  }
+
+  .planner {
+    padding: 32px 40px;
+    border-right: 1px solid var(--border);
+  }
+
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .day-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+
+  .day-card:hover { border-color: var(--accent); }
+  .day-card.friday-card { border-color: rgba(232,184,75,0.3); }
+
+  .day-header {
+    padding: 10px 14px 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .day-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .friday-card .day-name { color: var(--accent); }
+
+  .day-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    opacity: 0.6;
+  }
+
+  .day-meal {
+    padding: 14px;
+  }
+
+  .meal-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .meal-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+
+  .tag-chicken { background: rgba(160,92,42,0.25); color: #d4895a; border: 1px solid rgba(160,92,42,0.4); }
+  .tag-taco { background: rgba(74,122,58,0.25); color: #7ab86a; border: 1px solid rgba(74,122,58,0.4); }
+  .tag-fish { background: rgba(42,90,122,0.25); color: #5a9abe; border: 1px solid rgba(42,90,122,0.4); }
+  .tag-pasta { background: rgba(106,74,138,0.25); color: #9a7ac8; border: 1px solid rgba(106,74,138,0.4); }
+  .tag-burger { background: rgba(122,58,58,0.25); color: #c87a7a; border: 1px solid rgba(122,58,58,0.4); }
+  .tag-shabbat { background: rgba(138,122,42,0.25); color: #c8b85a; border: 1px solid rgba(138,122,42,0.4); }
+  .tag-veg { background: rgba(58,122,90,0.25); color: #6ab895; border: 1px solid rgba(58,122,90,0.4); }
+  .tag-quick { background: rgba(74,127,165,0.2); color: #7ab0d4; border: 1px solid rgba(74,127,165,0.3); }
+  .tag-soup { background: rgba(165,100,74,0.25); color: #d4905a; border: 1px solid rgba(165,100,74,0.4); }
+
+  .shop-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+  .shop-tj { color: #c45c3a; }
+  .shop-costco { color: #4a7fa5; }
+  .shop-wf { color: #5a8f6a; }
+
+  .meal-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .action-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    padding: 4px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    border: 1px solid;
+    flex: 1;
+    text-align: center;
+  }
+
+  .btn-swap {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-muted);
+  }
+  .btn-swap:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-alexa {
+    background: rgba(74,127,165,0.15);
+    border-color: rgba(74,127,165,0.4);
+    color: #7ab0d4;
+  }
+  .btn-alexa:hover { background: rgba(74,127,165,0.3); }
+
+  /* Shabbat special */
+  .shabbat-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 14px;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    padding: 28px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .sidebar-section h3 {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Grocery list */
+  .grocery-store-group { margin-bottom: 18px; }
+
+  .store-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .store-name.tj { color: #c45c3a; }
+  .store-name.costco { color: #4a7fa5; }
+  .store-name.wf { color: #5a8f6a; }
+  .store-name.safeway { color: #9a7ac8; }
+
+  .store-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .ingredient-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(46,44,40,0.5);
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .ingredient-item:hover { color: var(--accent); }
+  .ingredient-item.checked { 
+    text-decoration: line-through; 
+    color: var(--text-muted);
+    opacity: 0.5;
+  }
+
+  .ingredient-cb {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    color: var(--accent);
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .ingredient-item.checked .ingredient-cb {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+
+  .alexa-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .alexa-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .alexa-icon {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #00b4d8, #0077b6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .alexa-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #7ab0d4;
+    text-transform: uppercase;
+  }
+
+  .alexa-commands {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .alexa-cmd {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    background: var(--surface2);
+    padding: 6px 10px;
+    border-radius: 4px;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+  .alexa-cmd:hover { border-color: #4a7fa5; color: var(--text); }
+  .alexa-cmd span { color: #7ab0d4; }
+
+  .copy-all-btn {
+    width: 100%;
+    margin-top: 10px;
+    background: rgba(74,127,165,0.15);
+    border: 1px solid rgba(74,127,165,0.4);
+    color: #7ab0d4;
+    padding: 8px;
+    border-radius: 5px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-all-btn:hover { background: rgba(74,127,165,0.3); }
+
+  /* Recipe rotation display */
+  .rotation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .rotation-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 7px 10px;
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .rotation-item:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    z-index: 9999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* Swap modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    width: 420px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .modal h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .modal p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+
+  .modal-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+
+  .cat-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .cat-btn.active, .cat-btn:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+  .swap-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .swap-option {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .swap-option:hover { border-color: var(--accent); }
+  .swap-option .name { font-size: 14px; font-weight: 500; }
+  .swap-option .meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-muted); }
+
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Confirm bar */
+  .confirm-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface2);
+    border-top: 1px solid var(--accent);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 90;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .confirm-bar.visible { transform: translateY(0); }
+
+  .confirm-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .confirm-text strong { color: var(--accent); }
+
+  .confirm-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .confirm-btn:hover { background: var(--accent2); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .week-grid { grid-template-columns: 1fr; }
+    header { padding: 16px 20px; }
+    .planner { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-title">Lewis Family Meal OS</div>
+    <div class="logo-sub">v2025</div>
+  </div>
+  <div class="week-nav">
+    <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
+    <div class="week-label" id="weekLabel">Week of —</div>
+    <button class="nav-btn" onclick="changeWeek(1)">›</button>
+    <button class="generate-btn" onclick="generateWeek()">↻ Generate</button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="planner">
+    <div class="section-label">This Week's Plan</div>
+    <div class="week-grid" id="weekGrid"></div>
+    <div class="section-label">Rotation Library</div>
+    <div class="rotation-grid" id="rotationGrid"></div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <h3>🛒 Grocery List</h3>
+      <div id="groceryList"></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="alexa-panel">
+        <div class="alexa-header">
+          <div class="alexa-icon">◎</div>
+          <div class="alexa-title">Our Groceries · Alexa</div>
+        </div>
+        <div class="alexa-commands" id="alexaCommands"></div>
+        <button class="copy-all-btn" onclick="copyAllCommands()">📋 Copy All Commands</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-bar" id="confirmBar">
+  <div class="confirm-text">Plan looks good? <strong id="confirmCount">0</strong> items ready to add to Our Groceries.</div>
+  <button class="confirm-btn" onclick="confirmPlan()">✓ Confirm & Send to Groceries</button>
+</div>
+
+<div class="modal-overlay" id="swapModal" onclick="closeModal(event)">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeModalDirect()">×</button>
+    <h3>Swap Meal</h3>
+    <p id="swapDay">Choose a replacement for Monday</p>
+    <div class="modal-cats" id="modalCats"></div>
+    <div class="swap-options" id="swapOptions"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+
+const RECIPES = {
+  chicken: [
+    { name: "Mama's Chicken Thighs", tags:["chicken","quick"], shop:"tj",
+      ingredients: [{item:"bone-in chicken thighs",store:"tj"},{item:"garlic",store:"tj"},{item:"olive oil",store:"costco"},{item:"lemon",store:"tj"},{item:"fresh herbs (rosemary, thyme)",store:"tj"}] },
+    { name: "Chicken Shawarma & Rice", tags:["chicken"], shop:"tj",
+      ingredients: [{item:"chicken thighs",store:"tj"},{item:"shawarma spice blend (cumin, paprika, turmeric, cinnamon)",store:"tj"},{item:"Greek yogurt",store:"tj"},{item:"pita bread",store:"tj"},{item:"basmati rice",store:"tj"},{item:"cucumber",store:"tj"},{item:"tomato",store:"tj"}] },
+    { name: "Marinated Chicken Thighs", tags:["chicken","quick"], shop:"tj",
+      ingredients: [{item:"boneless chicken thighs",store:"tj"},{item:"soy sauce",store:"tj"},{item:"garlic",store:"tj"},{item:"olive oil",store:"costco"},{item:"lemon",store:"tj"},{item:"honey",store:"tj"}] },
+    { name: "Rotisserie Chicken + Sides", tags:["chicken","quick"], shop:"costco",
+      ingredients: [{item:"rotisserie chicken",store:"costco"},{item:"dinner rolls",store:"costco"},{item:"broccoli florets",store:"costco"},{item:"salad greens",store:"costco"}] },
+    { name: "Chicken Wings & Tater Tots", tags:["chicken","quick"], shop:"costco",
+      ingredients: [{item:"party chicken wings",store:"costco"},{item:"tater tots",store:"costco"},{item:"celery",store:"tj"},{item:"ranch dressing",store:"tj"},{item:"hot sauce",store:"tj"}] },
+    { name: "Souvlaki / Greek Chicken", tags:["chicken"], shop:"tj",
+      ingredients: [{item:"chicken thighs",store:"tj"},{item:"Greek yogurt",store:"tj"},{item:"lemon",store:"tj"},{item:"garlic",store:"tj"},{item:"oregano",store:"tj"},{item:"rice pilaf",store:"tj"},{item:"naan",store:"tj"},{item:"cauliflower",store:"tj"}] },
+    { name: "BBQ Chicken Sheet Pan", tags:["chicken"], shop:"costco",
+      ingredients: [{item:"chicken pieces",store:"costco"},{item:"BBQ sauce",store:"costco"},{item:"Brussels sprouts",store:"costco"},{item:"sweet potatoes",store:"costco"}] },
+    { name: "Salsa Chicken Tacos", tags:["chicken","taco"], shop:"tj",
+      ingredients: [{item:"boneless chicken thighs",store:"tj"},{item:"salsa jar",store:"tj"},{item:"taco shells/tortillas",store:"tj"},{item:"shredded cheese",store:"costco"},{item:"crema",store:"tj"},{item:"lime",store:"tj"},{item:"avocado",store:"tj"}] },
+    { name: "Kefta Kebab Wraps", tags:["chicken"], shop:"tj",
+      ingredients: [{item:"ground beef or lamb",store:"costco"},{item:"onion",store:"tj"},{item:"parsley",store:"tj"},{item:"cumin & paprika",store:"tj"},{item:"pita",store:"tj"},{item:"tzatziki",store:"tj"},{item:"salad greens",store:"tj"}] },
+    { name: "Fettuccine Alfredo with Chicken", tags:["chicken","pasta"], shop:"tj",
+      ingredients: [{item:"fettuccine pasta",store:"tj"},{item:"heavy cream",store:"tj"},{item:"Parmesan",store:"costco"},{item:"butter",store:"costco"},{item:"chicken breast",store:"tj"},{item:"broccoli",store:"tj"},{item:"garlic",store:"tj"}] },
+  ],
+  taco: [
+    { name: "Taco Tuesday (Turkey)", tags:["taco","quick"], shop:"tj",
+      ingredients: [{item:"ground turkey",store:"costco"},{item:"taco seasoning",store:"tj"},{item:"tortillas",store:"tj"},{item:"shredded cheese",store:"costco"},{item:"tomato",store:"tj"},{item:"lettuce",store:"tj"},{item:"sour cream",store:"tj"},{item:"salsa",store:"tj"}] },
+    { name: "Carne Asada Tacos", tags:["taco"], shop:"tj",
+      ingredients: [{item:"skirt steak",store:"costco"},{item:"tortillas",store:"tj"},{item:"lime",store:"tj"},{item:"cilantro",store:"tj"},{item:"white onion",store:"tj"},{item:"jalapeño",store:"tj"},{item:"avocado",store:"tj"}] },
+    { name: "Birria Tacos", tags:["taco"], shop:"tj",
+      ingredients: [{item:"beef chuck",store:"costco"},{item:"dried chiles (guajillo, ancho)",store:"safeway"},{item:"garlic",store:"tj"},{item:"corn tortillas",store:"tj"},{item:"mozzarella",store:"costco"},{item:"onion",store:"tj"},{item:"cilantro",store:"tj"},{item:"lime",store:"tj"}] },
+    { name: "Fish Tacos", tags:["taco","fish"], shop:"tj",
+      ingredients: [{item:"white fish (mahi-mahi or cod)",store:"tj"},{item:"corn tortillas",store:"tj"},{item:"cabbage slaw mix",store:"tj"},{item:"lime",store:"tj"},{item:"chipotle mayo",store:"tj"},{item:"avocado",store:"tj"}] },
+    { name: "Turkey Tostadas", tags:["taco","quick"], shop:"tj",
+      ingredients: [{item:"ground turkey",store:"costco"},{item:"tostada shells",store:"tj"},{item:"refried beans",store:"tj"},{item:"shredded cheese",store:"costco"},{item:"salsa",store:"tj"},{item:"crema",store:"tj"},{item:"lettuce",store:"tj"}] },
+  ],
+  pasta: [
+    { name: "Peanut Noodles", tags:["pasta","veg"], shop:"tj",
+      ingredients: [{item:"soba or rice noodles",store:"tj"},{item:"peanut butter",store:"costco"},{item:"soy sauce",store:"tj"},{item:"sesame oil",store:"tj"},{item:"garlic",store:"tj"},{item:"ginger",store:"tj"},{item:"shredded carrots",store:"tj"},{item:"green onions",store:"tj"}] },
+    { name: "Pasta Pesto Tortellini", tags:["pasta","quick"], shop:"tj",
+      ingredients: [{item:"cheese tortellini",store:"tj"},{item:"pesto jar",store:"tj"},{item:"cherry tomatoes",store:"tj"},{item:"Parmesan",store:"costco"},{item:"baby spinach",store:"tj"}] },
+    { name: "Spaghetti & Meatballs", tags:["pasta"], shop:"costco",
+      ingredients: [{item:"spaghetti",store:"costco"},{item:"frozen meatballs",store:"costco"},{item:"marinara sauce",store:"tj"},{item:"Parmesan",store:"costco"},{item:"garlic bread",store:"tj"}] },
+    { name: "Shrimp & Pasta", tags:["pasta","fish"], shop:"tj",
+      ingredients: [{item:"large shrimp",store:"costco"},{item:"linguine",store:"tj"},{item:"butter",store:"costco"},{item:"garlic",store:"tj"},{item:"white wine",store:"tj"},{item:"lemon",store:"tj"},{item:"parsley",store:"tj"},{item:"Parmesan",store:"costco"}] },
+    { name: "Chicken Sausage Orzo", tags:["pasta","chicken"], shop:"tj",
+      ingredients: [{item:"Italian chicken sausage",store:"tj"},{item:"orzo pasta",store:"tj"},{item:"cherry tomatoes",store:"tj"},{item:"spinach",store:"tj"},{item:"chicken broth",store:"tj"},{item:"Parmesan",store:"costco"}] },
+  ],
+  fish: [
+    { name: "Salmon, Rice & Broccoli", tags:["fish","quick"], shop:"costco",
+      ingredients: [{item:"salmon fillets",store:"costco"},{item:"basmati rice",store:"tj"},{item:"broccoli",store:"costco"},{item:"lemon",store:"tj"},{item:"olive oil",store:"costco"},{item:"garlic",store:"tj"}] },
+    { name: "Ponzu Salmon Bowl", tags:["fish"], shop:"tj",
+      ingredients: [{item:"salmon",store:"costco"},{item:"ponzu sauce",store:"tj"},{item:"jasmine rice",store:"tj"},{item:"edamame",store:"tj"},{item:"shredded carrots",store:"tj"},{item:"sesame seeds",store:"tj"},{item:"green onions",store:"tj"}] },
+  ],
+  burger: [
+    { name: "Smash Burgers & Fries", tags:["burger"], shop:"costco",
+      ingredients: [{item:"80/20 ground beef patties",store:"costco"},{item:"burger buns",store:"tj"},{item:"American cheese",store:"tj"},{item:"lettuce, tomato, onion",store:"tj"},{item:"frozen fries",store:"tj"},{item:"pickles",store:"tj"}] },
+    { name: "Turkey Burgers & Salad", tags:["burger","quick"], shop:"costco",
+      ingredients: [{item:"ground turkey",store:"costco"},{item:"burger buns",store:"tj"},{item:"avocado",store:"tj"},{item:"salad greens",store:"tj"},{item:"tomato",store:"tj"}] },
+  ],
+  friday_special: [
+    { name: "Chicken Soup Friday", tags:["soup","shabbat"], shop:"costco",
+      friday: true,
+      ingredients: [{item:"whole chicken or bone-in pieces",store:"costco"},{item:"carrots",store:"tj"},{item:"celery",store:"tj"},{item:"onion",store:"tj"},{item:"parsnip",store:"safeway"},{item:"dill (fresh)",store:"tj"},{item:"egg noodles or matzo ball mix",store:"safeway"},{item:"chicken broth",store:"costco"},{item:"challah",store:"safeway"}] },
+    { name: "Shabbat Roast Chicken", tags:["chicken","shabbat"], shop:"costco",
+      friday: true,
+      ingredients: [{item:"whole chicken",store:"costco"},{item:"garlic",store:"tj"},{item:"lemon",store:"tj"},{item:"fresh herbs",store:"tj"},{item:"challah",store:"safeway"},{item:"roasted vegetables",store:"tj"},{item:"salad",store:"tj"}] },
+    { name: "Chicken Soup + Roast Chicken", tags:["soup","chicken","shabbat"], shop:"costco",
+      friday: true,
+      ingredients: [{item:"whole chicken",store:"costco"},{item:"carrots",store:"tj"},{item:"celery",store:"tj"},{item:"onion",store:"tj"},{item:"parsnip",store:"safeway"},{item:"fresh dill",store:"tj"},{item:"matzo ball mix",store:"safeway"},{item:"challah",store:"safeway"},{item:"salad greens",store:"tj"}] },
+    { name: "Whole Foods Pizza Night", tags:["quick"], shop:"wf",
+      friday: true,
+      ingredients: [{item:"pizza (WF hot bar or take-and-bake)",store:"wf"},{item:"salad greens",store:"tj"},{item:"sparkling water",store:"tj"}] },
+    { name: "Shawarma Friday", tags:["chicken","shabbat"], shop:"tj",
+      friday: true,
+      ingredients: [{item:"chicken thighs",store:"tj"},{item:"shawarma spice",store:"tj"},{item:"pita",store:"tj"},{item:"Greek yogurt",store:"tj"},{item:"cucumber",store:"tj"},{item:"tomato",store:"tj"},{item:"challah",store:"safeway"}] },
+  ],
+  easy: [
+    { name: "Leftovers Night", tags:["quick"], shop:null, ingredients: [] },
+    { name: "Mac & Cheese Night", tags:["quick","pasta"], shop:"costco",
+      ingredients: [{item:"mac & cheese (Costco)",store:"costco"},{item:"broccoli",store:"tj"}] },
+    { name: "Freezer Dive", tags:["quick"], shop:null, ingredients: [] },
+    { name: "Takeout (Chinese)", tags:["quick"], shop:null, ingredients: [] },
+  ]
+};
+
+const ALL_RECIPES = Object.values(RECIPES).flat();
+
+const WEEKLY_TEMPLATE = [
+  // Each week slot: [Mon, Tue, Wed, Thu, Fri]
+  // We rotate through categories with some randomness
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+
+let currentWeekOffset = 0;
+let weekPlans = {}; // keyed by weekOffset
+let checkedIngredients = {};
+let swapTarget = null; // { dayIndex, weekKey }
+
+// ─── DATE HELPERS ─────────────────────────────────────────────────────────────
+
+function getMondayOfCurrentWeek() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = (day === 0) ? -6 : 1 - day;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diff);
+  monday.setHours(0,0,0,0);
+  return monday;
+}
+
+function getWeekDates(offset) {
+  const base = getMondayOfCurrentWeek();
+  base.setDate(base.getDate() + offset * 7);
+  const days = [];
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(base);
+    d.setDate(base.getDate() + i);
+    days.push(d);
+  }
+  return days;
+}
+
+function formatWeekLabel(dates) {
+  const opts = { month: 'short', day: 'numeric' };
+  return `${dates[0].toLocaleDateString('en-US', opts)} – ${dates[4].toLocaleDateString('en-US', opts)}`;
+}
+
+function formatDayDate(date) {
+  return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
+}
+
+// ─── GENERATION ──────────────────────────────────────────────────────────────
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function pickFriday() {
+  // Bias toward chicken soup 50% of the time
+  const r = Math.random();
+  if (r < 0.5) return RECIPES.friday_special.find(r => r.name.includes("Chicken Soup"));
+  return pickRandom(RECIPES.friday_special);
+}
+
+function generateWeekPlan() {
+  // Mon: Chicken dish
+  // Tue: Tacos or pasta variation
+  // Wed: Something hearty (shawarma, burger, pasta)
+  // Thu: Fish or pasta (lighter)
+  // Fri: Shabbat/Chicken Soup always
+  const pool = [
+    pickRandom([...RECIPES.chicken.slice(0,6)]),
+    pickRandom([...RECIPES.taco.slice(0,4)]),
+    pickRandom([...RECIPES.chicken.slice(3,9), ...RECIPES.pasta.slice(0,3)]),
+    pickRandom([...RECIPES.fish, ...RECIPES.pasta.slice(1,4), ...RECIPES.burger]),
+    pickFriday(),
+  ];
+  return pool;
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+
+function getWeekKey(offset) { return `w${offset}`; }
+
+function renderWeek() {
+  const dates = getWeekDates(currentWeekOffset);
+  document.getElementById('weekLabel').textContent = formatWeekLabel(dates);
+
+  const key = getWeekKey(currentWeekOffset);
+  if (!weekPlans[key]) {
+    weekPlans[key] = generateWeekPlan();
+  }
+  const plan = weekPlans[key];
+
+  const grid = document.getElementById('weekGrid');
+  grid.innerHTML = '';
+
+  plan.forEach((meal, i) => {
+    const isFri = i === 4;
+    const card = document.createElement('div');
+    card.className = `day-card${isFri ? ' friday-card' : ''}`;
+    card.innerHTML = `
+      ${isFri ? '<div class="shabbat-badge">✡</div>' : ''}
+      <div class="day-header">
+        <span class="day-name">${DAYS[i]}</span>
+        <span class="day-date">${formatDayDate(dates[i])}</span>
+      </div>
+      <div class="day-meal">
+        <div class="meal-name">${meal.name}</div>
+        <div class="meal-tags">
+          ${meal.tags.map(t => `<span class="tag tag-${t}">${t}</span>`).join('')}
+        </div>
+        ${meal.shop ? `<div class="shop-tag shop-${meal.shop}">📍 ${shopName(meal.shop)}</div>` : ''}
+        <div class="meal-actions">
+          <button class="action-btn btn-swap" onclick="openSwapModal(${i})">⇄ Swap</button>
+          <button class="action-btn btn-alexa" onclick="alexaForMeal(${i})">◎ Alexa</button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  renderGroceryList();
+  renderAlexaCommands();
+  renderRotationGrid();
+  updateConfirmBar();
+}
+
+function shopName(s) {
+  return { tj:"Trader Joe's", costco:"Costco", wf:"Whole Foods", safeway:"Safeway" }[s] || s;
+}
+
+// ─── GROCERY LIST ─────────────────────────────────────────────────────────────
+
+function renderGroceryList() {
+  const key = getWeekKey(currentWeekOffset);
+  const plan = weekPlans[key] || [];
+  
+  const byStore = { tj:[], costco:[], wf:[], safeway:[] };
+  const seen = new Set();
+  
+  plan.forEach(meal => {
+    (meal.ingredients || []).forEach(ing => {
+      if (!seen.has(ing.item)) {
+        seen.add(ing.item);
+        (byStore[ing.store] || byStore.tj).push(ing);
+      }
+    });
+  });
+
+  const el = document.getElementById('groceryList');
+  el.innerHTML = '';
+
+  const storeOrder = [
+    { key:'tj', label:"Trader Joe's", cls:'tj' },
+    { key:'costco', label:'Costco', cls:'costco' },
+    { key:'wf', label:'Whole Foods', cls:'wf' },
+    { key:'safeway', label:'Safeway', cls:'safeway' },
+  ];
+
+  storeOrder.forEach(({ key: sk, label, cls }) => {
+    if (byStore[sk].length === 0) return;
+    const group = document.createElement('div');
+    group.className = 'grocery-store-group';
+    group.innerHTML = `<div class="store-name ${cls}"><span class="store-dot"></span>${label}</div>`;
+    
+    byStore[sk].forEach(ing => {
+      const itemKey = `${key}-${ing.item}`;
+      const checked = checkedIngredients[itemKey] ? 'checked' : '';
+      const div = document.createElement('div');
+      div.className = `ingredient-item ${checked}`;
+      div.onclick = () => toggleIngredient(itemKey, div);
+      div.innerHTML = `<div class="ingredient-cb">${checked ? '✓' : ''}</div><span>${ing.item}</span>`;
+      group.appendChild(div);
+    });
+    
+    el.appendChild(group);
+  });
+
+  updateConfirmBar();
+}
+
+function toggleIngredient(itemKey, el) {
+  checkedIngredients[itemKey] = !checkedIngredients[itemKey];
+  if (checkedIngredients[itemKey]) {
+    el.classList.add('checked');
+    el.querySelector('.ingredient-cb').textContent = '✓';
+  } else {
+    el.classList.remove('checked');
+    el.querySelector('.ingredient-cb').textContent = '';
+  }
+  updateConfirmBar();
+}
+
+function updateConfirmBar() {
+  const key = getWeekKey(currentWeekOffset);
+  const plan = weekPlans[key] || [];
+  const total = new Set(plan.flatMap(m => (m.ingredients||[]).map(i => i.item))).size;
+  const checked = Object.entries(checkedIngredients).filter(([k,v]) => k.startsWith(key+'-') && !v).length;
+  const toAdd = total - Object.entries(checkedIngredients).filter(([k,v]) => k.startsWith(key+'-') && v).length;
+  
+  document.getElementById('confirmCount').textContent = toAdd;
+  document.getElementById('confirmBar').classList.toggle('visible', total > 0);
+}
+
+// ─── ALEXA COMMANDS ───────────────────────────────────────────────────────────
+
+function renderAlexaCommands() {
+  const key = getWeekKey(currentWeekOffset);
+  const plan = weekPlans[key] || [];
+  
+  const seen = new Set();
+  const items = [];
+  plan.forEach(meal => {
+    (meal.ingredients||[]).forEach(ing => {
+      if (!seen.has(ing.item)) {
+        seen.add(ing.item);
+        const list = ing.store === 'wf' ? 'Whole Foods' : ing.store === 'costco' ? 'Costco' : "Trader Joe's";
+        items.push({ item: ing.item, list });
+      }
+    });
+  });
+
+  const el = document.getElementById('alexaCommands');
+  el.innerHTML = items.slice(0, 30).map(({ item, list }) =>
+    `<div class="alexa-cmd" onclick="copyCmd(this, '${item}', '${list}')">
+      <span>Alexa,</span> ask our groceries to add <span>${item}</span> to ${list}
+    </div>`
+  ).join('');
+}
+
+function alexaForMeal(dayIndex) {
+  const key = getWeekKey(currentWeekOffset);
+  const meal = weekPlans[key][dayIndex];
+  if (!meal || !meal.ingredients?.length) {
+    showToast('No ingredients for this meal');
+    return;
+  }
+  const cmds = meal.ingredients.map(ing => {
+    const list = ing.store === 'wf' ? 'Whole Foods' : ing.store === 'costco' ? 'Costco' : "Trader Joe's";
+    return `Alexa, ask our groceries to add ${ing.item} to ${list}`;
+  }).join('\n');
+  copyToClipboard(cmds);
+  showToast(`${meal.ingredients.length} Alexa commands copied!`);
+}
+
+function copyCmd(el, item, list) {
+  const cmd = `Alexa, ask our groceries to add ${item} to ${list}`;
+  copyToClipboard(cmd);
+  showToast('Command copied!');
+}
+
+function copyAllCommands() {
+  const cmds = document.querySelectorAll('.alexa-cmd');
+  const text = [...cmds].map(c => c.textContent.trim().replace(/\s+/g,' ')).join('\n');
+  copyToClipboard(text);
+  showToast('All commands copied to clipboard!');
+}
+
+function confirmPlan() {
+  const key = getWeekKey(currentWeekOffset);
+  const plan = weekPlans[key] || [];
+  const seen = new Set();
+  const items = [];
+  plan.forEach(meal => {
+    (meal.ingredients||[]).forEach(ing => {
+      const itemKey = `${key}-${ing.item}`;
+      if (!seen.has(ing.item) && !checkedIngredients[itemKey]) {
+        seen.add(ing.item);
+        const list = ing.store === 'wf' ? 'Whole Foods' : ing.store === 'costco' ? 'Costco' : "Trader Joe's";
+        items.push(`Alexa, ask our groceries to add ${ing.item} to ${list}`);
+      }
+    });
+  });
+  copyToClipboard(items.join('\n'));
+  showToast(`✓ ${items.length} Alexa commands ready — paste & run!`);
+}
+
+// ─── SWAP MODAL ───────────────────────────────────────────────────────────────
+
+let activeFilter = 'all';
+
+function openSwapModal(dayIndex) {
+  swapTarget = dayIndex;
+  const key = getWeekKey(currentWeekOffset);
+  const current = weekPlans[key][dayIndex];
+  document.getElementById('swapDay').textContent = `Replacing: ${DAYS[dayIndex]} — ${current.name}`;
+  activeFilter = dayIndex === 4 ? 'friday_special' : 'all';
+  renderModalCats(dayIndex);
+  renderSwapOptions();
+  document.getElementById('swapModal').classList.add('open');
+}
+
+function renderModalCats(dayIndex) {
+  const cats = dayIndex === 4 
+    ? [['friday_special','Shabbat/Friday'],['chicken','Chicken'],['pasta','Pasta']]
+    : [['all','All'],['chicken','Chicken'],['taco','Tacos'],['pasta','Pasta'],['fish','Fish'],['burger','Burgers'],['easy','Easy Night']];
+  
+  const el = document.getElementById('modalCats');
+  el.innerHTML = cats.map(([k,l]) => 
+    `<button class="cat-btn ${activeFilter===k?'active':''}" onclick="setFilter('${k}')">${l}</button>`
+  ).join('');
+}
+
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    b.classList.toggle('active', b.onclick.toString().includes(`'${f}'`));
+  });
+  renderSwapOptions();
+}
+
+function renderSwapOptions() {
+  let pool;
+  if (activeFilter === 'all') {
+    pool = ALL_RECIPES.filter(r => !r.friday);
+  } else if (RECIPES[activeFilter]) {
+    pool = RECIPES[activeFilter];
+  } else {
+    pool = ALL_RECIPES;
+  }
+
+  const el = document.getElementById('swapOptions');
+  el.innerHTML = pool.map((r,i) => `
+    <div class="swap-option" onclick="applySwap(${ALL_RECIPES.indexOf(r)})">
+      <div>
+        <div class="name">${r.name}</div>
+        <div class="meal-tags" style="margin-top:4px">${r.tags.map(t=>`<span class="tag tag-${t}">${t}</span>`).join('')}</div>
+      </div>
+      <div class="meta">${r.shop ? shopName(r.shop) : '—'}</div>
+    </div>
+  `).join('');
+}
+
+function applySwap(recipeIdx) {
+  const key = getWeekKey(currentWeekOffset);
+  weekPlans[key][swapTarget] = ALL_RECIPES[recipeIdx];
+  closeModalDirect();
+  renderWeek();
+  showToast('Meal swapped!');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('swapModal')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('swapModal').classList.remove('open');
+}
+
+// ─── ROTATION GRID ────────────────────────────────────────────────────────────
+
+function renderRotationGrid() {
+  const favorites = [
+    "Mama's Chicken Thighs","Chicken Shawarma","Taco Tuesday","Birria Tacos",
+    "Salmon Bowl","Smash Burgers","Peanut Noodles","Chicken Soup Friday",
+    "Shrimp & Pasta","Rotisserie Chicken","Spaghetti & Meatballs","Marinated Chicken"
+  ];
+  const el = document.getElementById('rotationGrid');
+  el.innerHTML = favorites.map(f => `<div class="rotation-item" onclick="addToPlanner('${f}')" title="Click to learn more">🍽 ${f}</div>`).join('');
+}
+
+// ─── WEEK NAV ─────────────────────────────────────────────────────────────────
+
+function changeWeek(delta) {
+  currentWeekOffset += delta;
+  renderWeek();
+}
+
+function generateWeek() {
+  const key = getWeekKey(currentWeekOffset);
+  weekPlans[key] = generateWeekPlan();
+  checkedIngredients = Object.fromEntries(
+    Object.entries(checkedIngredients).filter(([k]) => !k.startsWith(key+'-'))
+  );
+  renderWeek();
+  showToast('New week generated!');
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+renderWeek();
+</script>
+</body>
+</html>
