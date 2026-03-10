@@ -1663,12 +1663,32 @@ function assignRecipeToDay(recipeName, dayIndex) {
 let customRecipes = [];
 let quickAddDayIndex = null;
 
+// ─── STORAGE HELPERS ──────────────────────────────────────────────────────────
+
+const Store = {
+  async get(key) {
+    try {
+      if (window.storage) {
+        const result = await window.storage.get(key);
+        return result ? result.value : null;
+      }
+    } catch(e) {}
+    try { return localStorage.getItem(key); } catch(e) {}
+    return null;
+  },
+  async set(key, value) {
+    try {
+      if (window.storage) await window.storage.set(key, value);
+    } catch(e) {}
+    try { localStorage.setItem(key, value); } catch(e) {}
+  }
+};
 function loadCustomRecipes() {
   customRecipes = [];
-  window.storage.get('mealos-custom-recipes').then(result => {
-    if (result) {
+  Store.get('mealos-custom-recipes').then(raw => {
+    if (raw) {
       try {
-        customRecipes = JSON.parse(result.value);
+        customRecipes = JSON.parse(raw);
         customRecipes.forEach(({ name, cat }) => {
           if (!RECIPES[cat]) RECIPES[cat] = [];
           if (!RECIPES[cat].find(r => r.name === name)) {
@@ -1678,11 +1698,11 @@ function loadCustomRecipes() {
         renderRotationGrid();
       } catch(e) {}
     }
-  }).catch(() => {});
+  });
 }
 
 function persistCustomRecipes() {
-  window.storage.set('mealos-custom-recipes', JSON.stringify(customRecipes)).catch(() => {});
+  Store.set('mealos-custom-recipes', JSON.stringify(customRecipes));
 }
 
 function openQuickAddModal(dayIndex) {
@@ -1744,15 +1764,15 @@ let savedWeeks = [];
 
 function loadHistory() {
   savedWeeks = [];
-  window.storage.get('mealos-history').then(result => {
-    if (result) {
-      try { savedWeeks = JSON.parse(result.value); } catch(e) {}
+  Store.get('mealos-history').then(raw => {
+    if (raw) {
+      try { savedWeeks = JSON.parse(raw); } catch(e) {}
     }
-  }).catch(() => {});
+  });
 }
 
 function persistHistory() {
-  window.storage.set('mealos-history', JSON.stringify(savedWeeks)).catch(() => {});
+  Store.set('mealos-history', JSON.stringify(savedWeeks));
 }
 
 function saveWeekSnapshot() {
