@@ -490,6 +490,20 @@
     font-family: 'DM Sans', sans-serif;
   }
   .rotation-item:hover { border-color: var(--accent); color: var(--text); background: rgba(232,184,75,0.07); }
+  .rotation-item-custom { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+  .rotation-item-custom span { cursor: pointer; flex: 1; }
+  .rot-delete-btn {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 0 2px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .rot-delete-btn:hover { color: #cc4444; }
 
   .day-picker-btns {
     display: flex;
@@ -1175,7 +1189,7 @@ const RECIPES = {
   ]
 };
 
-const ALL_RECIPES = Object.values(RECIPES).flat();
+function getAllRecipes() { return Object.values(RECIPES).flat(); }
 
 const WEEKLY_TEMPLATE = [
   // Each week slot: [Mon, Tue, Wed, Thu, Fri]
@@ -1530,31 +1544,37 @@ function setFilter(f) {
 }
 
 function renderSwapOptions() {
+  const all = getAllRecipes();
   let pool;
   if (activeFilter === 'all') {
-    pool = ALL_RECIPES.filter(r => !r.friday);
+    pool = all.filter(r => !r.friday);
   } else if (RECIPES[activeFilter]) {
     pool = RECIPES[activeFilter];
   } else {
-    pool = ALL_RECIPES;
+    pool = all;
   }
 
   const el = document.getElementById('swapOptions');
-  el.innerHTML = pool.map((r,i) => `
-    <div class="swap-option" onclick="applySwap(${ALL_RECIPES.indexOf(r)})">
+  el.innerHTML = pool.map(r => {
+    const safeName = r.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    return `
+    <div class="swap-option" onclick="applySwapByName('${safeName}')">
       <div>
         <div class="name">${r.name}</div>
-        <div class="meal-tags" style="margin-top:4px">${r.tags.map(t=>`<span class="tag tag-${t}">${t}</span>`).join('')}</div>
+        <div class="meal-tags" style="margin-top:4px">${(r.tags||[]).map(t=>`<span class="tag tag-${t}">${t}</span>`).join('')}</div>
       </div>
       <div class="meta">${r.shop ? shopName(r.shop) : '—'}</div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
-function applySwap(recipeIdx) {
+function applySwapByName(recipeName) {
+  const recipe = getAllRecipes().find(r => r.name === recipeName);
+  if (!recipe) return;
   const key = getWeekKey(currentWeekOffset);
-  weekPlans[key][swapTarget] = ALL_RECIPES[recipeIdx];
+  weekPlans[key][swapTarget] = { ...recipe };
   closeModalDirect();
+  persistWeekPlans();
   renderWeek();
   showToast('Meal swapped!');
 }
@@ -1585,8 +1605,9 @@ function renderRotationGrid() {
         <div class="rot-items">
           ${recipes.map(r => {
             const safeName = r.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            return `<div class="rotation-item" onclick="openDayPickerModal('${safeName}')">
-              ${r.name}${r.custom ? ' <span class="custom-badge">custom</span>' : ''}
+            return `<div class="rotation-item${r.custom ? ' rotation-item-custom' : ''}">
+              <span onclick="openDayPickerModal('${safeName}')">${r.name}</span>
+              ${r.custom ? `<button class="rot-delete-btn" onclick="deleteRecipeFromLibrary('${safeName}', '${r.tags.find(t => t !== 'custom') || 'other'}')" title="Remove">✕</button>` : ''}
             </div>`;
           }).join('')}
         </div>
@@ -1607,6 +1628,7 @@ function generateWeek() {
   checkedIngredients = Object.fromEntries(
     Object.entries(checkedIngredients).filter(([k]) => !k.startsWith(key+'-'))
   );
+  persistWeekPlans();
   renderWeek();
   showToast('New week generated!');
 }
@@ -1631,8 +1653,17 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-function openDayPickerModal(recipeName) {
-  const recipe = ALL_RECIPES.find(r => r.name === recipeName);
+function deleteRecipeFromLibrary(name, cat) {
+  if (!confirm(`Remove "${name}" from the library?`)) return;
+  if (RECIPES[cat]) RECIPES[cat] = RECIPES[cat].filter(r => r.name !== name);
+  customRecipes = customRecipes.filter(r => r.name !== name);
+  persistCustomRecipes();
+  renderRotationGrid();
+  showToast(`"${name}" removed from library`);
+}
+
+
+  const recipe = getAllRecipes().find(r => r.name === recipeName);
   if (!recipe) return;
   document.getElementById('dayPickerTitle').textContent = `Add "${recipeName}" to…`;
   const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
@@ -1648,11 +1679,12 @@ function closeDayPickerModal(e) {
 }
 
 function assignRecipeToDay(recipeName, dayIndex) {
-  const recipe = ALL_RECIPES.find(r => r.name === recipeName) || { name: recipeName, tags:[], shop:null, ingredients:[] };
+  const recipe = getAllRecipes().find(r => r.name === recipeName) || { name: recipeName, tags:[], shop:null, ingredients:[] };
   const key = getWeekKey(currentWeekOffset);
   if (!weekPlans[key]) weekPlans[key] = Array(5).fill(null);
   weekPlans[key][dayIndex] = { ...recipe };
   document.getElementById('dayPickerModal').classList.remove('open');
+  persistWeekPlans();
   renderWeek();
   const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
   showToast(`${recipeName} → ${DAYS[dayIndex]}!`);
@@ -1727,6 +1759,7 @@ function confirmQuickAdd() {
   if (!weekPlans[key]) weekPlans[key] = Array(5).fill(null);
   weekPlans[key][quickAddDayIndex] = { name, tags:['custom'], shop:null, ingredients:[], custom:true };
   document.getElementById('quickAddModal').classList.remove('open');
+  persistWeekPlans();
   renderWeek();
   showToast(`"${name}" added!`);
 }
@@ -1957,9 +1990,29 @@ function printSnapshot() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 
-renderWeek();
-loadHistory();
-loadCustomRecipes();
+function persistWeekPlans() {
+  Store.set('mealos-weekplans', JSON.stringify(weekPlans));
+}
+
+function loadWeekPlans() {
+  return Store.get('mealos-weekplans').then(raw => {
+    if (raw) {
+      try { weekPlans = JSON.parse(raw); } catch(e) {}
+    }
+  }).catch(() => {});
+}
+
+loadWeekPlans().then(() => {
+  // Auto-generate current week if empty
+  const key = getWeekKey(currentWeekOffset);
+  if (!weekPlans[key]) {
+    weekPlans[key] = generateWeekPlan();
+    persistWeekPlans();
+  }
+  renderWeek();
+  loadHistory();
+  loadCustomRecipes();
+});
 </script>
 </body>
 </html>
