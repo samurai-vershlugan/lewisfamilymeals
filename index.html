@@ -715,7 +715,76 @@
   .history-action-btn:hover { border-color: var(--accent); color: var(--accent); }
   .history-action-btn.del:hover { border-color: #cc4444; color: #cc4444; }
 
-  .snapshot-modal { background: #1a1917; }
+  .add-library-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .add-library-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .text-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 9px 12px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .text-input:focus { border-color: var(--accent); }
+
+  .input-label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .empty-day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+    cursor: pointer;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    margin-top: 4px;
+    transition: border-color 0.15s;
+  }
+  .empty-day:hover { border-color: var(--accent); }
+  .empty-day-prompt {
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: color 0.15s;
+  }
+  .empty-day:hover .empty-day-prompt { color: var(--accent); }
+
+  .custom-badge {
+    font-size: 10px;
+    background: rgba(232,184,75,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(232,184,75,0.3);
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
   .snapshot-week-title {
     font-family: 'DM Mono', monospace;
     font-size: 14px;
@@ -809,7 +878,10 @@
   <div class="planner">
     <div class="section-label">This Week's Plan</div>
     <div class="week-grid" id="weekGrid"></div>
-    <div class="section-label">Rotation Library</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div class="section-label" style="margin-bottom:0">Rotation Library</div>
+      <button class="add-library-btn" onclick="openAddLibraryModal()">＋ Add to Library</button>
+    </div>
     <div class="rotation-grid" id="rotationGrid"></div>
   </div>
 
@@ -843,6 +915,44 @@
 <div class="confirm-bar" id="confirmBar">
   <div class="confirm-text">Plan looks good? <strong id="confirmCount">0</strong> items ready to add to Our Groceries.</div>
   <button class="confirm-btn" onclick="confirmPlan()">✓ Confirm & Send to Groceries</button>
+</div>
+
+<div class="modal-overlay" id="quickAddModal" onclick="closeQuickAddModal(event)">
+  <div class="modal" style="position:relative;max-width:380px;width:90%">
+    <button class="modal-close" onclick="document.getElementById('quickAddModal').classList.remove('open')">×</button>
+    <h3>Quick Add Meal</h3>
+    <p id="quickAddDay" style="color:var(--text-muted);font-size:13px;margin-bottom:14px"></p>
+    <input id="quickAddInput" class="text-input" placeholder="e.g. Homemade Ramen" onkeydown="if(event.key==='Enter')confirmQuickAdd()" />
+    <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+      <button class="confirm-btn" style="background:#333;color:#ccc" onclick="document.getElementById('quickAddModal').classList.remove('open')">Cancel</button>
+      <button class="confirm-btn" onclick="confirmQuickAdd()">Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addLibraryModal" onclick="closeAddLibraryModal(event)">
+  <div class="modal" style="position:relative;max-width:380px;width:90%">
+    <button class="modal-close" onclick="document.getElementById('addLibraryModal').classList.remove('open')">×</button>
+    <h3>Add to Library</h3>
+    <p style="color:var(--text-muted);font-size:13px;margin-bottom:14px">This meal will join the rotation permanently.</p>
+    <label class="input-label">Meal name</label>
+    <input id="libraryNameInput" class="text-input" placeholder="e.g. Shakshuka" onkeydown="if(event.key==='Enter')confirmAddLibrary()" />
+    <label class="input-label" style="margin-top:12px">Category</label>
+    <select id="libraryCatInput" class="text-input" style="cursor:pointer">
+      <option value="chicken">Chicken</option>
+      <option value="taco">Taco / Mexican</option>
+      <option value="pasta">Pasta</option>
+      <option value="fish">Fish / Seafood</option>
+      <option value="burger">Burger / Steak</option>
+      <option value="other">Other</option>
+      <option value="friday_special">Friday Special</option>
+      <option value="easy">Easy / Quick</option>
+    </select>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+      <button class="confirm-btn" style="background:#333;color:#ccc" onclick="document.getElementById('addLibraryModal').classList.remove('open')">Cancel</button>
+      <button class="confirm-btn" onclick="confirmAddLibrary()">Save to Library</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="snapshotModal" onclick="closeSnapshotModal(event)">
@@ -1095,23 +1205,36 @@ function renderWeek() {
     const isFri = i === 4;
     const card = document.createElement('div');
     card.className = `day-card${isFri ? ' friday-card' : ''}`;
-    card.innerHTML = `
-      <div class="day-header">
-        <span class="day-name">${DAYS[i]}</span>
-        <span class="day-date">${formatDayDate(dates[i])}</span>
-      </div>
-      <div class="day-meal">
-        <div class="meal-name">${meal.name}</div>
-        <div class="meal-tags">
-          ${meal.tags.map(t => `<span class="tag tag-${t}">${t}</span>`).join('')}
+    if (meal && meal.name) {
+      card.innerHTML = `
+        <div class="day-header">
+          <span class="day-name">${DAYS[i]}</span>
+          <span class="day-date">${formatDayDate(dates[i])}</span>
         </div>
-        ${meal.shop ? `<div class="shop-tag shop-${meal.shop}">📍 ${shopName(meal.shop)}</div>` : ''}
-        <div class="meal-actions">
-          <button class="action-btn btn-swap" onclick="openSwapModal(${i})">⇄ Swap</button>
-          <button class="action-btn btn-alexa" onclick="alexaForMeal(${i})">◎ Alexa</button>
+        <div class="day-meal">
+          <div class="meal-name">${meal.name}</div>
+          <div class="meal-tags">
+            ${(meal.tags||[]).map(t => `<span class="tag tag-${t}">${t}</span>`).join('')}
+          </div>
+          ${meal.shop ? `<div class="shop-tag shop-${meal.shop}">📍 ${shopName(meal.shop)}</div>` : ''}
+          <div class="meal-actions">
+            <button class="action-btn btn-swap" onclick="openSwapModal(${i})">⇄ Swap</button>
+            <button class="action-btn btn-swap" onclick="openQuickAddModal(${i})">✎ Edit</button>
+            <button class="action-btn btn-alexa" onclick="alexaForMeal(${i})">◎ Alexa</button>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    } else {
+      card.innerHTML = `
+        <div class="day-header">
+          <span class="day-name">${DAYS[i]}</span>
+          <span class="day-date">${formatDayDate(dates[i])}</span>
+        </div>
+        <div class="day-meal empty-day" onclick="openQuickAddModal(${i})">
+          <div class="empty-day-prompt">＋ Add a meal</div>
+        </div>
+      `;
+    }
     grid.appendChild(card);
   });
 
@@ -1425,7 +1548,76 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ─── HISTORY / SNAPSHOTS ──────────────────────────────────────────────────────
+// ─── QUICK ADD & LIBRARY ──────────────────────────────────────────────────────
+
+let customRecipes = [];
+let quickAddDayIndex = null;
+
+function loadCustomRecipes() {
+  try {
+    const raw = localStorage.getItem('mealos-custom-recipes');
+    customRecipes = raw ? JSON.parse(raw) : [];
+  } catch(e) { customRecipes = []; }
+}
+
+function persistCustomRecipes() {
+  try { localStorage.setItem('mealos-custom-recipes', JSON.stringify(customRecipes)); } catch(e) {}
+}
+
+function openQuickAddModal(dayIndex) {
+  quickAddDayIndex = dayIndex;
+  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  document.getElementById('quickAddDay').textContent = `What are you making ${DAYS[dayIndex]}?`;
+  const key = getWeekKey(currentWeekOffset);
+  const existing = weekPlans[key]?.[dayIndex];
+  document.getElementById('quickAddInput').value = existing?.custom ? existing.name : '';
+  document.getElementById('quickAddModal').classList.add('open');
+  setTimeout(() => document.getElementById('quickAddInput').focus(), 80);
+}
+
+function closeQuickAddModal(e) {
+  if (e.target.id === 'quickAddModal') document.getElementById('quickAddModal').classList.remove('open');
+}
+
+function confirmQuickAdd() {
+  const name = document.getElementById('quickAddInput').value.trim();
+  if (!name) return;
+  const key = getWeekKey(currentWeekOffset);
+  if (!weekPlans[key]) weekPlans[key] = Array(5).fill(null);
+  weekPlans[key][quickAddDayIndex] = { name, tags:['custom'], shop:null, ingredients:[], custom:true };
+  document.getElementById('quickAddModal').classList.remove('open');
+  renderWeek();
+  showToast(`"${name}" added!`);
+}
+
+function openAddLibraryModal() {
+  document.getElementById('libraryNameInput').value = '';
+  document.getElementById('libraryCatInput').value = 'chicken';
+  document.getElementById('addLibraryModal').classList.add('open');
+  setTimeout(() => document.getElementById('libraryNameInput').focus(), 80);
+}
+
+function closeAddLibraryModal(e) {
+  if (e.target.id === 'addLibraryModal') document.getElementById('addLibraryModal').classList.remove('open');
+}
+
+function confirmAddLibrary() {
+  const name = document.getElementById('libraryNameInput').value.trim();
+  const cat = document.getElementById('libraryCatInput').value;
+  if (!name) { showToast('Please enter a meal name'); return; }
+
+  const recipe = { name, tags:[cat, 'custom'], shop:null, ingredients:[], custom:true };
+  if (!RECIPES[cat]) RECIPES[cat] = [];
+  RECIPES[cat].push(recipe);
+  customRecipes.push({ name, cat });
+  persistCustomRecipes();
+
+  document.getElementById('addLibraryModal').classList.remove('open');
+  renderRotationGrid();
+  showToast(`"${name}" added to ${cat} rotation!`);
+}
+
+
 
 let savedWeeks = [];
 
@@ -1574,6 +1766,14 @@ function printSnapshot() {
 
 renderWeek();
 loadHistory();
+loadCustomRecipes();
+// Re-inject any saved custom recipes back into RECIPES
+customRecipes.forEach(({ name, cat }) => {
+  if (!RECIPES[cat]) RECIPES[cat] = [];
+  if (!RECIPES[cat].find(r => r.name === name)) {
+    RECIPES[cat].push({ name, tags:[cat,'custom'], shop:null, ingredients:[], custom:true });
+  }
+});
 </script>
 </body>
 </html>
