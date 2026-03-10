@@ -689,6 +689,8 @@
 
 const RECIPES = {
   chicken: [
+    { name: "Greek Chicken (The Kitchn)", tags:["chicken","quick"], shop:"tj",
+      ingredients: [{item:"boneless skinless chicken thighs (2 lbs)",store:"costco"},{item:"lemons (2 large)",store:"tj"},{item:"shallot",store:"tj"},{item:"garlic",store:"tj"},{item:"olive oil",store:"costco"},{item:"dried oregano",store:"tj"},{item:"kosher salt",store:"tj"},{item:"paprika",store:"tj"},{item:"fresh parsley",store:"tj"}] },
     { name: "Mama's Chicken Thighs", tags:["chicken","quick"], shop:"tj",
       ingredients: [{item:"bone-in chicken thighs",store:"tj"},{item:"garlic",store:"tj"},{item:"olive oil",store:"costco"},{item:"lemon",store:"tj"},{item:"fresh herbs (rosemary, thyme)",store:"tj"}] },
     { name: "Chicken Shawarma & Rice", tags:["chicken"], shop:"tj",
@@ -713,12 +715,16 @@ const RECIPES = {
   taco: [
     { name: "Taco Tuesday (Turkey)", tags:["taco","quick"], shop:"tj",
       ingredients: [{item:"ground turkey",store:"costco"},{item:"taco seasoning",store:"tj"},{item:"tortillas",store:"tj"},{item:"shredded cheese",store:"costco"},{item:"tomato",store:"tj"},{item:"lettuce",store:"tj"},{item:"sour cream",store:"tj"},{item:"salsa",store:"tj"}] },
+    { name: "Taco Tuesday (Beef)", tags:["taco","quick"], shop:"costco",
+      ingredients: [{item:"ground beef (80/20)",store:"costco"},{item:"taco seasoning",store:"tj"},{item:"tortillas",store:"tj"},{item:"shredded cheese",store:"costco"},{item:"tomato",store:"tj"},{item:"lettuce",store:"tj"},{item:"sour cream",store:"tj"},{item:"salsa",store:"tj"},{item:"jalapeño",store:"tj"}] },
+    { name: "Beef Tostadas", tags:["taco","quick"], shop:"costco",
+      ingredients: [{item:"ground beef (80/20)",store:"costco"},{item:"tostada shells",store:"tj"},{item:"refried beans",store:"tj"},{item:"shredded cheese",store:"costco"},{item:"salsa",store:"tj"},{item:"crema",store:"tj"},{item:"lettuce",store:"tj"},{item:"avocado",store:"tj"}] },
     { name: "Carne Asada Tacos", tags:["taco"], shop:"tj",
       ingredients: [{item:"skirt steak",store:"costco"},{item:"tortillas",store:"tj"},{item:"lime",store:"tj"},{item:"cilantro",store:"tj"},{item:"white onion",store:"tj"},{item:"jalapeño",store:"tj"},{item:"avocado",store:"tj"}] },
     { name: "Birria Tacos", tags:["taco"], shop:"tj",
       ingredients: [{item:"beef chuck",store:"costco"},{item:"dried chiles (guajillo, ancho)",store:"safeway"},{item:"garlic",store:"tj"},{item:"corn tortillas",store:"tj"},{item:"mozzarella",store:"costco"},{item:"onion",store:"tj"},{item:"cilantro",store:"tj"},{item:"lime",store:"tj"}] },
-    { name: "Fish Tacos", tags:["taco","fish"], shop:"tj",
-      ingredients: [{item:"white fish (mahi-mahi or cod)",store:"tj"},{item:"corn tortillas",store:"tj"},{item:"cabbage slaw mix",store:"tj"},{item:"lime",store:"tj"},{item:"chipotle mayo",store:"tj"},{item:"avocado",store:"tj"}] },
+    { name: "Baja Fish Tacos", tags:["taco","fish"], shop:"tj",
+      ingredients: [{item:"skinless halibut fillet (1.25 lbs)",store:"wf"},{item:"corn tortillas",store:"tj"},{item:"red cabbage",store:"tj"},{item:"fresh cilantro",store:"tj"},{item:"lime",store:"tj"},{item:"honey",store:"tj"},{item:"mayonnaise",store:"tj"},{item:"all-purpose flour",store:"tj"},{item:"chili powder",store:"tj"},{item:"avocado",store:"tj"},{item:"fresh salsa",store:"tj"},{item:"vegetable oil",store:"tj"}] },
     { name: "Turkey Tostadas", tags:["taco","quick"], shop:"tj",
       ingredients: [{item:"ground turkey",store:"costco"},{item:"tostada shells",store:"tj"},{item:"refried beans",store:"tj"},{item:"shredded cheese",store:"costco"},{item:"salsa",store:"tj"},{item:"crema",store:"tj"},{item:"lettuce",store:"tj"}] },
   ],
@@ -735,6 +741,8 @@ const RECIPES = {
       ingredients: [{item:"Italian chicken sausage",store:"tj"},{item:"orzo pasta",store:"tj"},{item:"cherry tomatoes",store:"tj"},{item:"spinach",store:"tj"},{item:"chicken broth",store:"tj"},{item:"Parmesan",store:"costco"}] },
   ],
   fish: [
+    { name: "Grilled Shrimp Bowl", tags:["fish","quick"], shop:"costco",
+      ingredients: [{item:"large shrimp, peeled & deveined (1 lb)",store:"costco"},{item:"olive oil",store:"costco"},{item:"paprika",store:"tj"},{item:"cayenne pepper",store:"tj"},{item:"frozen corn",store:"tj"},{item:"red onion",store:"tj"},{item:"cilantro",store:"tj"},{item:"jalapeño",store:"tj"},{item:"lime",store:"tj"},{item:"mayonnaise",store:"tj"},{item:"sour cream",store:"tj"},{item:"garlic",store:"tj"},{item:"lemon",store:"tj"},{item:"avocado",store:"tj"},{item:"sesame seeds",store:"tj"},{item:"green onions",store:"tj"},{item:"jasmine rice",store:"tj"}] },
     { name: "Salmon, Rice & Broccoli", tags:["fish","quick"], shop:"costco",
       ingredients: [{item:"salmon fillets",store:"costco"},{item:"basmati rice",store:"tj"},{item:"broccoli",store:"costco"},{item:"lemon",store:"tj"},{item:"olive oil",store:"costco"},{item:"garlic",store:"tj"}] },
     { name: "Ponzu Salmon Bowl", tags:["fish"], shop:"tj",
