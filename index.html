@@ -1583,10 +1583,12 @@ function renderRotationGrid() {
       <div class="rot-category">
         <div class="rot-cat-label">${CAT_LABELS[cat]}</div>
         <div class="rot-items">
-          ${recipes.map(r => `
-            <div class="rotation-item" onclick="openDayPickerModal(${JSON.stringify(r.name)})">
+          ${recipes.map(r => {
+            const safeName = r.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            return `<div class="rotation-item" onclick="openDayPickerModal('${safeName}')">
               ${r.name}${r.custom ? ' <span class="custom-badge">custom</span>' : ''}
-            </div>`).join('')}
+            </div>`;
+          }).join('')}
         </div>
       </div>`;
   }).join('');
@@ -1634,8 +1636,9 @@ function openDayPickerModal(recipeName) {
   if (!recipe) return;
   document.getElementById('dayPickerTitle').textContent = `Add "${recipeName}" to…`;
   const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  const safeName = recipeName.replace(/'/g, "\\'");
   document.getElementById('dayPickerBtns').innerHTML = DAYS.map((d, i) =>
-    `<button class="day-pick-btn" onclick="assignRecipeToDay(${JSON.stringify(recipeName)}, ${i})">${d}</button>`
+    `<button class="day-pick-btn" onclick="assignRecipeToDay('${safeName}', ${i})">${d}</button>`
   ).join('');
   document.getElementById('dayPickerModal').classList.add('open');
 }
@@ -1645,8 +1648,7 @@ function closeDayPickerModal(e) {
 }
 
 function assignRecipeToDay(recipeName, dayIndex) {
-  const recipe = ALL_RECIPES.find(r => r.name === recipeName);
-  if (!recipe) return;
+  const recipe = ALL_RECIPES.find(r => r.name === recipeName) || { name: recipeName, tags:[], shop:null, ingredients:[] };
   const key = getWeekKey(currentWeekOffset);
   if (!weekPlans[key]) weekPlans[key] = Array(5).fill(null);
   weekPlans[key][dayIndex] = { ...recipe };
