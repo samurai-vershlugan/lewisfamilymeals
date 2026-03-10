@@ -459,23 +459,57 @@
 
   /* Recipe rotation display */
   .rotation-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .rot-category {}
+  .rot-cat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .rot-items {
+    display: flex;
+    flex-wrap: wrap;
     gap: 6px;
   }
-
   .rotation-item {
     background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: 5px;
-    padding: 7px 10px;
-    font-size: 11px;
+    padding: 5px 10px;
+    font-size: 12px;
     color: var(--text-muted);
     cursor: pointer;
     transition: all 0.15s;
     font-family: 'DM Sans', sans-serif;
   }
-  .rotation-item:hover { border-color: var(--accent); color: var(--accent); }
+  .rotation-item:hover { border-color: var(--accent); color: var(--text); background: rgba(232,184,75,0.07); }
+
+  .day-picker-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .day-pick-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .day-pick-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(232,184,75,0.07); }
 
   /* Toast */
   .toast {
@@ -598,30 +632,6 @@
   }
 
   /* Confirm bar */
-  .confirm-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--surface2);
-    border-top: 1px solid var(--accent);
-    padding: 16px 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    z-index: 90;
-    transform: translateY(100%);
-    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  .confirm-bar.visible { transform: translateY(0); }
-
-  .confirm-text {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-  .confirm-text strong { color: var(--accent); }
-
   .confirm-btn {
     background: var(--accent);
     color: var(--bg);
@@ -938,16 +948,15 @@
     <div class="sidebar-section">
       <h3>🛒 Grocery List</h3>
       <div id="groceryList"></div>
-      <button class="confirm-btn" style="width:100%;margin-top:12px" onclick="confirmPlan()">✓ Confirm & Send to Groceries</button>
+      <button class="confirm-btn" style="width:100%;margin-top:12px" onclick="confirmPlan()">📋 Copy Alexa Commands (unchecked items)</button>
     </div>
     <div class="sidebar-section">
       <div class="alexa-panel">
         <div class="alexa-header">
           <div class="alexa-icon">◎</div>
-          <div class="alexa-title">Our Groceries · Alexa</div>
+          <div class="alexa-title">Our Groceries · Alexa Commands</div>
         </div>
         <div class="alexa-commands" id="alexaCommands"></div>
-        <button class="copy-all-btn" onclick="copyAllCommands()">📋 Copy All Commands</button>
       </div>
     </div>
   </div>
@@ -962,10 +971,18 @@
       <div class="logo-title" style="font-size:18px">Saved Weeks</div>
       <div class="logo-sub" style="margin-top:2px">Your archived meal plans</div>
     </div>
-    <button class="nav-btn" style="font-size:18px;padding:6px 16px" onclick="hideHistoryPage()">← Back</button>
+    <button class="nav-btn" onclick="hideHistoryPage()">← Back</button>
   </div>
   <div class="history-page-body">
     <div id="historyPageList"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="dayPickerModal" onclick="closeDayPickerModal(event)">
+  <div class="modal" style="position:relative;max-width:340px;width:90%">
+    <button class="modal-close" onclick="document.getElementById('dayPickerModal').classList.remove('open')">×</button>
+    <h3 id="dayPickerTitle">Add to which day?</h3>
+    <div class="day-picker-btns" id="dayPickerBtns"></div>
   </div>
 </div>
 
@@ -1400,8 +1417,7 @@ function updateConfirmBar() {
   const checked = Object.entries(checkedIngredients).filter(([k,v]) => k.startsWith(key+'-') && !v).length;
   const toAdd = total - Object.entries(checkedIngredients).filter(([k,v]) => k.startsWith(key+'-') && v).length;
   
-  document.getElementById('confirmCount').textContent = toAdd;
-  document.getElementById('confirmBar').classList.toggle('visible', total > 0);
+  document.getElementById('confirmCount') && (document.getElementById('confirmCount').textContent = toAdd);
 }
 
 // ─── ALEXA COMMANDS ───────────────────────────────────────────────────────────
@@ -1498,7 +1514,7 @@ function openSwapModal(dayIndex) {
 function renderModalCats(dayIndex) {
   const cats = dayIndex === 4 
     ? [['friday_special','Shabbat/Friday'],['chicken','Chicken'],['pasta','Pasta']]
-    : [['all','All'],['chicken','Chicken'],['taco','Tacos'],['pasta','Pasta'],['fish','Fish'],['burger','Burgers'],['steak','Steak'],['other','Other'],['easy','Easy Night']];
+    : [['all','All'],['burger','Burgers'],['chicken','Chicken'],['fish','Fish'],['other','Other'],['pasta','Pasta'],['steak','Steak'],['taco','Tacos'],['easy','Easy Night']];
   
   const el = document.getElementById('modalCats');
   el.innerHTML = cats.map(([k,l]) => 
@@ -1553,14 +1569,28 @@ function closeModalDirect() {
 
 // ─── ROTATION GRID ────────────────────────────────────────────────────────────
 
+const CAT_LABELS = {
+  chicken:'Chicken', taco:'Tacos', pasta:'Pasta', fish:'Fish',
+  burger:'Burgers', steak:'Steak', other:'Other', friday_special:'Friday', easy:'Easy'
+};
+
 function renderRotationGrid() {
-  const favorites = [
-    "Mama's Chicken Thighs","Chicken Shawarma","Taco Tuesday","Birria Tacos",
-    "Salmon Bowl","Smash Burgers","Peanut Noodles","Chicken Soup Friday",
-    "Shrimp & Pasta","Rotisserie Chicken","Spaghetti & Meatballs","Marinated Chicken"
-  ];
   const el = document.getElementById('rotationGrid');
-  el.innerHTML = favorites.map(f => `<div class="rotation-item" onclick="addToPlanner('${f}')" title="Click to learn more">🍽 ${f}</div>`).join('');
+  const cats = Object.keys(CAT_LABELS).sort((a,b) => CAT_LABELS[a].localeCompare(CAT_LABELS[b]));
+  el.innerHTML = cats.map(cat => {
+    const recipes = (RECIPES[cat] || []);
+    if (!recipes.length) return '';
+    return `
+      <div class="rot-category">
+        <div class="rot-cat-label">${CAT_LABELS[cat]}</div>
+        <div class="rot-items">
+          ${recipes.map(r => `
+            <div class="rotation-item" onclick="openDayPickerModal(${JSON.stringify(r.name)})">
+              ${r.name}${r.custom ? ' <span class="custom-badge">custom</span>' : ''}
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }).join('');
 }
 
 // ─── WEEK NAV ─────────────────────────────────────────────────────────────────
@@ -1600,7 +1630,34 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ─── QUICK ADD & LIBRARY ──────────────────────────────────────────────────────
+function openDayPickerModal(recipeName) {
+  const recipe = ALL_RECIPES.find(r => r.name === recipeName);
+  if (!recipe) return;
+  document.getElementById('dayPickerTitle').textContent = `Add "${recipeName}" to…`;
+  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  document.getElementById('dayPickerBtns').innerHTML = DAYS.map((d, i) =>
+    `<button class="day-pick-btn" onclick="assignRecipeToDay(${JSON.stringify(recipeName)}, ${i})">${d}</button>`
+  ).join('');
+  document.getElementById('dayPickerModal').classList.add('open');
+}
+
+function closeDayPickerModal(e) {
+  if (e.target.id === 'dayPickerModal') document.getElementById('dayPickerModal').classList.remove('open');
+}
+
+function assignRecipeToDay(recipeName, dayIndex) {
+  const recipe = ALL_RECIPES.find(r => r.name === recipeName);
+  if (!recipe) return;
+  const key = getWeekKey(currentWeekOffset);
+  if (!weekPlans[key]) weekPlans[key] = Array(5).fill(null);
+  weekPlans[key][dayIndex] = { ...recipe };
+  document.getElementById('dayPickerModal').classList.remove('open');
+  renderWeek();
+  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  showToast(`${recipeName} → ${DAYS[dayIndex]}!`);
+}
+
+
 
 let customRecipes = [];
 let quickAddDayIndex = null;
