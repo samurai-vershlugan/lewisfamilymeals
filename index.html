@@ -637,6 +637,146 @@
   }
   .confirm-btn:hover { background: var(--accent2); }
 
+  .save-btn {
+    background: #4466cc;
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .save-btn:hover { background: #5577dd; transform: translateY(-1px); }
+
+  .history-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .history-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .history-icon { font-size: 14px; }
+  .history-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .history-empty {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    text-align: center;
+    padding: 8px 0;
+  }
+  .history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    gap: 8px;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-item-label {
+    font-size: 12px;
+    color: var(--text);
+    flex: 1;
+    cursor: pointer;
+  }
+  .history-item-label:hover { color: var(--accent); }
+  .history-item-date {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .history-item-actions { display: flex; gap: 6px; }
+  .history-action-btn {
+    font-size: 11px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 4px;
+    padding: 2px 7px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .history-action-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .history-action-btn.del:hover { border-color: #cc4444; color: #cc4444; }
+
+  .snapshot-modal { background: #1a1917; }
+  .snapshot-week-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .snapshot-saved-on {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .snapshot-day {
+    margin-bottom: 8px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+  .snapshot-day-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    width: 32px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .snapshot-meal-name {
+    font-size: 13px;
+    color: var(--text);
+  }
+  .snapshot-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 12px 0;
+  }
+  .snapshot-ingredients-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .snapshot-store-group { margin-bottom: 10px; }
+  .snapshot-store-name {
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text-muted);
+  }
+  .snapshot-store-name.tj { color: #3a7a5a; }
+  .snapshot-store-name.costco { color: #4466cc; }
+  .snapshot-store-name.wf { color: #996633; }
+  .snapshot-store-name.safeway { color: #aa3333; }
+  .snapshot-ing { font-size: 12px; color: var(--text); padding: 2px 0 2px 10px; }
+
+  @media print {
+    body > *:not(#printArea) { display: none !important; }
+    #printArea { display: block !important; }
+  }
+
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -661,6 +801,7 @@
     <div class="week-label" id="weekLabel">Week of —</div>
     <button class="nav-btn" onclick="changeWeek(1)">›</button>
     <button class="generate-btn" onclick="generateWeek()">↻ Generate</button>
+    <button class="save-btn" onclick="saveWeekSnapshot()" title="Save this week to history">💾 Save Week</button>
   </div>
 </header>
 
@@ -687,12 +828,32 @@
         <button class="copy-all-btn" onclick="copyAllCommands()">📋 Copy All Commands</button>
       </div>
     </div>
+    <div class="sidebar-section">
+      <div class="history-panel">
+        <div class="history-header">
+          <span class="history-icon">📋</span>
+          <span class="history-title">Saved Weeks</span>
+        </div>
+        <div id="historyList"><div class="history-empty">No saved weeks yet.<br>Hit 💾 Save Week to archive a plan.</div></div>
+      </div>
+    </div>
   </div>
 </div>
 
 <div class="confirm-bar" id="confirmBar">
   <div class="confirm-text">Plan looks good? <strong id="confirmCount">0</strong> items ready to add to Our Groceries.</div>
   <button class="confirm-btn" onclick="confirmPlan()">✓ Confirm & Send to Groceries</button>
+</div>
+
+<div class="modal-overlay" id="snapshotModal" onclick="closeSnapshotModal(event)">
+  <div class="modal snapshot-modal" style="position:relative; max-width:560px; width:90%">
+    <button class="modal-close" onclick="document.getElementById('snapshotModal').classList.remove('open')">×</button>
+    <div id="snapshotContent"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end">
+      <button class="confirm-btn" style="background:#333;color:#ccc" onclick="document.getElementById('snapshotModal').classList.remove('open')">Close</button>
+      <button class="confirm-btn" onclick="printSnapshot()">🖨 Print / Save PDF</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="swapModal" onclick="closeModal(event)">
@@ -1264,9 +1425,155 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+// ─── HISTORY / SNAPSHOTS ──────────────────────────────────────────────────────
+
+let savedWeeks = [];
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem('mealos-history');
+    savedWeeks = raw ? JSON.parse(raw) : [];
+  } catch(e) { savedWeeks = []; }
+  renderHistory();
+}
+
+function persistHistory() {
+  try { localStorage.setItem('mealos-history', JSON.stringify(savedWeeks)); } catch(e) {}
+}
+
+function saveWeekSnapshot() {
+  const key = getWeekKey(currentWeekOffset);
+  const plan = weekPlans[key];
+  if (!plan || plan.every(m => !m)) {
+    showToast('Generate a plan first!');
+    return;
+  }
+
+  // Build grocery snapshot with current store overrides
+  const byStore = { tj:[], costco:[], wf:[], safeway:[] };
+  const seen = new Set();
+  plan.forEach(meal => {
+    (meal?.ingredients || []).forEach(ing => {
+      if (!seen.has(ing.item)) {
+        seen.add(ing.item);
+        const itemKey = `${key}-${ing.item}`;
+        const store = getEffectiveStore(itemKey, ing);
+        (byStore[store] || byStore.tj).push(ing.item);
+      }
+    });
+  });
+
+  const DAYS = ['Mon','Tue','Wed','Thu','Fri'];
+  const snapshot = {
+    id: Date.now(),
+    weekKey: key,
+    label: document.getElementById('weekLabel').textContent,
+    savedOn: new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }),
+    meals: plan.map((m, i) => ({ day: DAYS[i], name: m?.name || '—' })),
+    grocery: byStore
+  };
+
+  // Replace if same week already saved, otherwise prepend
+  const existing = savedWeeks.findIndex(s => s.weekKey === key);
+  if (existing >= 0) savedWeeks.splice(existing, 1);
+  savedWeeks.unshift(snapshot);
+  persistHistory();
+  renderHistory();
+  showToast('Week saved to history!');
+}
+
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  if (!savedWeeks.length) {
+    el.innerHTML = '<div class="history-empty">No saved weeks yet.<br>Hit 💾 Save Week to archive a plan.</div>';
+    return;
+  }
+  el.innerHTML = savedWeeks.map(s => `
+    <div class="history-item">
+      <div>
+        <div class="history-item-label" onclick="viewSnapshot(${s.id})">${s.label}</div>
+        <div class="history-item-date">Saved ${s.savedOn}</div>
+      </div>
+      <div class="history-item-actions">
+        <button class="history-action-btn" onclick="viewSnapshot(${s.id})">View</button>
+        <button class="history-action-btn del" onclick="deleteSnapshot(${s.id})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function viewSnapshot(id) {
+  const s = savedWeeks.find(w => w.id === id);
+  if (!s) return;
+
+  const STORE_INFO = [
+    { key:'tj', label:"Trader Joe's", cls:'tj' },
+    { key:'costco', label:'Costco', cls:'costco' },
+    { key:'wf', label:'Whole Foods', cls:'wf' },
+    { key:'safeway', label:'Safeway', cls:'safeway' },
+  ];
+
+  const mealsHtml = s.meals.map(m => `
+    <div class="snapshot-day">
+      <span class="snapshot-day-name">${m.day}</span>
+      <span class="snapshot-meal-name">${m.name}</span>
+    </div>`).join('');
+
+  const groceryHtml = STORE_INFO.filter(si => s.grocery[si.key]?.length).map(si => `
+    <div class="snapshot-store-group">
+      <div class="snapshot-store-name ${si.cls}">${si.label}</div>
+      ${s.grocery[si.key].map(item => `<div class="snapshot-ing">· ${item}</div>`).join('')}
+    </div>`).join('');
+
+  document.getElementById('snapshotContent').innerHTML = `
+    <div class="snapshot-week-title">${s.label}</div>
+    <div class="snapshot-saved-on">Saved ${s.savedOn}</div>
+    ${mealsHtml}
+    <hr class="snapshot-divider">
+    <div class="snapshot-ingredients-title">Grocery List</div>
+    ${groceryHtml}
+  `;
+  document.getElementById('snapshotModal').classList.add('open');
+}
+
+function closeSnapshotModal(e) {
+  if (e.target.id === 'snapshotModal') document.getElementById('snapshotModal').classList.remove('open');
+}
+
+function deleteSnapshot(id) {
+  savedWeeks = savedWeeks.filter(s => s.id !== id);
+  persistHistory();
+  renderHistory();
+  showToast('Removed from history');
+}
+
+function printSnapshot() {
+  const content = document.getElementById('snapshotContent').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`
+    <html><head><title>Meal Plan</title>
+    <style>
+      body { font-family: Georgia, serif; padding: 40px; color: #111; max-width: 560px; margin: 0 auto; }
+      h2 { font-size: 20px; margin-bottom: 4px; }
+      .snapshot-saved-on { color: #888; font-size: 12px; margin-bottom: 20px; }
+      .snapshot-day { display: flex; gap: 12px; margin-bottom: 6px; }
+      .snapshot-day-name { font-weight: bold; width: 36px; color: #555; font-size: 13px; text-transform: uppercase; }
+      .snapshot-meal-name { font-size: 14px; }
+      hr { border: none; border-top: 1px solid #ddd; margin: 16px 0; }
+      .snapshot-ingredients-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 10px; }
+      .snapshot-store-group { margin-bottom: 12px; }
+      .snapshot-store-name { font-size: 12px; font-weight: bold; color: #333; margin-bottom: 4px; }
+      .snapshot-ing { font-size: 13px; padding: 1px 0 1px 10px; color: #444; }
+      .snapshot-week-title { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+    </style></head>
+    <body>${content}</body></html>`);
+  win.document.close();
+  win.print();
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 
 renderWeek();
+loadHistory();
 </script>
 </body>
 </html>
