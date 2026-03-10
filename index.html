@@ -154,11 +154,11 @@
     border-radius: 10px;
     overflow: hidden;
     transition: border-color 0.2s;
-    position: relative;
   }
 
   .day-card:hover { border-color: var(--accent); }
   .day-card.friday-card { border-color: rgba(232,184,75,0.3); }
+  .day-card.friday-card:hover { border-color: var(--accent); }
 
   .day-header {
     padding: 10px 14px 8px;
@@ -269,11 +269,15 @@
 
   /* Shabbat special */
   .shabbat-badge {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--accent);
   }
+  .shabbat-badge .star { font-size: 11px; }
 
   /* Sidebar */
   .sidebar {
@@ -868,7 +872,6 @@ function renderWeek() {
     const card = document.createElement('div');
     card.className = `day-card${isFri ? ' friday-card' : ''}`;
     card.innerHTML = `
-      ${isFri ? '<div class="shabbat-badge">✡</div>' : ''}
       <div class="day-header">
         <span class="day-name">${DAYS[i]}</span>
         <span class="day-date">${formatDayDate(dates[i])}</span>
