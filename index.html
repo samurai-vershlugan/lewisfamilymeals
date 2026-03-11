@@ -1228,8 +1228,6 @@ const RECIPES = {
       ingredients: [{item:"rotisserie chicken",store:"costco"},{item:"dinner rolls",store:"costco"},{item:"broccoli",store:"costco"},{item:"salad greens",store:"costco"}] },
     { name: "BBQ Chicken Sheet Pan", tags:["chicken"], shop:"costco",
       ingredients: [{item:"chicken thighs",store:"costco"},{item:"BBQ sauce",store:"tj"},{item:"broccoli",store:"costco"},{item:"sweet potatoes",store:"tj"}] },
-    { name: "Salsa Chicken Tacos", tags:["chicken","taco"], shop:"costco",
-      ingredients: [{item:"boneless chicken thighs",store:"costco"},{item:"salsa",store:"costco"},{item:"flour tortillas",store:"costco"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"},{item:"lime",store:"tj"},{item:"avocado",store:"costco"}] },
     { name: "Chicken Burrito Bowls", tags:["chicken","quick"], shop:"costco",
       ingredients: [{item:"chicken thighs",store:"costco"},{item:"white jasmine rice",store:"tj"},{item:"black beans",store:"tj"},{item:"salsa",store:"costco"},{item:"avocado",store:"costco"},{item:"shredded Mexican cheese",store:"costco"},{item:"lime",store:"tj"},{item:"fresh cilantro",store:"tj"}] },
     { name: "Mediterranean Pitas", tags:["chicken","quick"], shop:"costco",
@@ -1334,6 +1332,22 @@ const RECIPES = {
     { name: "Frozen Pizza", tags:["quick"], shop:"costco",
       ingredients: [{item:"frozen gluten free pizza",store:"costco"},{item:"salad greens",store:"costco"}] },
     { name: "Takeout (Chinese)", tags:["quick"], shop:null, ingredients: [] },
+  ],
+  slowcooker: [
+    { name: "Salsa Chicken", tags:["slowcooker","chicken"], shop:"costco",
+      ingredients: [{item:"boneless chicken thighs",store:"costco"},{item:"salsa",store:"costco"},{item:"flour tortillas",store:"costco"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"},{item:"lime",store:"tj"},{item:"avocado",store:"costco"}] },
+    { name: "Chicken Tortilla Soup", tags:["slowcooker","chicken"], shop:"costco",
+      ingredients: [{item:"boneless chicken thighs",store:"costco"},{item:"chicken broth",store:"costco"},{item:"salsa",store:"costco"},{item:"black beans",store:"tj"},{item:"frozen corn",store:"tj"},{item:"diced tomatoes",store:"costco"},{item:"taco seasoning",store:"tj"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"},{item:"fresh cilantro",store:"tj"}] },
+    { name: "Pulled Chicken Sliders", tags:["slowcooker","chicken"], shop:"costco",
+      ingredients: [{item:"boneless chicken thighs",store:"costco"},{item:"BBQ sauce",store:"costco"},{item:"Hawaiian rolls",store:"costco"},{item:"coleslaw mix",store:"costco"},{item:"apple cider vinegar",store:"tj"},{item:"honey",store:"tj"}] },
+    { name: "White Bean & Turkey Chili", tags:["slowcooker"], shop:"costco",
+      ingredients: [{item:"ground turkey",store:"costco"},{item:"white beans",store:"tj"},{item:"chicken broth",store:"costco"},{item:"diced green chiles",store:"costco"},{item:"onion",store:"tj"},{item:"garlic",store:"tj"},{item:"cumin",store:"tj"},{item:"oregano",store:"tj"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"}] },
+    { name: "Beef Ragu", tags:["slowcooker"], shop:"costco",
+      ingredients: [{item:"beef chuck roast",store:"costco"},{item:"marinara sauce",store:"costco"},{item:"onion",store:"tj"},{item:"garlic",store:"tj"},{item:"red wine",store:"tj"},{item:"Italian seasoning",store:"tj"},{item:"parmesan",store:"costco"},{item:"pasta",store:"costco"}] },
+    { name: "Honey Garlic Chicken", tags:["slowcooker","chicken"], shop:"costco",
+      ingredients: [{item:"boneless chicken thighs",store:"costco"},{item:"honey",store:"tj"},{item:"soy sauce",store:"tj"},{item:"garlic",store:"tj"},{item:"sesame oil",store:"tj"},{item:"white jasmine rice",store:"tj"},{item:"green onions",store:"tj"},{item:"sesame seeds",store:"tj"}] },
+    { name: "Lemon Herb Chicken Thighs", tags:["slowcooker","chicken"], shop:"costco",
+      ingredients: [{item:"bone-in chicken thighs",store:"costco"},{item:"chicken broth",store:"costco"},{item:"lemons",store:"tj"},{item:"garlic",store:"tj"},{item:"fresh rosemary",store:"tj"},{item:"fresh thyme",store:"tj"},{item:"olive oil",store:"costco"},{item:"roasting vegetables",store:"costco"}] },
   ]
 };
 
@@ -1631,9 +1645,23 @@ function alexaForMeal(dayIndex) {
 }
 
 function copyCmd(el, item, list) {
-  const cmd = `Alexa, ask our groceries to add ${item} to ${list}`;
-  copyToClipboard(cmd);
-  showToast('Command copied!');
+  const wake = getWakeWord();
+  const text = `${wake}, ask our groceries to add ${item} to ${list}`;
+  // Speak it directly
+  if ('speechSynthesis' in window) {
+    speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.92;
+    const voice = getSelectedVoice();
+    if (voice) utter.voice = voice;
+    // Flash highlight
+    el.classList.add('speaking-now');
+    utter.onend = () => el.classList.remove('speaking-now');
+    speechSynthesis.speak(utter);
+  } else {
+    copyToClipboard(text);
+    showToast('Command copied!');
+  }
 }
 
 function copyAllCommands() {
@@ -1685,15 +1713,41 @@ function populateVoiceSelect() {
   const voices = speechSynthesis.getVoices();
   if (!voices.length) return;
 
-  // Prefer English voices, put them first
-  const en = voices.filter(v => v.lang.startsWith('en'));
-  const others = voices.filter(v => !v.lang.startsWith('en'));
-  const sorted = [...en, ...others];
+  // Curated list: prefer Apple/premium voices by name substring
+  const PREFERRED = [
+    { match: 'Samantha',    label: 'Samantha (US)' },
+    { match: 'Karen',       label: 'Karen (AU)' },
+    { match: 'Moira',       label: 'Moira (IE)' },
+    { match: 'Siri',        label: 'Siri' },
+    { match: 'Daniel',      label: 'Daniel (UK)' },
+    { match: 'Rishi',       label: 'Rishi (IN)' },
+    { match: 'Tessa',       label: 'Tessa (ZA)' },
+    { match: 'Fiona',       label: 'Fiona (Scotland)' },
+    { match: 'Google US English',  label: 'Google US' },
+    { match: 'Google UK English Female', label: 'Google UK (F)' },
+    { match: 'Google UK English Male',   label: 'Google UK (M)' },
+  ];
 
   const saved = localStorage.getItem('mealos-voice') || '';
+  const found = [];
+  const usedNames = new Set();
+
+  PREFERRED.forEach(({ match, label }) => {
+    const v = voices.find(v => v.name.includes(match));
+    if (v && !usedNames.has(v.name)) {
+      found.push({ name: v.name, label });
+      usedNames.add(v.name);
+    }
+  });
+
+  // Fallback: add any remaining English voices not already listed
+  voices.filter(v => v.lang.startsWith('en') && !usedNames.has(v.name)).forEach(v => {
+    found.push({ name: v.name, label: v.name });
+  });
+
   sel.innerHTML = `<option value="">Default</option>` +
-    sorted.map(v =>
-      `<option value="${v.name}" ${v.name === saved ? 'selected' : ''}>${v.name} (${v.lang})</option>`
+    found.map(({ name, label }) =>
+      `<option value="${name}" ${name === saved ? 'selected' : ''}>${label}</option>`
     ).join('');
 }
 
@@ -1773,7 +1827,7 @@ function speakNext(index) {
 
   utter.onend = () => {
     // Pause between commands so Alexa has time to process
-    setTimeout(() => speakNext(index + 1), 1800);
+    setTimeout(() => speakNext(index + 1), 3600);
   };
   utter.onerror = () => speakNext(index + 1);
 
@@ -1814,7 +1868,7 @@ function openSwapModal(dayIndex) {
 function renderModalCats(dayIndex) {
   const cats = dayIndex === 4 
     ? [['friday_special','Shabbat/Friday'],['chicken','Chicken'],['pasta','Pasta']]
-    : [['all','All'],['burger','Burgers'],['chicken','Chicken'],['fish','Fish'],['other','Other'],['pasta','Pasta'],['steak','Steak'],['taco','Tacos'],['easy','Easy Night']];
+    : [['all','All'],['burger','Burgers'],['chicken','Chicken'],['fish','Fish'],['other','Other'],['pasta','Pasta'],['slowcooker','Slow Cooker'],['steak','Steak'],['taco','Tacos'],['easy','Easy Night']];
   
   const el = document.getElementById('modalCats');
   el.innerHTML = cats.map(([k,l]) => 
@@ -1877,7 +1931,8 @@ function closeModalDirect() {
 
 const CAT_LABELS = {
   chicken:'Chicken', taco:'Tacos', pasta:'Pasta', fish:'Fish',
-  burger:'Burgers', steak:'Steak', other:'Other', friday_special:'Friday', easy:'Easy'
+  burger:'Burgers', steak:'Steak', other:'Other', friday_special:'Friday',
+  easy:'Easy', slowcooker:'Slow Cooker'
 };
 
 function renderRotationGrid() {
