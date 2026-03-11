@@ -439,8 +439,79 @@
   }
   .alexa-cmd:hover { border-color: #4a7fa5; color: var(--text); }
   .alexa-cmd span { color: #7ab0d4; }
+  .alexa-cmd.speaking-now { background: rgba(232,184,75,0.12); border-color: var(--accent); color: var(--accent); }
 
-  .copy-all-btn {
+  .alexa-voice-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .voice-setting {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+  .voice-setting label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .wake-select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 5px 8px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .wake-select:focus { border-color: var(--accent); }
+
+  .speak-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .speak-btn {
+    flex: 1;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 9px 10px;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .speak-btn:hover { background: var(--accent2); }
+  .speak-btn.speaking { background: #4466cc; animation: alexaPulse 1s infinite; }
+  .speak-stop-btn {
+    background: #883333;
+    color: #fff;
+    border: none;
+    padding: 9px 12px;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .speak-stop-btn:hover { background: #aa4444; }
+  @keyframes alexaPulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
+
+
     width: 100%;
     margin-top: 10px;
     background: rgba(74,127,165,0.15);
@@ -1026,7 +1097,28 @@
           <div class="alexa-icon">◎</div>
           <div class="alexa-title">Our Groceries · Alexa Commands</div>
         </div>
+        <div class="alexa-voice-bar">
+          <div class="voice-setting">
+            <label class="input-label" style="margin:0">Wake word</label>
+            <select id="wakeWordSelect" class="wake-select" onchange="saveWakeWord()">
+              <option value="Alexa">Alexa</option>
+              <option value="Echo">Echo</option>
+              <option value="Amazon">Amazon</option>
+              <option value="Computer">Computer</option>
+            </select>
+          </div>
+          <div class="voice-setting">
+            <label class="input-label" style="margin:0">Voice</label>
+            <select id="voiceSelect" class="wake-select" onchange="saveVoice()">
+              <option value="">Default</option>
+            </select>
+          </div>
+        </div>
         <div class="alexa-commands" id="alexaCommands"></div>
+        <div class="speak-controls">
+          <button class="speak-btn" id="speakBtn" onclick="speakAllCommands()">🔊 Speak All Commands</button>
+          <button class="speak-stop-btn" id="speakStopBtn" onclick="stopSpeaking()" style="display:none">⏹ Stop</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1492,10 +1584,15 @@ function updateConfirmBar() {
 
 // ─── ALEXA COMMANDS ───────────────────────────────────────────────────────────
 
+function getWakeWord() {
+  return localStorage.getItem('mealos-wakeword') || 'Echo';
+}
+
 function renderAlexaCommands() {
   const key = getWeekKey(currentWeekOffset);
   const plan = weekPlans[key] || [];
-  
+  const wake = getWakeWord();
+
   const seen = new Set();
   const items = [];
   plan.forEach(meal => {
@@ -1513,7 +1610,7 @@ function renderAlexaCommands() {
   const el = document.getElementById('alexaCommands');
   el.innerHTML = items.slice(0, 30).map(({ item, list }) =>
     `<div class="alexa-cmd" onclick="copyCmd(this, '${item}', '${list}')">
-      <span>Alexa,</span> ask our groceries to add <span>${item}</span> to ${list}
+      <span>${wake},</span> ask our groceries to add <span>${item}</span> to ${list}
     </div>`
   ).join('');
 }
@@ -1566,7 +1663,140 @@ function confirmPlan() {
   showToast(`✓ ${items.length} Alexa commands ready — paste & run!`);
 }
 
-// ─── SWAP MODAL ───────────────────────────────────────────────────────────────
+// ─── VOICE / SPEECH SYNTHESIS ─────────────────────────────────────────────────
+
+let speechQueue = [];
+let isSpeaking = false;
+
+function saveWakeWord() {
+  const val = document.getElementById('wakeWordSelect').value;
+  localStorage.setItem('mealos-wakeword', val);
+  renderAlexaCommands(); // refresh displayed commands
+}
+
+function saveVoice() {
+  const val = document.getElementById('voiceSelect').value;
+  localStorage.setItem('mealos-voice', val);
+}
+
+function populateVoiceSelect() {
+  const sel = document.getElementById('voiceSelect');
+  if (!sel) return;
+  const voices = speechSynthesis.getVoices();
+  if (!voices.length) return;
+
+  // Prefer English voices, put them first
+  const en = voices.filter(v => v.lang.startsWith('en'));
+  const others = voices.filter(v => !v.lang.startsWith('en'));
+  const sorted = [...en, ...others];
+
+  const saved = localStorage.getItem('mealos-voice') || '';
+  sel.innerHTML = `<option value="">Default</option>` +
+    sorted.map(v =>
+      `<option value="${v.name}" ${v.name === saved ? 'selected' : ''}>${v.name} (${v.lang})</option>`
+    ).join('');
+}
+
+function initWakeWord() {
+  const sel = document.getElementById('wakeWordSelect');
+  if (sel) sel.value = getWakeWord();
+}
+
+// Voices load async in most browsers
+if (typeof speechSynthesis !== 'undefined') {
+  speechSynthesis.onvoiceschanged = populateVoiceSelect;
+  populateVoiceSelect(); // try immediately too
+}
+
+function getSelectedVoice() {
+  const name = localStorage.getItem('mealos-voice') || '';
+  if (!name) return null;
+  return speechSynthesis.getVoices().find(v => v.name === name) || null;
+}
+
+function speakAllCommands() {
+  if (!('speechSynthesis' in window)) {
+    showToast('Speech not supported in this browser');
+    return;
+  }
+  stopSpeaking();
+
+  const key = getWeekKey(currentWeekOffset);
+  const plan = weekPlans[key] || [];
+  const wake = getWakeWord();
+  const seen = new Set();
+  const cmds = [];
+
+  plan.forEach(meal => {
+    (meal?.ingredients || []).forEach(ing => {
+      const itemKey = `${key}-${ing.item}`;
+      if (!seen.has(ing.item) && !checkedIngredients[itemKey]) {
+        seen.add(ing.item);
+        const store = getEffectiveStore(itemKey, ing);
+        const list = store === 'wf' ? 'Whole Foods' : store === 'costco' ? 'Costco' : store === 'safeway' ? 'Safeway' : "Trader Joe's";
+        cmds.push({ text: `${wake}, ask our groceries to add ${ing.item} to ${list}`, item: ing.item });
+      }
+    });
+  });
+
+  if (!cmds.length) { showToast('No unchecked items to speak'); return; }
+
+  speechQueue = [...cmds];
+  isSpeaking = true;
+  document.getElementById('speakBtn').classList.add('speaking');
+  document.getElementById('speakBtn').textContent = '🔊 Speaking…';
+  document.getElementById('speakStopBtn').style.display = 'inline-block';
+
+  speakNext(0);
+}
+
+function speakNext(index) {
+  if (!isSpeaking || index >= speechQueue.length) {
+    finishSpeaking();
+    return;
+  }
+
+  // Highlight matching command row
+  document.querySelectorAll('.alexa-cmd').forEach(el => el.classList.remove('speaking-now'));
+  const allCmds = document.querySelectorAll('.alexa-cmd');
+  if (allCmds[index]) {
+    allCmds[index].classList.add('speaking-now');
+    allCmds[index].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  const utter = new SpeechSynthesisUtterance(speechQueue[index].text);
+  utter.rate = 0.92;
+  utter.pitch = 1.0;
+  utter.volume = 1.0;
+  const voice = getSelectedVoice();
+  if (voice) utter.voice = voice;
+
+  utter.onend = () => {
+    // Pause between commands so Alexa has time to process
+    setTimeout(() => speakNext(index + 1), 1800);
+  };
+  utter.onerror = () => speakNext(index + 1);
+
+  speechSynthesis.speak(utter);
+}
+
+function stopSpeaking() {
+  isSpeaking = false;
+  speechSynthesis.cancel();
+  finishSpeaking();
+}
+
+function finishSpeaking() {
+  isSpeaking = false;
+  speechQueue = [];
+  document.querySelectorAll('.alexa-cmd').forEach(el => el.classList.remove('speaking-now'));
+  const btn = document.getElementById('speakBtn');
+  const stop = document.getElementById('speakStopBtn');
+  if (btn) { btn.classList.remove('speaking'); btn.textContent = '🔊 Speak All Commands'; }
+  if (stop) stop.style.display = 'none';
+}
+
+
 
 let activeFilter = 'all';
 
@@ -2109,6 +2339,8 @@ loadWeekPlans().then(() => {
   renderWeek();
   loadHistory();
   loadCustomRecipes();
+  initWakeWord();
+  populateVoiceSelect();
 });
 </script>
 </body>
