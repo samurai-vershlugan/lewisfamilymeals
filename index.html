@@ -290,6 +290,37 @@
   }
   .btn-swap:hover { border-color: var(--accent); color: var(--accent); }
 
+  .btn-lock {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-muted);
+    flex: 0 0 auto;
+    width: 32px;
+    padding: 4px 0;
+    font-size: 11px;
+  }
+  .btn-lock:hover { border-color: #4a9; color: #4a9; }
+  .btn-lock.locked {
+    background: rgba(74,153,100,0.15);
+    border-color: #4a9;
+    color: #4a9;
+  }
+
+  .day-card.locked-card {
+    border-color: rgba(74,153,100,0.4);
+    background: rgba(74,153,100,0.04);
+  }
+  .day-card.locked-card .day-name { color: #4a9; }
+  .day-card.locked-card .day-header { border-bottom-color: rgba(74,153,100,0.2); }
+  .lock-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    color: #4a9;
+    opacity: 0.7;
+    text-transform: uppercase;
+  }
+
   .btn-alexa {
     background: rgba(74,127,165,0.15);
     border-color: rgba(74,127,165,0.4);
@@ -1211,7 +1242,6 @@
     <div class="sidebar-section">
       <h3>🛒 Grocery List</h3>
       <div id="groceryList"></div>
-      <button class="confirm-btn" style="width:100%;margin-top:12px" onclick="confirmPlan()">📋 Copy Alexa Commands (unchecked items)</button>
     </div>
     <div class="sidebar-section">
       <div class="alexa-panel">
@@ -1223,16 +1253,10 @@
           <div class="voice-setting">
             <label class="input-label" style="margin:0">Wake word</label>
             <select id="wakeWordSelect" class="wake-select" onchange="saveWakeWord()">
-              <option value="Alexa">Alexa</option>
               <option value="Echo">Echo</option>
+              <option value="Alexa">Alexa</option>
               <option value="Amazon">Amazon</option>
               <option value="Computer">Computer</option>
-            </select>
-          </div>
-          <div class="voice-setting">
-            <label class="input-label" style="margin:0">Voice</label>
-            <select id="voiceSelect" class="wake-select" onchange="saveVoice()">
-              <option value="">Default</option>
             </select>
           </div>
         </div>
@@ -1380,21 +1404,13 @@ const RECIPES = {
   ],
   taco: [
     { name: "Turkey Tacos", tags:["taco","quick"], shop:"costco",
-      ingredients: [{item:"ground turkey",store:"costco"},{item:"taco seasoning",store:"tj"},{item:"flour tortillas",store:"costco"},{item:"organic romaine lettuce",store:"costco"},{item:"tomatoes",store:"costco"},{item:"shredded Mexican cheese",store:"costco"},{item:"avocado",store:"costco"},{item:"sour cream",store:"tj"}] },
+      ingredients: [{item:"ground turkey",store:"costco"},{item:"flour tortillas",store:"tj"},{item:"crunchy taco shells",store:"safeway"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"},{item:"roma tomatoes (2)",store:"tj"},{item:"jalapeño",store:"tj"},{item:"onion",store:"tj"},{item:"avocado",store:"costco"},{item:"fresh cilantro",store:"tj"},{item:"lime",store:"tj"}] },
     { name: "Beef Tacos", tags:["taco","quick"], shop:"costco",
-      ingredients: [{item:"ground beef",store:"costco"},{item:"taco seasoning",store:"tj"},{item:"flour tortillas",store:"costco"},{item:"shredded Mexican cheese",store:"costco"},{item:"tomatoes",store:"costco"},{item:"organic romaine lettuce",store:"costco"},{item:"sour cream",store:"tj"},{item:"salsa",store:"costco"},{item:"jalapeño",store:"tj"}] },
-    { name: "Turkey Tostadas", tags:["taco","quick"], shop:"costco",
-      ingredients: [{item:"ground turkey",store:"costco"},{item:"tostadas",store:"tj"},{item:"refried beans",store:"tj"},{item:"shredded Mexican cheese",store:"costco"},{item:"salsa",store:"costco"},{item:"sour cream",store:"tj"},{item:"organic romaine lettuce",store:"costco"}] },
-    { name: "Beef Tostadas", tags:["taco","quick"], shop:"costco",
-      ingredients: [{item:"ground beef",store:"costco"},{item:"tostadas",store:"tj"},{item:"refried beans",store:"tj"},{item:"shredded Mexican cheese",store:"costco"},{item:"salsa",store:"costco"},{item:"sour cream",store:"tj"},{item:"organic romaine lettuce",store:"costco"},{item:"avocado",store:"costco"}] },
-    { name: "Chicken Tostadas", tags:["taco","chicken"], shop:"costco",
-      ingredients: [{item:"chicken thighs",store:"costco"},{item:"tostadas",store:"tj"},{item:"refried beans",store:"tj"},{item:"shredded Mexican cheese",store:"costco"},{item:"salsa",store:"costco"},{item:"organic romaine lettuce",store:"costco"},{item:"sour cream",store:"tj"}] },
+      ingredients: [{item:"ground beef",store:"costco"},{item:"flour tortillas",store:"tj"},{item:"crunchy taco shells",store:"safeway"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"},{item:"roma tomatoes (2)",store:"tj"},{item:"jalapeño",store:"tj"},{item:"onion",store:"tj"},{item:"avocado",store:"costco"},{item:"fresh cilantro",store:"tj"},{item:"lime",store:"tj"}] },
     { name: "Carne Asada Tacos", tags:["taco"], shop:"costco",
-      ingredients: [{item:"skirt steak",store:"costco"},{item:"corn tortillas",store:"tj"},{item:"lime",store:"tj"},{item:"fresh cilantro",store:"tj"},{item:"white onion",store:"tj"},{item:"jalapeño",store:"tj"},{item:"avocado",store:"costco"}] },
-    { name: "Birria Tacos", tags:["taco"], shop:"costco",
-      ingredients: [{item:"beef chuck roast (3 lbs)",store:"costco"},{item:"dried chiles (guajillo, ancho)",store:"safeway"},{item:"garlic",store:"tj"},{item:"corn tortillas",store:"tj"},{item:"shredded mozzarella",store:"costco"},{item:"yellow onion",store:"tj"},{item:"fresh cilantro",store:"tj"},{item:"lime",store:"tj"}] },
+      ingredients: [{item:"skirt steak",store:"costco"},{item:"flour tortillas",store:"tj"},{item:"lime",store:"tj"},{item:"fresh cilantro",store:"tj"},{item:"onion",store:"tj"},{item:"jalapeño",store:"tj"},{item:"roma tomatoes (2)",store:"tj"},{item:"avocado",store:"costco"}] },
     { name: "Baja Fish Tacos", tags:["taco","fish"], shop:"wf",
-      ingredients: [{item:"halibut fillet (1.25 lbs)",store:"wf"},{item:"corn tortillas",store:"tj"},{item:"red cabbage",store:"tj"},{item:"fresh cilantro",store:"tj"},{item:"lime",store:"tj"},{item:"honey",store:"tj"},{item:"mayonnaise",store:"tj"},{item:"flour",store:"tj"},{item:"chili powder",store:"costco"},{item:"avocado",store:"costco"},{item:"salsa",store:"costco"}] },
+      ingredients: [{item:"halibut fillet (1.25 lbs)",store:"wf"},{item:"flour tortillas",store:"tj"},{item:"red cabbage",store:"tj"},{item:"fresh cilantro",store:"tj"},{item:"lime",store:"tj"},{item:"honey",store:"tj"},{item:"mayonnaise",store:"tj"},{item:"chili powder",store:"costco"},{item:"avocado",store:"costco"},{item:"jalapeño",store:"tj"}] },
   ],
   pasta: [
     { name: "Peanut Noodles", tags:["pasta","veg"], shop:"tj",
@@ -1493,10 +1509,13 @@ const WEEKLY_TEMPLATE = [
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 
-let currentWeekOffset = 0;
+// Start on next week if today is Saturday (6) or Sunday (0)
+const _startDay = new Date().getDay();
+let currentWeekOffset = (_startDay === 0 || _startDay === 6) ? 1 : 0;
 let weekPlans = {}; // keyed by weekOffset
 let checkedIngredients = {};
-let swapTarget = null; // { dayIndex, weekKey }
+let swapTarget = null;
+let lockedDays = {}; // keyed by "weekKey-dayIndex"
 
 // ─── DATE HELPERS ─────────────────────────────────────────────────────────────
 
@@ -1552,7 +1571,7 @@ function generateWeekPlan() {
   // Fri: Shabbat/Chicken Soup always
   const pool = [
     pickRandom([...RECIPES.chicken.slice(0,6)]),
-    pickRandom([...RECIPES.taco.slice(0,4)]),
+    pickRandom([...RECIPES.taco]),
     pickRandom([...RECIPES.chicken.slice(3,9), ...RECIPES.pasta.slice(0,3)]),
     pickRandom([...RECIPES.fish, ...RECIPES.pasta.slice(1,4), ...RECIPES.burger]),
     pickFriday(),
@@ -1566,6 +1585,20 @@ const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
 const SHORT_DAYS = ['Mon','Tue','Wed','Thu','Fri'];
 
 function getWeekKey(offset) { return `w${offset}`; }
+
+function getLockKey(weekKey, dayIndex) { return `${weekKey}-${dayIndex}`; }
+
+function toggleLock(dayIndex) {
+  const key = getWeekKey(currentWeekOffset);
+  const lk = getLockKey(key, dayIndex);
+  lockedDays[lk] = !lockedDays[lk];
+  try { localStorage.setItem('mealos-locks', JSON.stringify(lockedDays)); } catch(e) {}
+  renderWeek();
+}
+
+function loadLockedDays() {
+  try { lockedDays = JSON.parse(localStorage.getItem('mealos-locks') || '{}'); } catch(e) {}
+}
 
 function renderWeek() {
   const dates = getWeekDates(currentWeekOffset);
@@ -1582,13 +1615,19 @@ function renderWeek() {
 
   plan.forEach((meal, i) => {
     const isFri = i === 4;
+    const lk = getLockKey(key, i);
+    const isLocked = !!lockedDays[lk];
     const card = document.createElement('div');
-    card.className = `day-card${isFri ? ' friday-card' : ''}`;
+    card.className = `day-card${isFri ? ' friday-card' : ''}${isLocked ? ' locked-card' : ''}`;
+
     if (meal && meal.name) {
       card.innerHTML = `
         <div class="day-header">
           <span class="day-name">${DAYS[i]}</span>
-          <span class="day-date">${formatDayDate(dates[i])}</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            ${isLocked ? '<span class="lock-badge">locked</span>' : ''}
+            <span class="day-date">${formatDayDate(dates[i])}</span>
+          </div>
         </div>
         <div class="day-meal">
           <div class="meal-name">${meal.name}</div>
@@ -1599,6 +1638,7 @@ function renderWeek() {
           <div class="meal-actions">
             <button class="action-btn btn-swap" onclick="openSwapModal(${i})">⇄ Swap</button>
             <button class="action-btn btn-swap" onclick="openQuickAddModal(${i})">＋ Add</button>
+            <button class="action-btn btn-lock${isLocked ? ' locked' : ''}" onclick="toggleLock(${i})" title="${isLocked ? 'Unlock this meal' : 'Lock this meal'}">${isLocked ? '🔒' : '🔓'}</button>
           </div>
         </div>
       `;
@@ -1639,10 +1679,12 @@ function renderGroceryList() {
     (meal.ingredients || []).forEach(ing => {
       if (!seen.has(ing.item)) {
         seen.add(ing.item);
-        if (haveIngredients[ing.item]) return; // already have it
         const itemKey = `${key}-${ing.item}`;
         const effectiveStore = getEffectiveStore(itemKey, ing);
+        // Include all items — have-it items show as pre-checked
         (byStore[effectiveStore] || byStore.tj).push({ ...ing, _effectiveStore: effectiveStore });
+        // Pre-check if in pantry
+        if (haveIngredients[ing.item]) checkedIngredients[itemKey] = true;
       }
     });
   });
@@ -1708,15 +1750,32 @@ function getEffectiveStore(itemKey, ing) {
 }
 
 
-function toggleIngredient(itemKey, el) {
+async function toggleIngredient(itemKey, el) {
   checkedIngredients[itemKey] = !checkedIngredients[itemKey];
-  if (checkedIngredients[itemKey]) {
+  const checked = checkedIngredients[itemKey];
+  // Extract item name from itemKey (format: "w0-item name" or "w-1-item name")
+  const itemName = itemKey.replace(/^w-?\d+-/, '');
+
+  if (checked) {
     el.classList.add('checked');
     el.querySelector('.ingredient-cb').textContent = '✓';
+    // Add to pantry — assume they have it henceforth
+    haveIngredients[itemName] = true;
+    try {
+      await sb.upsert('pantry', { family_id: FAMILY_ID, item_name: itemName, have_it: true }, 'family_id,item_name');
+    } catch(e) {}
+    persistHaveIngredients();
   } else {
     el.classList.remove('checked');
     el.querySelector('.ingredient-cb').textContent = '';
+    // Remove from pantry — they need it again
+    delete haveIngredients[itemName];
+    try {
+      await sb.delete('pantry', { family_id: FAMILY_ID, item_name: itemName });
+    } catch(e) {}
+    persistHaveIngredients();
   }
+  renderAlexaCommands();
   updateConfirmBar();
 }
 
@@ -1839,71 +1898,15 @@ function saveWakeWord() {
   renderAlexaCommands(); // refresh displayed commands
 }
 
-function saveVoice() {
-  const val = document.getElementById('voiceSelect').value;
-  localStorage.setItem('mealos-voice', val);
-}
-
-function populateVoiceSelect() {
-  const sel = document.getElementById('voiceSelect');
-  if (!sel) return;
-  const voices = speechSynthesis.getVoices();
-  if (!voices.length) return;
-
-  // Curated list: prefer Apple/premium voices by name substring
-  const PREFERRED = [
-    { match: 'Samantha',    label: 'Samantha (US)' },
-    { match: 'Karen',       label: 'Karen (AU)' },
-    { match: 'Moira',       label: 'Moira (IE)' },
-    { match: 'Siri',        label: 'Siri' },
-    { match: 'Daniel',      label: 'Daniel (UK)' },
-    { match: 'Rishi',       label: 'Rishi (IN)' },
-    { match: 'Tessa',       label: 'Tessa (ZA)' },
-    { match: 'Fiona',       label: 'Fiona (Scotland)' },
-    { match: 'Google US English',  label: 'Google US' },
-    { match: 'Google UK English Female', label: 'Google UK (F)' },
-    { match: 'Google UK English Male',   label: 'Google UK (M)' },
-  ];
-
-  const saved = localStorage.getItem('mealos-voice') || '';
-  const found = [];
-  const usedNames = new Set();
-
-  PREFERRED.forEach(({ match, label }) => {
-    const v = voices.find(v => v.name.includes(match));
-    if (v && !usedNames.has(v.name)) {
-      found.push({ name: v.name, label });
-      usedNames.add(v.name);
-    }
-  });
-
-  // Fallback: add any remaining English voices not already listed
-  voices.filter(v => v.lang.startsWith('en') && !usedNames.has(v.name)).forEach(v => {
-    found.push({ name: v.name, label: v.name });
-  });
-
-  sel.innerHTML = `<option value="">Default</option>` +
-    found.map(({ name, label }) =>
-      `<option value="${name}" ${name === saved ? 'selected' : ''}>${label}</option>`
-    ).join('');
-}
-
 function initWakeWord() {
   const sel = document.getElementById('wakeWordSelect');
-  if (sel) sel.value = getWakeWord();
-}
-
-// Voices load async in most browsers
-if (typeof speechSynthesis !== 'undefined') {
-  speechSynthesis.onvoiceschanged = populateVoiceSelect;
-  populateVoiceSelect(); // try immediately too
+  if (sel) sel.value = localStorage.getItem('mealos-wakeword') || 'Echo';
 }
 
 function getSelectedVoice() {
-  const name = localStorage.getItem('mealos-voice') || '';
-  if (!name) return null;
-  return speechSynthesis.getVoices().find(v => v.name === name) || null;
+  return null; // always use system default voice
 }
+
 
 function speakAllCommands() {
   if (!('speechSynthesis' in window)) {
@@ -2126,7 +2129,16 @@ function changeWeek(delta) {
 
 function generateWeek() {
   const key = getWeekKey(currentWeekOffset);
-  weekPlans[key] = generateWeekPlan();
+  const existing = weekPlans[key] || [];
+  const newPlan = generateWeekPlan();
+
+  // Preserve locked days
+  const finalPlan = newPlan.map((meal, i) => {
+    const lk = getLockKey(key, i);
+    return lockedDays[lk] ? existing[i] : meal;
+  });
+
+  weekPlans[key] = finalPlan;
   checkedIngredients = Object.fromEntries(
     Object.entries(checkedIngredients).filter(([k]) => !k.startsWith(key+'-'))
   );
@@ -2754,6 +2766,22 @@ function sharePlan() {
   }
 }
 
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+loadLockedDays();
+loadHaveIngredients().then(() => {
+  loadWeekPlans().then(() => {
+    const key = getWeekKey(currentWeekOffset);
+    if (!weekPlans[key]) {
+      weekPlans[key] = generateWeekPlan();
+      persistWeekPlans();
+    }
+    renderWeek();
+    loadHistory();
+    loadCustomRecipes();
+    initWakeWord();
+  });
+});
 
 </script>
 </body>
