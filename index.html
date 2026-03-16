@@ -1678,7 +1678,10 @@ function renderGroceryList() {
   const seen = new Set();
   
   plan.forEach(meal => {
-    (meal.ingredients || []).forEach(ing => {
+    if (!meal || !meal.name) return; // skip empty slots
+    // Always pull fresh ingredients from RECIPES so edits take effect immediately
+    const liveMeal = getAllRecipes().find(r => r.name === meal.name) || meal;
+    (liveMeal.ingredients || []).forEach(ing => {
       if (!seen.has(ing.item)) {
         seen.add(ing.item);
         const itemKey = `${key}-${ing.item}`;
@@ -1805,7 +1808,9 @@ function renderAlexaCommands() {
   const seen = new Set();
   const items = [];
   plan.forEach(meal => {
-    (meal.ingredients||[]).forEach(ing => {
+    if (!meal || !meal.name) return;
+    const liveMeal = getAllRecipes().find(r => r.name === meal.name) || meal;
+    (liveMeal.ingredients||[]).forEach(ing => {
       if (!seen.has(ing.item)) {
         seen.add(ing.item);
         const itemKey = `${key}-${ing.item}`;
@@ -1924,7 +1929,9 @@ function speakAllCommands() {
   const cmds = [];
 
   plan.forEach(meal => {
-    (meal?.ingredients || []).forEach(ing => {
+    if (!meal || !meal.name) return;
+    const liveMeal = getAllRecipes().find(r => r.name === meal.name) || meal;
+    (liveMeal?.ingredients || []).forEach(ing => {
       const itemKey = `${key}-${ing.item}`;
       if (!seen.has(ing.item) && !checkedIngredients[itemKey] && !haveIngredients[ing.item]) {
         seen.add(ing.item);
@@ -2294,7 +2301,9 @@ function buildGroceryByStore(weekKey, plan) {
   const byStore = { tj:[], costco:[], wf:[], safeway:[] };
   const seen = new Set();
   (plan || []).forEach(meal => {
-    (meal?.ingredients || []).forEach(ing => {
+    if (!meal || !meal.name) return;
+    const liveMeal = getAllRecipes().find(r => r.name === meal.name) || meal;
+    (liveMeal?.ingredients || []).forEach(ing => {
       const itemKey = `${weekKey}-${ing.item}`;
       if (!seen.has(ing.item) && !checkedIngredients[itemKey] && !haveIngredients[ing.item]) {
         seen.add(ing.item);
@@ -2737,7 +2746,9 @@ function sharePlan() {
   const byStore = { tj:[], costco:[], wf:[], safeway:[] };
   const seen = new Set();
   plan.forEach(meal => {
-    (meal?.ingredients || []).forEach(ing => {
+    if (!meal || !meal.name) return;
+    const liveMeal = getAllRecipes().find(r => r.name === meal.name) || meal;
+    (liveMeal?.ingredients || []).forEach(ing => {
       const itemKey = `${key}-${ing.item}`;
       if (!seen.has(ing.item) && !checkedIngredients[itemKey] && !haveIngredients[ing.item]) {
         seen.add(ing.item);
