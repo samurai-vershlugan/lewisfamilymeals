@@ -1324,7 +1324,7 @@
   <div class="modal" style="position:relative;max-width:380px;width:90%">
     <button class="modal-close" onclick="document.getElementById('addLibraryModal').classList.remove('open')">×</button>
     <h3>Add to Library</h3>
-    <p style="color:var(--text-muted);font-size:13px;margin-bottom:14px">This meal will join the rotation permanently.</p>
+    <p id="addLibraryHint" style="color:var(--text-muted);font-size:13px;margin-bottom:14px">This meal will join the rotation permanently.</p>
     <label class="input-label">Meal name</label>
     <input id="libraryNameInput" class="text-input" placeholder="e.g. Shakshuka" onkeydown="if(event.key==='Enter')confirmAddLibrary()" />
     <label class="input-label" style="margin-top:12px">Category</label>
@@ -1334,6 +1334,7 @@
       <option value="pasta">Pasta</option>
       <option value="fish">Fish / Seafood</option>
       <option value="burger">Burger / Steak</option>
+      <option value="slowcooker">Slow Cooker</option>
       <option value="other">Other</option>
       <option value="friday_special">Friday Special</option>
       <option value="easy">Easy / Quick</option>
@@ -1639,7 +1640,7 @@ function renderWeek() {
           ${meal.shop ? `<div class="shop-tag shop-${meal.shop}">📍 ${shopName(meal.shop)}</div>` : ''}
           <div class="meal-actions">
             <button class="action-btn btn-swap" onclick="openSwapModal(${i})">⇄ Swap</button>
-            <button class="action-btn btn-swap" onclick="openQuickAddModal(${i})">＋ Add</button>
+            <button class="action-btn btn-swap" onclick="openAddLibraryModal(${i})">＋ Add</button>
             <button class="action-btn btn-lock${isLocked ? ' locked' : ''}" onclick="toggleLock(${i})" title="${isLocked ? 'Unlock this meal' : 'Lock this meal'}">${isLocked ? '🔒' : '🔓'}</button>
           </div>
         </div>
@@ -1650,7 +1651,7 @@ function renderWeek() {
           <span class="day-name">${DAYS[i]}</span>
           <span class="day-date">${formatDayDate(dates[i])}</span>
         </div>
-        <div class="day-meal empty-day" onclick="openQuickAddModal(${i})">
+        <div class="day-meal empty-day" onclick="openAddLibraryModal(${i})">
           <div class="empty-day-prompt">＋ Add a meal</div>
         </div>
       `;
@@ -2544,9 +2545,15 @@ function confirmQuickAdd() {
   showToast(`"${name}" added!`);
 }
 
-function openAddLibraryModal() {
+let addLibraryDayIndex = null;
+
+function openAddLibraryModal(dayIndex = null) {
+  addLibraryDayIndex = dayIndex;
   document.getElementById('libraryNameInput').value = '';
   document.getElementById('libraryCatInput').value = 'chicken';
+  // Update modal title hint if coming from a day card
+  const hint = document.getElementById('addLibraryHint');
+  if (hint) hint.textContent = dayIndex !== null ? `This meal will be added to ${DAYS[dayIndex]} and saved to the library.` : 'This meal will join the rotation permanently.';
   document.getElementById('addLibraryModal').classList.add('open');
   setTimeout(() => document.getElementById('libraryNameInput').focus(), 80);
 }
@@ -2574,7 +2581,17 @@ async function confirmAddLibrary() {
   } catch(e) { console.warn('Recipe sync failed, saved locally'); }
   persistCustomRecipes();
 
+  // If opened from a day card, assign to that day
+  if (addLibraryDayIndex !== null) {
+    const key = getWeekKey(currentWeekOffset);
+    if (!weekPlans[key]) weekPlans[key] = Array(5).fill(null);
+    weekPlans[key][addLibraryDayIndex] = { ...recipe };
+    persistWeekPlans();
+  }
+
   document.getElementById('addLibraryModal').classList.remove('open');
+  addLibraryDayIndex = null;
+  renderWeek();
   renderRotationGrid();
   showToast(`"${name}" added to ${CAT_LABELS[cat] || cat} rotation!`);
 }
