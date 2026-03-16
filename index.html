@@ -88,12 +88,29 @@
     gap: 16px;
   }
 
+  .week-nav-group {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .week-nav-group .nav-btn { border-radius: 6px; }
+
+  .week-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 8px;
+    padding-left: 16px;
+    border-left: 1px solid var(--border);
+  }
+
   .week-label {
     font-family: 'DM Mono', monospace;
     font-size: 12px;
     color: var(--text-muted);
     letter-spacing: 1px;
-    min-width: 140px;
+    min-width: 160px;
     text-align: center;
   }
 
@@ -113,21 +130,34 @@
   }
   .nav-btn:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
 
-  .generate-btn {
-    background: var(--accent);
-    color: var(--bg);
+  /* ── Header action buttons — shared base ── */
+  .nav-action {
     border: none;
-    padding: 8px 18px;
+    padding: 8px 0;
+    min-width: 100px;
     border-radius: 6px;
     font-family: 'DM Mono', monospace;
     font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 1px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
     cursor: pointer;
     text-transform: uppercase;
     transition: all 0.15s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 34px;
   }
-  .generate-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+  .nav-action:hover { transform: translateY(-1px); filter: brightness(1.12); }
+
+  .generate-btn { background: var(--accent);  color: var(--bg);  border: none; }
+  .save-btn     { background: #4466cc;         color: #fff;       border: none; }
+  .share-btn    { background: #2e7d5e;         color: #fff;       border: none; }
+  .history-btn  { background: transparent;     color: var(--text-muted); border: 1px solid var(--border); }
+  .history-btn:hover { border-color: var(--accent); color: var(--accent); filter: none; transform: translateY(-1px); }
+
 
   .main {
     display: grid;
@@ -698,6 +728,143 @@
     cursor: pointer;
   }
 
+  /* ── Recipe Detail Modal ── */
+  .recipe-modal { padding: 24px 24px 16px; }
+
+  .recipe-modal-header { margin-bottom: 16px; padding-right: 24px; }
+  .recipe-modal-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .recipe-modal-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .recipe-modal-add-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+  }
+  .recipe-modal-add-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .recipe-modal-day-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .recipe-modal-day-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .recipe-modal-day-btn:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+  .recipe-modal-section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .recipe-modal-ingredients {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .recipe-ing-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    transition: all 0.12s;
+    cursor: pointer;
+    user-select: none;
+  }
+  .recipe-ing-row:hover { background: var(--surface2); border-color: var(--border); }
+  .recipe-ing-row.have-it {
+    opacity: 0.45;
+    text-decoration: line-through;
+  }
+  .recipe-ing-checkbox {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.12s;
+    font-size: 11px;
+  }
+  .recipe-ing-row.have-it .recipe-ing-checkbox {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+  .recipe-ing-name { font-size: 13px; flex: 1; }
+  .recipe-ing-store {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+
+  .recipe-modal-footer {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .recipe-modal-footer-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    opacity: 0.7;
+  }
+
+  .no-ingredients {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 12px 0;
+    text-align: center;
+    opacity: 0.6;
+  }
+
+  .store-pill-tj      { background: rgba(196,92,58,0.15);  color: #c45c3a; }
+  .store-pill-costco  { background: rgba(74,127,165,0.15); color: #4a7fa5; }
+  .store-pill-wf      { background: rgba(90,143,106,0.15); color: #5a8f6a; }
+  .store-pill-safeway { background: rgba(154,122,200,0.15);color: #9a7ac8; }
+
   .section-label {
     font-family: 'DM Mono', monospace;
     font-size: 10px;
@@ -731,38 +898,6 @@
     text-transform: uppercase;
   }
   .confirm-btn:hover { background: var(--accent2); }
-
-  .save-btn {
-    background: #4466cc;
-    color: #fff;
-    border: none;
-    padding: 8px 18px;
-    border-radius: 6px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 1px;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: all 0.15s;
-  }
-  .save-btn:hover { background: #5577dd; transform: translateY(-1px); }
-
-  .history-btn {
-    background: transparent;
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-    padding: 8px 18px;
-    border-radius: 6px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 1px;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: all 0.15s;
-  }
-  .history-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
 
   /* ── History Full Page ── */
   .history-page {
@@ -993,22 +1128,6 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  .share-btn {
-    background: transparent;
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-    padding: 8px 18px;
-    border-radius: 6px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 1px;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: all 0.15s;
-  }
-  .share-btn:hover { border-color: #4a9; color: #4a9; transform: translateY(-1px); }
-
   @media (max-width: 900px) {
     header {
       padding: 12px 16px;
@@ -1017,12 +1136,10 @@
       gap: 10px;
     }
     .logo-title { font-size: 18px; }
-    .week-nav {
-      width: 100%;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .week-label { min-width: unset; flex: 1; text-align: left; font-size: 11px; }
+    .week-nav { width: 100%; flex-wrap: wrap; gap: 8px; }
+    .week-nav-group { flex-shrink: 0; }
+    .week-nav-actions { margin-left: 0; padding-left: 0; border-left: none; flex-wrap: wrap; gap: 6px; }
+    .week-label { min-width: 130px; text-align: center; font-size: 11px; }
     .generate-btn, .save-btn, .share-btn, .history-btn {
       padding: 7px 12px;
       font-size: 10px;
@@ -1064,13 +1181,18 @@
     <div class="logo-sub">v2026</div>
   </div>
   <div class="week-nav">
-    <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
-    <div class="week-label" id="weekLabel">Week of —</div>
-    <button class="nav-btn" onclick="changeWeek(1)">›</button>
-    <button class="generate-btn" onclick="generateWeek()">↻ Generate</button>
-    <button class="save-btn" onclick="saveWeekSnapshot()" title="Save this week to history">💾 Save Week</button>
-    <button class="share-btn" onclick="sharePlan()">↗ Share</button>
-    <button class="history-btn" onclick="showHistoryPage()">📋 Saved Weeks</button>
+    <div class="week-nav-group">
+      <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
+      <div class="week-label" id="weekLabel">Week of —</div>
+      <button class="nav-btn" onclick="changeWeek(1)">›</button>
+    </div>
+    <div class="week-nav-actions">
+      <button class="nav-action generate-btn" onclick="generateWeek()">↻ Generate</button>
+      <button class="nav-action save-btn" onclick="saveWeekSnapshot()" title="Save this week to history">Save Week</button>
+      <button class="nav-action share-btn" onclick="sharePlan()">Share</button>
+      <button class="nav-action history-btn" onclick="showHistoryPage()">Saved Weeks</button>
+    </div>
+  </div>
   </div>
 </header>
 
@@ -1140,11 +1262,22 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="dayPickerModal" onclick="closeDayPickerModal(event)">
-  <div class="modal" style="position:relative;max-width:340px;width:90%">
-    <button class="modal-close" onclick="document.getElementById('dayPickerModal').classList.remove('open')">×</button>
-    <h3 id="dayPickerTitle">Add to which day?</h3>
-    <div class="day-picker-btns" id="dayPickerBtns"></div>
+<div class="modal-overlay" id="recipeModal" onclick="closeRecipeModal(event)">
+  <div class="modal recipe-modal" style="position:relative;max-width:460px;width:94%">
+    <button class="modal-close" onclick="document.getElementById('recipeModal').classList.remove('open')">×</button>
+    <div class="recipe-modal-header">
+      <div id="recipeModalTitle" class="recipe-modal-name"></div>
+      <div id="recipeModalTags" class="recipe-modal-tags"></div>
+    </div>
+    <div class="recipe-modal-add-bar">
+      <span class="recipe-modal-add-label">Add to week:</span>
+      <div id="recipeModalDayBtns" class="recipe-modal-day-btns"></div>
+    </div>
+    <div class="recipe-modal-section-label">Ingredients</div>
+    <div id="recipeModalIngredients" class="recipe-modal-ingredients"></div>
+    <div class="recipe-modal-footer">
+      <span class="recipe-modal-footer-note">Checked items won't appear in this week's grocery list</span>
+    </div>
   </div>
 </div>
 
@@ -1506,6 +1639,7 @@ function renderGroceryList() {
     (meal.ingredients || []).forEach(ing => {
       if (!seen.has(ing.item)) {
         seen.add(ing.item);
+        if (haveIngredients[ing.item]) return; // already have it
         const itemKey = `${key}-${ing.item}`;
         const effectiveStore = getEffectiveStore(itemKey, ing);
         (byStore[effectiveStore] || byStore.tj).push({ ...ing, _effectiveStore: effectiveStore });
@@ -1622,11 +1756,14 @@ function renderAlexaCommands() {
   });
 
   const el = document.getElementById('alexaCommands');
-  el.innerHTML = items.slice(0, 30).map(({ item, list }) =>
-    `<div class="alexa-cmd" onclick="copyCmd(this, '${item}', '${list}')">
-      <span>${wake},</span> ask our groceries to add <span>${item}</span> to ${list}
-    </div>`
-  ).join('');
+  el.innerHTML = '';
+  items.slice(0, 30).forEach(({ item, list }) => {
+    const div = document.createElement('div');
+    div.className = 'alexa-cmd';
+    div.innerHTML = `<span>${wake},</span> ask our groceries to add <span>${item}</span> to ${list}`;
+    div.addEventListener('click', () => copyCmd(div, item, list));
+    el.appendChild(div);
+  });
 }
 
 function alexaForMeal(dayIndex) {
@@ -1679,7 +1816,7 @@ function confirmPlan() {
   plan.forEach(meal => {
     (meal.ingredients||[]).forEach(ing => {
       const itemKey = `${key}-${ing.item}`;
-      if (!seen.has(ing.item) && !checkedIngredients[itemKey]) {
+      if (!seen.has(ing.item) && !checkedIngredients[itemKey] && !haveIngredients[ing.item]) {
         seen.add(ing.item);
         const store = getEffectiveStore(itemKey, ing);
         const list = store === 'wf' ? 'Whole Foods' : store === 'costco' ? 'Costco' : store === 'safeway' ? 'Safeway' : "Trader Joe's";
@@ -1784,7 +1921,7 @@ function speakAllCommands() {
   plan.forEach(meal => {
     (meal?.ingredients || []).forEach(ing => {
       const itemKey = `${key}-${ing.item}`;
-      if (!seen.has(ing.item) && !checkedIngredients[itemKey]) {
+      if (!seen.has(ing.item) && !checkedIngredients[itemKey] && !haveIngredients[ing.item]) {
         seen.add(ing.item);
         const store = getEffectiveStore(itemKey, ing);
         const list = store === 'wf' ? 'Whole Foods' : store === 'costco' ? 'Costco' : store === 'safeway' ? 'Safeway' : "Trader Joe's";
@@ -1938,23 +2075,46 @@ const CAT_LABELS = {
 function renderRotationGrid() {
   const el = document.getElementById('rotationGrid');
   const cats = Object.keys(CAT_LABELS).sort((a,b) => CAT_LABELS[a].localeCompare(CAT_LABELS[b]));
-  el.innerHTML = cats.map(cat => {
+  el.innerHTML = '';
+
+  cats.forEach(cat => {
     const recipes = (RECIPES[cat] || []).slice().sort((a,b) => a.name.localeCompare(b.name));
-    if (!recipes.length) return '';
-    return `
-      <div class="rot-category">
-        <div class="rot-cat-label">${CAT_LABELS[cat]}</div>
-        <div class="rot-items">
-          ${recipes.map(r => {
-            const safeName = r.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            return `<div class="rotation-item${r.custom ? ' rotation-item-custom' : ''}">
-              <span onclick="openDayPickerModal('${safeName}')">${r.name}</span>
-              ${r.custom ? `<button class="rot-delete-btn" onclick="deleteRecipeFromLibrary('${safeName}', '${r.tags.find(t => t !== 'custom') || 'other'}')" title="Remove">✕</button>` : ''}
-            </div>`;
-          }).join('')}
-        </div>
-      </div>`;
-  }).join('');
+    if (!recipes.length) return;
+
+    const section = document.createElement('div');
+    section.className = 'rot-category';
+    section.innerHTML = `<div class="rot-cat-label">${CAT_LABELS[cat]}</div>`;
+
+    const items = document.createElement('div');
+    items.className = 'rot-items';
+
+    recipes.forEach(r => {
+      const row = document.createElement('div');
+      row.className = `rotation-item${r.custom ? ' rotation-item-custom' : ''}`;
+
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = r.name;
+      nameSpan.addEventListener('click', () => openRecipeModal(r.name));
+      row.appendChild(nameSpan);
+
+      if (r.custom) {
+        const del = document.createElement('button');
+        del.className = 'rot-delete-btn';
+        del.title = 'Remove';
+        del.textContent = '✕';
+        del.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteRecipeFromLibrary(r.name, r.tags.find(t => t !== 'custom') || 'other');
+        });
+        row.appendChild(del);
+      }
+
+      items.appendChild(row);
+    });
+
+    section.appendChild(items);
+    el.appendChild(section);
+  });
 }
 
 // ─── WEEK NAV ─────────────────────────────────────────────────────────────────
@@ -1995,27 +2155,328 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-function deleteRecipeFromLibrary(name, cat) {
+async function deleteRecipeFromLibrary(name, cat) {
   if (!confirm(`Remove "${name}" from the library?`)) return;
   if (RECIPES[cat]) RECIPES[cat] = RECIPES[cat].filter(r => r.name !== name);
   customRecipes = customRecipes.filter(r => r.name !== name);
+  try {
+    await sb.delete('recipes', { family_id: FAMILY_ID, name });
+  } catch(e) { console.warn('Recipe delete sync failed'); }
   persistCustomRecipes();
   renderRotationGrid();
   showToast(`"${name}" removed from library`);
 }
 
 
+// ─── RECIPE DETAIL MODAL ──────────────────────────────────────────────────────
+
+// Per-ingredient "I have this" state — keyed by ingredient name, persists across sessions
+let haveIngredients = {};
+
 function openDayPickerModal(recipeName) {
-  const recipe = getAllRecipes().find(r => r.name === recipeName);
-  const safeName = recipeName.replace(/'/g, "\\'");
-  document.getElementById('dayPickerBtns').innerHTML = DAYS.map((d, i) =>
-    `<button class="day-pick-btn" onclick="assignRecipeToDay('${safeName}', ${i})">${d}</button>`
-  ).join('');
-  document.getElementById('dayPickerModal').classList.add('open');
+  // Now opens the full recipe detail modal
+  openRecipeModal(recipeName);
 }
 
-function closeDayPickerModal(e) {
-  if (e.target.id === 'dayPickerModal') document.getElementById('dayPickerModal').classList.remove('open');
+function openRecipeModal(recipeName) {
+  const recipe = getAllRecipes().find(r => r.name === recipeName);
+  if (!recipe) return;
+
+  // Title + tags
+  document.getElementById('recipeModalTitle').textContent = recipe.name;
+  const STORE_PILL = { costco:'costco', tj:'tj', wf:'wf', safeway:'safeway' };
+  document.getElementById('recipeModalTags').innerHTML =
+    (recipe.tags || []).map(t => `<span class="tag tag-${t}">${t}</span>`).join('');
+
+  // Add-to-day buttons
+  document.getElementById('recipeModalDayBtns').innerHTML = DAYS.map((d, i) =>
+    `<button class="recipe-modal-day-btn" onclick="assignRecipeToDay('${recipeName.replace(/'/g,"\\'")}', ${i})">${d}</button>`
+  ).join('');
+
+  // Ingredient list
+  const ingEl = document.getElementById('recipeModalIngredients');
+  if (!recipe.ingredients || !recipe.ingredients.length) {
+    ingEl.innerHTML = `<div class="no-ingredients">No ingredients listed for this recipe.</div>`;
+  } else {
+    ingEl.innerHTML = '';
+    recipe.ingredients.forEach(ing => {
+      const key = ing.item;
+      const have = !!haveIngredients[key];
+      const storeClass = STORE_PILL[ing.store] || 'tj';
+      const storeLabel = ing.store === 'costco' ? 'Costco' : ing.store === 'wf' ? 'WF' : ing.store === 'safeway' ? 'Safeway' : "TJ's";
+
+      const row = document.createElement('div');
+      row.className = `recipe-ing-row${have ? ' have-it' : ''}`;
+      row.innerHTML = `
+        <div class="recipe-ing-checkbox">${have ? '✓' : ''}</div>
+        <span class="recipe-ing-name">${ing.item}</span>
+        <span class="recipe-ing-store store-pill-${storeClass}">${storeLabel}</span>
+      `;
+      row.addEventListener('click', () => toggleHaveIngredient(ing.item, row));
+      ingEl.appendChild(row);
+    });
+  }
+
+  document.getElementById('recipeModal').classList.add('open');
+}
+
+// ─── SUPABASE CONFIG ──────────────────────────────────────────────────────────
+
+const SUPABASE_URL = 'https://pkypokkbnvfwcuofqtwq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBreXBva2tibnZmd2N1b2ZxdHdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MTk0NTIsImV4cCI6MjA4OTE5NTQ1Mn0.Jt4k5271tMijWrJvcvowogfgn5q0MGcjdpyuem5z6n4';
+const FAMILY_ID = 'lewis-family';
+
+const sb = {
+  async query(path, options = {}) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': options.prefer || 'return=representation',
+          ...(options.headers || {})
+        },
+        method: options.method || 'GET',
+        body: options.body ? JSON.stringify(options.body) : undefined
+      });
+      if (!res.ok) { console.error('Supabase error:', await res.text()); return null; }
+      const text = await res.text();
+      return text ? JSON.parse(text) : null;
+    } catch(e) { console.warn('Supabase fetch failed:', e); return null; }
+  },
+  select(table, params = '') { return this.query(`${table}?${params}`); },
+  upsert(table, body, onConflict) {
+    return this.query(`${table}?on_conflict=${onConflict}`, {
+      method: 'POST', prefer: 'resolution=merge-duplicates,return=representation', body
+    });
+  },
+  update(table, match, body) {
+    const q = Object.entries(match).map(([k,v]) => `${k}=eq.${encodeURIComponent(v)}`).join('&');
+    return this.query(`${table}?${q}`, { method: 'PATCH', body });
+  },
+  delete(table, match) {
+    const q = Object.entries(match).map(([k,v]) => `${k}=eq.${encodeURIComponent(v)}`).join('&');
+    return this.query(`${table}?${q}`, { method: 'DELETE', prefer: 'return=minimal' });
+  }
+};
+
+// Legacy Store helper (window.storage / localStorage fallback)
+const Store = {
+  async get(key) {
+    try { const r = await window.storage?.get(key); if (r?.value) return r.value; } catch(e) {}
+    try { return localStorage.getItem(key); } catch(e) {}
+    return null;
+  },
+  async set(key, value) {
+    try { if (window.storage) await window.storage.set(key, value); } catch(e) {}
+    try { localStorage.setItem(key, value); } catch(e) {}
+  }
+};
+
+// ─── WEEK PLANS ───────────────────────────────────────────────────────────────
+
+function buildGroceryByStore(weekKey, plan) {
+  const byStore = { tj:[], costco:[], wf:[], safeway:[] };
+  const seen = new Set();
+  (plan || []).forEach(meal => {
+    (meal?.ingredients || []).forEach(ing => {
+      const itemKey = `${weekKey}-${ing.item}`;
+      if (!seen.has(ing.item) && !checkedIngredients[itemKey] && !haveIngredients[ing.item]) {
+        seen.add(ing.item);
+        const store = getEffectiveStore(itemKey, ing);
+        (byStore[store] || byStore.tj).push(ing.item);
+      }
+    });
+  });
+  return byStore;
+}
+
+async function persistWeekPlans() {
+  const key = getWeekKey(currentWeekOffset);
+  const plan = weekPlans[key] || [];
+  const label = document.getElementById('weekLabel')?.textContent || '';
+  const grocery = buildGroceryByStore(key, plan);
+  const weekStart = getWeekDates(currentWeekOffset)[0];
+  const now = new Date(); now.setHours(0,0,0,0);
+  const status = (weekStart < now && currentWeekOffset < 0) ? 'archived' : 'active';
+
+  await sb.upsert('meal_plans', {
+    family_id: FAMILY_ID, week_key: key, label, status,
+    plan_json: plan, grocery_json: grocery,
+    updated_at: new Date().toISOString()
+  }, 'family_id,week_key');
+
+  try { localStorage.setItem('mealos-weekplans', JSON.stringify(weekPlans)); } catch(e) {}
+}
+
+async function loadWeekPlans() {
+  try {
+    const rows = await sb.select('meal_plans',
+      `family_id=eq.${FAMILY_ID}&status=in.(active,archived)&order=updated_at.desc`
+    );
+    if (rows && rows.length) {
+      rows.forEach(row => { if (row.week_key) weekPlans[row.week_key] = row.plan_json; });
+      // Auto-archive any active rows whose week has passed
+      const now = new Date(); now.setHours(0,0,0,0);
+      for (const row of rows) {
+        if (row.status === 'active' && row.week_key) {
+          const offset = parseInt(row.week_key.replace('w',''));
+          if (!isNaN(offset) && offset < 0) {
+            const weekStart = getWeekDates(offset)[0];
+            if (weekStart < now)
+              await sb.update('meal_plans', { family_id: FAMILY_ID, week_key: row.week_key }, { status: 'archived' });
+          }
+        }
+      }
+      return;
+    }
+  } catch(e) { console.warn('Supabase unavailable, using localStorage'); }
+  try { const raw = localStorage.getItem('mealos-weekplans'); if (raw) weekPlans = JSON.parse(raw); } catch(e) {}
+}
+
+// ─── SAVED DRAFTS ─────────────────────────────────────────────────────────────
+
+let savedWeeks = [];
+
+async function loadHistory() {
+  savedWeeks = [];
+  try {
+    const rows = await sb.select('meal_plans',
+      `family_id=eq.${FAMILY_ID}&status=eq.draft&order=updated_at.desc`
+    );
+    if (rows) {
+      savedWeeks = rows.map(r => ({
+        id: r.id,
+        weekKey: r.week_key,
+        label: r.label,
+        savedOn: new Date(r.updated_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }),
+        meals: (r.plan_json || []).map((m,i) => ({ day: SHORT_DAYS[i], name: m?.name || '—' })),
+        grocery: r.grocery_json || {}
+      }));
+      return;
+    }
+  } catch(e) {}
+  try { const raw = localStorage.getItem('mealos-history'); if (raw) savedWeeks = JSON.parse(raw); } catch(e) {}
+}
+
+function persistHistory() {
+  try { localStorage.setItem('mealos-history', JSON.stringify(savedWeeks)); } catch(e) {}
+}
+
+async function saveWeekSnapshot() {
+  const key = getWeekKey(currentWeekOffset);
+  const plan = weekPlans[key];
+  if (!plan || plan.every(m => !m)) { showToast('Generate a plan first!'); return; }
+
+  const defaultLabel = document.getElementById('weekLabel').textContent;
+  const draftName = prompt('Name this draft plan:', defaultLabel);
+  if (draftName === null) return;
+
+  const grocery = buildGroceryByStore(key, plan);
+  const label = draftName || defaultLabel;
+
+  try {
+    await sb.upsert('meal_plans', {
+      family_id: FAMILY_ID, week_key: null, label, status: 'draft',
+      plan_json: plan, grocery_json: grocery,
+      updated_at: new Date().toISOString()
+    }, 'family_id,week_key');
+    await loadHistory();
+    renderHistoryPage();
+    showToast(`"${label}" saved as draft!`);
+  } catch(e) {
+    // localStorage fallback
+    const snapshot = {
+      id: Date.now(), weekKey: key, label,
+      savedOn: new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }),
+      meals: plan.map((m,i) => ({ day: SHORT_DAYS[i], name: m?.name || '—' })),
+      grocery
+    };
+    savedWeeks.unshift(snapshot);
+    persistHistory();
+    showToast(`"${label}" saved!`);
+  }
+}
+
+// ─── CUSTOM RECIPES ───────────────────────────────────────────────────────────
+
+let customRecipes = [];
+let quickAddDayIndex = null;
+
+async function loadCustomRecipes() {
+  customRecipes = [];
+  try {
+    const rows = await sb.select('recipes', `family_id=eq.${FAMILY_ID}`);
+    if (rows && rows.length) {
+      rows.forEach(row => {
+        const cat = row.category || 'other';
+        if (!RECIPES[cat]) RECIPES[cat] = [];
+        if (!RECIPES[cat].find(r => r.name === row.name)) {
+          RECIPES[cat].push({ name: row.name, tags: row.tags_json || [cat,'custom'],
+            shop: null, ingredients: row.ingredients_json || [], custom: true, sbId: row.id });
+          customRecipes.push({ name: row.name, cat, sbId: row.id });
+        }
+      });
+      renderRotationGrid();
+      return;
+    }
+  } catch(e) { console.warn('Supabase unavailable for recipes'); }
+  // Fallback
+  Store.get('mealos-custom-recipes').then(raw => {
+    if (!raw) return;
+    try {
+      customRecipes = JSON.parse(raw);
+      customRecipes.forEach(({ name, cat }) => {
+        if (!RECIPES[cat]) RECIPES[cat] = [];
+        if (!RECIPES[cat].find(r => r.name === name))
+          RECIPES[cat].push({ name, tags:[cat,'custom'], shop:null, ingredients:[], custom:true });
+      });
+      renderRotationGrid();
+    } catch(e) {}
+  });
+}
+
+async function persistCustomRecipes() {
+  Store.set('mealos-custom-recipes', JSON.stringify(customRecipes));
+}
+
+// ─── PANTRY ───────────────────────────────────────────────────────────────────
+
+async function loadHaveIngredients() {
+  haveIngredients = {};
+  try {
+    const rows = await sb.select('pantry', `family_id=eq.${FAMILY_ID}&have_it=eq.true`);
+    if (rows) { rows.forEach(row => { haveIngredients[row.item_name] = true; }); return; }
+  } catch(e) { console.warn('Supabase unavailable for pantry'); }
+  try { const raw = localStorage.getItem('mealos-have'); if (raw) haveIngredients = JSON.parse(raw); } catch(e) {}
+}
+
+function persistHaveIngredients() {
+  try { localStorage.setItem('mealos-have', JSON.stringify(haveIngredients)); } catch(e) {}
+}
+
+async function toggleHaveIngredient(itemName, rowEl) {
+  haveIngredients[itemName] = !haveIngredients[itemName];
+  const have = haveIngredients[itemName];
+  try {
+    if (have) {
+      await sb.upsert('pantry', { family_id: FAMILY_ID, item_name: itemName, have_it: true }, 'family_id,item_name');
+    } else {
+      await sb.delete('pantry', { family_id: FAMILY_ID, item_name: itemName });
+    }
+  } catch(e) { console.warn('Pantry sync failed'); }
+  persistHaveIngredients();
+  rowEl.classList.toggle('have-it', have);
+  rowEl.querySelector('.recipe-ing-checkbox').textContent = have ? '✓' : '';
+  renderGroceryList();
+  renderAlexaCommands();
+}
+
+
+
+function closeRecipeModal(e) {
+  if (e.target.id === 'recipeModal') document.getElementById('recipeModal').classList.remove('open');
 }
 
 function assignRecipeToDay(recipeName, dayIndex) {
@@ -2023,7 +2484,7 @@ function assignRecipeToDay(recipeName, dayIndex) {
   const key = getWeekKey(currentWeekOffset);
   if (!weekPlans[key]) weekPlans[key] = Array(5).fill(null);
   weekPlans[key][dayIndex] = { ...recipe };
-  document.getElementById('dayPickerModal').classList.remove('open');
+  document.getElementById('recipeModal').classList.remove('open');
   persistWeekPlans();
   renderWeek();
   showToast(`${recipeName} → ${DAYS[dayIndex]}!`);
@@ -2031,50 +2492,8 @@ function assignRecipeToDay(recipeName, dayIndex) {
 
 
 
-let customRecipes = [];
-let quickAddDayIndex = null;
 
-// ─── STORAGE HELPERS ──────────────────────────────────────────────────────────
 
-const Store = {
-  async get(key) {
-    try {
-      if (window.storage) {
-        const result = await window.storage.get(key);
-        return result ? result.value : null;
-      }
-    } catch(e) {}
-    try { return localStorage.getItem(key); } catch(e) {}
-    return null;
-  },
-  async set(key, value) {
-    try {
-      if (window.storage) await window.storage.set(key, value);
-    } catch(e) {}
-    try { localStorage.setItem(key, value); } catch(e) {}
-  }
-};
-function loadCustomRecipes() {
-  customRecipes = [];
-  Store.get('mealos-custom-recipes').then(raw => {
-    if (raw) {
-      try {
-        customRecipes = JSON.parse(raw);
-        customRecipes.forEach(({ name, cat }) => {
-          if (!RECIPES[cat]) RECIPES[cat] = [];
-          if (!RECIPES[cat].find(r => r.name === name)) {
-            RECIPES[cat].push({ name, tags:[cat,'custom'], shop:null, ingredients:[], custom:true });
-          }
-        });
-        renderRotationGrid();
-      } catch(e) {}
-    }
-  });
-}
-
-function persistCustomRecipes() {
-  Store.set('mealos-custom-recipes', JSON.stringify(customRecipes));
-}
 
 function openQuickAddModal(dayIndex) {
   quickAddDayIndex = dayIndex;
@@ -2113,7 +2532,7 @@ function closeAddLibraryModal(e) {
   if (e.target.id === 'addLibraryModal') document.getElementById('addLibraryModal').classList.remove('open');
 }
 
-function confirmAddLibrary() {
+async function confirmAddLibrary() {
   const name = document.getElementById('libraryNameInput').value.trim();
   const cat = document.getElementById('libraryCatInput').value;
   if (!name) { showToast('Please enter a meal name'); return; }
@@ -2122,69 +2541,22 @@ function confirmAddLibrary() {
   if (!RECIPES[cat]) RECIPES[cat] = [];
   RECIPES[cat].push(recipe);
   customRecipes.push({ name, cat });
+
+  // Save to Supabase
+  try {
+    await sb.upsert('recipes', {
+      family_id: FAMILY_ID, name, category: cat,
+      tags_json: [cat, 'custom'], ingredients_json: []
+    }, 'family_id,name');
+  } catch(e) { console.warn('Recipe sync failed, saved locally'); }
   persistCustomRecipes();
 
   document.getElementById('addLibraryModal').classList.remove('open');
   renderRotationGrid();
-  showToast(`"${name}" added to ${cat} rotation!`);
+  showToast(`"${name}" added to ${CAT_LABELS[cat] || cat} rotation!`);
 }
 
 
-
-let savedWeeks = [];
-
-function loadHistory() {
-  savedWeeks = [];
-  Store.get('mealos-history').then(raw => {
-    if (raw) {
-      try { savedWeeks = JSON.parse(raw); } catch(e) {}
-    }
-  });
-}
-
-function persistHistory() {
-  Store.set('mealos-history', JSON.stringify(savedWeeks));
-}
-
-function saveWeekSnapshot() {
-  const key = getWeekKey(currentWeekOffset);
-  const plan = weekPlans[key];
-  if (!plan || plan.every(m => !m)) {
-    showToast('Generate a plan first!');
-    return;
-  }
-
-  // Build grocery snapshot with current store overrides, excluding checked items
-  const byStore = { tj:[], costco:[], wf:[], safeway:[] };
-  const seen = new Set();
-  plan.forEach(meal => {
-    (meal?.ingredients || []).forEach(ing => {
-      const itemKey = `${key}-${ing.item}`;
-      if (!seen.has(ing.item) && !checkedIngredients[itemKey]) {
-        seen.add(ing.item);
-        const store = getEffectiveStore(itemKey, ing);
-        (byStore[store] || byStore.tj).push(ing.item);
-      }
-    });
-  });
-
-  const snapshot = {
-    id: Date.now(),
-    weekKey: key,
-    label: document.getElementById('weekLabel').textContent,
-    savedOn: new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }),
-    meals: plan.map((m, i) => ({ day: SHORT_DAYS[i], name: m?.name || '—' })),
-    grocery: byStore
-  };
-
-  // Replace if same week already saved, otherwise prepend
-  const existing = savedWeeks.findIndex(s => s.weekKey === key);
-  if (existing >= 0) savedWeeks.splice(existing, 1);
-  savedWeeks.unshift(snapshot);
-  persistHistory();
-  renderHistory();
-  showToast('Week saved to history!');
-}
 
 function showHistoryPage() {
   document.getElementById('historyPage').style.display = 'block';
@@ -2200,7 +2572,7 @@ function renderHistory() {} // no-op, sidebar version removed
 function renderHistoryPage() {
   const el = document.getElementById('historyPageList');
   if (!savedWeeks.length) {
-    el.innerHTML = '<div class="history-page-empty">No saved weeks yet.<br><br>Head back and hit <strong>💾 Save Week</strong> to archive a plan.</div>';
+    el.innerHTML = '<div class="history-page-empty">No saved plans yet.<br><br>Head back and hit <strong>Save Week</strong> to create a named draft.</div>';
     return;
   }
 
@@ -2211,49 +2583,58 @@ function renderHistoryPage() {
     { key:'safeway', label:'Safeway', cls:'safeway' },
   ];
 
-  el.innerHTML = savedWeeks.map(s => {
+  el.innerHTML = '';
+  savedWeeks.forEach(s => {
     const mealsHtml = s.meals.map(m => `
       <div class="history-card-meal">
         <div class="history-card-meal-day">${m.day}</div>
         <div class="history-card-meal-name">${m.name}</div>
       </div>`).join('');
 
-    const groceryHtml = STORE_INFO.filter(si => s.grocery[si.key]?.length).map(si => `
+    const groceryHtml = STORE_INFO.filter(si => s.grocery?.[si.key]?.length).map(si => `
       <div class="snapshot-store-group">
         <div class="snapshot-store-name ${si.cls}">${si.label}</div>
         ${s.grocery[si.key].map(item => `<div class="snapshot-ing">· ${item}</div>`).join('')}
       </div>`).join('');
 
-    return `
-      <div class="history-card">
-        <div class="history-card-header">
-          <div>
-            <div class="history-card-title">${s.label}</div>
-            <div class="history-card-meta">Saved ${s.savedOn}</div>
-          </div>
-          <div class="history-card-actions">
-            <button class="hca-btn" onclick="viewSnapshotFromPage(${s.id})">🖨 Print</button>
-            <button class="hca-btn del" onclick="deleteSnapshotFromPage(${s.id})">✕ Delete</button>
-          </div>
+    const card = document.createElement('div');
+    card.className = 'history-card';
+    card.innerHTML = `
+      <div class="history-card-header">
+        <div>
+          <div class="history-card-title">${s.label}</div>
+          <div class="history-card-meta">Saved ${s.savedOn}</div>
         </div>
-        <div class="history-card-meals">${mealsHtml}</div>
-        <details style="margin-top:4px">
-          <summary style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);cursor:pointer;user-select:none;">Grocery List</summary>
-          <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:16px">${groceryHtml}</div>
-        </details>
-      </div>`;
-  }).join('');
+        <div class="history-card-actions">
+          <button class="hca-btn print-btn">🖨 Print</button>
+          <button class="hca-btn del delete-btn">✕ Delete</button>
+        </div>
+      </div>
+      <div class="history-card-meals">${mealsHtml}</div>
+      <details style="margin-top:4px">
+        <summary style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);cursor:pointer;user-select:none;">Grocery List</summary>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:16px">${groceryHtml || '<span style="color:var(--text-muted);font-size:12px">No items</span>'}</div>
+      </details>`;
+
+    card.querySelector('.print-btn').addEventListener('click', () => viewSnapshot(s.id));
+    card.querySelector('.delete-btn').addEventListener('click', () => deleteSnapshotFromPage(s.id));
+    el.appendChild(card);
+  });
+}
+
+async function deleteSnapshotFromPage(id) {
+  if (!confirm('Delete this saved plan?')) return;
+  try {
+    await sb.delete('meal_plans', { id });
+  } catch(e) { console.warn('Delete sync failed'); }
+  savedWeeks = savedWeeks.filter(s => s.id !== id);
+  persistHistory();
+  renderHistoryPage();
+  showToast('Plan deleted');
 }
 
 function viewSnapshotFromPage(id) {
   viewSnapshot(id);
-}
-
-function deleteSnapshotFromPage(id) {
-  savedWeeks = savedWeeks.filter(s => s.id !== id);
-  persistHistory();
-  renderHistoryPage();
-  showToast('Removed from history');
 }
 
 function viewSnapshot(id) {
@@ -2294,11 +2675,13 @@ function closeSnapshotModal(e) {
   if (e.target.id === 'snapshotModal') document.getElementById('snapshotModal').classList.remove('open');
 }
 
-function deleteSnapshot(id) {
+async function deleteSnapshot(id) {
+  try { await sb.delete('meal_plans', { id }); } catch(e) {}
   savedWeeks = savedWeeks.filter(s => s.id !== id);
   persistHistory();
   if (document.getElementById('historyPage').style.display !== 'none') renderHistoryPage();
-  showToast('Removed from history');
+  document.getElementById('snapshotModal').classList.remove('open');
+  showToast('Plan deleted');
 }
 
 function printSnapshot() {
@@ -2342,7 +2725,7 @@ function sharePlan() {
   plan.forEach(meal => {
     (meal?.ingredients || []).forEach(ing => {
       const itemKey = `${key}-${ing.item}`;
-      if (!seen.has(ing.item) && !checkedIngredients[itemKey]) {
+      if (!seen.has(ing.item) && !checkedIngredients[itemKey] && !haveIngredients[ing.item]) {
         seen.add(ing.item);
         const store = getEffectiveStore(itemKey, ing);
         (byStore[store] || byStore.tj).push(ing.item);
@@ -2372,31 +2755,6 @@ function sharePlan() {
 }
 
 
-function persistWeekPlans() {
-  Store.set('mealos-weekplans', JSON.stringify(weekPlans));
-}
-
-function loadWeekPlans() {
-  return Store.get('mealos-weekplans').then(raw => {
-    if (raw) {
-      try { weekPlans = JSON.parse(raw); } catch(e) {}
-    }
-  }).catch(() => {});
-}
-
-loadWeekPlans().then(() => {
-  // Auto-generate current week if empty
-  const key = getWeekKey(currentWeekOffset);
-  if (!weekPlans[key]) {
-    weekPlans[key] = generateWeekPlan();
-    persistWeekPlans();
-  }
-  renderWeek();
-  loadHistory();
-  loadCustomRecipes();
-  initWakeWord();
-  populateVoiceSelect();
-});
 </script>
 </body>
 </html>
