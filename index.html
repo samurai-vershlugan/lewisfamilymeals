@@ -138,8 +138,8 @@
     border-radius: 6px;
     font-family: 'DM Mono', monospace;
     font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.8px;
+    font-weight: 500;
+    letter-spacing: 1px;
     cursor: pointer;
     text-transform: uppercase;
     transition: all 0.15s;
@@ -149,12 +149,14 @@
     justify-content: center;
     box-sizing: border-box;
     height: 34px;
+    padding-left: 16px;
+    padding-right: 16px;
   }
   .nav-action:hover { transform: translateY(-1px); filter: brightness(1.12); }
 
-  .generate-btn { background: var(--accent);  color: var(--bg);  border: none; }
-  .save-btn     { background: #4466cc;         color: #fff;       border: none; }
-  .share-btn    { background: #2e7d5e;         color: #fff;       border: none; }
+  .generate-btn { background: var(--accent);  color: var(--bg);  border: 1px solid transparent; }
+  .save-btn     { background: #4466cc;         color: #fff;       border: 1px solid transparent; }
+  .share-btn    { background: #2e7d5e;         color: #fff;       border: 1px solid transparent; }
   .history-btn  { background: transparent;     color: var(--text-muted); border: 1px solid var(--border); }
   .history-btn:hover { border-color: var(--accent); color: var(--accent); filter: none; transform: translateY(-1px); }
 
