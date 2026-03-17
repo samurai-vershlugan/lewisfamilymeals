@@ -761,7 +761,105 @@
     cursor: pointer;
   }
 
-  /* ── Recipe Detail Modal ── */
+  /* ── Sunday Prep Card ── */
+  .sunday-prep-card {
+    background: linear-gradient(135deg, rgba(74,120,80,0.12), rgba(74,120,80,0.06));
+    border: 1px solid rgba(74,153,80,0.35);
+    border-radius: 10px;
+    overflow: hidden;
+    grid-column: 1 / -1;
+  }
+  .sunday-prep-header {
+    padding: 10px 14px 8px;
+    border-bottom: 1px solid rgba(74,153,80,0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sunday-prep-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #6ab870;
+  }
+  .sunday-prep-subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+  .sunday-prep-body { padding: 12px 14px; }
+  .sunday-prep-intro {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .prep-recipes-list { display: flex; flex-direction: column; gap: 6px; }
+  .prep-recipe-row {
+    background: rgba(74,153,80,0.07);
+    border: 1px solid rgba(74,153,80,0.2);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .prep-recipe-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .prep-recipe-summary:hover { background: rgba(74,153,80,0.1); }
+  .prep-recipe-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6ab870;
+    letter-spacing: 0.5px;
+  }
+  .prep-recipe-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .prep-expand-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .prep-recipe-steps {
+    padding: 0 12px 10px;
+    display: none;
+    border-top: 1px solid rgba(74,153,80,0.15);
+  }
+  .prep-recipe-steps.open { display: block; }
+  .prep-recipe-steps ol {
+    margin: 8px 0 0 16px;
+    padding: 0;
+  }
+  .prep-recipe-steps li {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 4px;
+  }
+  .prep-strategy {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: rgba(232,184,75,0.07);
+    border: 1px solid rgba(232,184,75,0.2);
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .prep-strategy strong { color: var(--accent); }
   .recipe-modal { padding: 24px 24px 16px; }
 
   .recipe-modal-header { margin-bottom: 16px; padding-right: 24px; }
@@ -1335,6 +1433,7 @@
       <option value="fish">Fish / Seafood</option>
       <option value="burger">Burger / Steak</option>
       <option value="slowcooker">Slow Cooker</option>
+      <option value="prep">Prep Recipe</option>
       <option value="other">Other</option>
       <option value="friday_special">Friday Special</option>
       <option value="easy">Easy / Quick</option>
@@ -1391,7 +1490,11 @@ const RECIPES = {
     { name: "Chicken Burrito Bowls", tags:["chicken","quick"], shop:"costco",
       ingredients: [{item:"chicken thighs",store:"costco"},{item:"white jasmine rice",store:"tj"},{item:"black beans",store:"tj"},{item:"salsa",store:"costco"},{item:"avocado",store:"costco"},{item:"shredded Mexican cheese",store:"costco"},{item:"lime",store:"tj"},{item:"fresh cilantro",store:"tj"}] },
     { name: "Mediterranean Pitas", tags:["chicken","quick"], shop:"costco",
-      ingredients: [{item:"chicken thighs",store:"costco"},{item:"pita bread",store:"tj"},{item:"cucumber",store:"tj"},{item:"tomatoes",store:"costco"},{item:"tzatziki",store:"tj"},{item:"red onion",store:"tj"},{item:"salad greens",store:"costco"}] },
+      prepIds: ["lemon-oregano-marinade","garlic-yogurt-marinade","yogurt-lemon-sauce"],
+      ingredients: [{item:"boneless chicken thighs (2–2.5 lb)",store:"costco"},{item:"pita bread",store:"tj"},{item:"romaine lettuce",store:"costco"},{item:"roma tomatoes (2)",store:"tj"},{item:"cucumber",store:"tj"},{item:"red onion",store:"tj"},{item:"Greek yogurt",store:"tj"},{item:"lemon",store:"tj"},{item:"olive oil",store:"costco"},{item:"garlic",store:"tj"},{item:"paprika",store:"costco"},{item:"dried oregano",store:"tj"}] },
+    { name: "Mediterranean Bowl", tags:["chicken","quick"], shop:"costco",
+      prepIds: ["lemon-oregano-marinade","garlic-yogurt-marinade","tahini-dressing"],
+      ingredients: [{item:"boneless chicken thighs (2–2.5 lb)",store:"costco"},{item:"white jasmine rice",store:"tj"},{item:"roasting vegetables",store:"costco"},{item:"cucumber",store:"tj"},{item:"roma tomatoes (2)",store:"tj"},{item:"avocado",store:"costco"},{item:"tahini",store:"tj"},{item:"lemon",store:"tj"},{item:"olive oil",store:"costco"},{item:"garlic",store:"tj"},{item:"dried oregano",store:"tj"}] },
     { name: "Chicken Enchiladas", tags:["chicken"], shop:"costco",
       ingredients: [{item:"chicken thighs",store:"costco"},{item:"flour tortillas",store:"costco"},{item:"enchilada sauce",store:"tj"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"},{item:"fresh cilantro",store:"tj"}] },
     { name: "Chicken Parm", tags:["chicken"], shop:"costco",
@@ -1500,6 +1603,24 @@ const RECIPES = {
       ingredients: [{item:"boneless chicken thighs",store:"costco"},{item:"honey",store:"tj"},{item:"soy sauce",store:"tj"},{item:"garlic",store:"tj"},{item:"sesame oil",store:"tj"},{item:"white jasmine rice",store:"tj"},{item:"green onions",store:"tj"},{item:"sesame seeds",store:"tj"}] },
     { name: "Lemon Herb Chicken Thighs", tags:["slowcooker","chicken"], shop:"costco",
       ingredients: [{item:"bone-in chicken thighs",store:"costco"},{item:"chicken broth",store:"costco"},{item:"lemons",store:"tj"},{item:"garlic",store:"tj"},{item:"fresh rosemary",store:"tj"},{item:"fresh thyme",store:"tj"},{item:"olive oil",store:"costco"},{item:"roasting vegetables",store:"costco"}] },
+  ],
+  prep: [
+    { name: "Lemon Oregano Marinade", id: "lemon-oregano-marinade", tags:["prep","marinade"], shop:null,
+      summary: "Bright citrus marinade for bowls & salads. Marinate 30 min – overnight.",
+      steps: ["Whisk 3 tbsp olive oil, juice of 1 lemon, 2 minced garlic cloves, 1 tsp dried oregano, ½ tsp salt, ¼ tsp black pepper.", "Add chicken and coat well.", "Marinate 30 minutes to overnight — overnight gives best flavor.", "Roast at 400°F for 20–25 min until internal temp reaches 165°F.", "Slice or cube, store in airtight container up to 4 days."],
+      ingredients: [{item:"olive oil",store:"costco"},{item:"lemon",store:"tj"},{item:"garlic",store:"tj"},{item:"dried oregano",store:"tj"}] },
+    { name: "Garlic Yogurt Marinade", id: "garlic-yogurt-marinade", tags:["prep","marinade"], shop:null,
+      summary: "Keeps chicken moist, reheats well. Marinate at least 1 hour.",
+      steps: ["Mix ¾ cup Greek yogurt, 2 tbsp olive oil, juice of ½ lemon, 2 minced garlic cloves, 1 tsp paprika, ½ tsp oregano, ½ tsp salt.", "Coat chicken thoroughly.", "Marinate at least 1 hour (up to overnight).", "Roast at 400°F for 20–25 min.", "Slice or cube, store in airtight container up to 4 days."],
+      ingredients: [{item:"Greek yogurt",store:"tj"},{item:"olive oil",store:"costco"},{item:"lemon",store:"tj"},{item:"garlic",store:"tj"},{item:"paprika",store:"costco"},{item:"dried oregano",store:"tj"}] },
+    { name: "Creamy Lemon Tahini Dressing", id: "tahini-dressing", tags:["prep","dressing"], shop:null,
+      summary: "Best for grain bowls and roasted vegetables. Makes ~½ cup.",
+      steps: ["Whisk 3 tbsp tahini, juice of 1 lemon, 2 tbsp olive oil, 1 small grated garlic clove.", "Add 2–4 tbsp warm water slowly until creamy and pourable.", "Season with a pinch of salt.", "Store refrigerated up to 5 days."],
+      ingredients: [{item:"tahini",store:"tj"},{item:"lemon",store:"tj"},{item:"olive oil",store:"costco"},{item:"garlic",store:"tj"}] },
+    { name: "Greek Yogurt Lemon Sauce", id: "yogurt-lemon-sauce", tags:["prep","dressing"], shop:null,
+      summary: "Great for chicken, lamb, and pita wraps. Add cucumber for tzatziki-style.",
+      steps: ["Mix ¾ cup Greek yogurt, 1 tbsp olive oil, juice of ½ lemon, 1 small grated garlic clove, pinch of salt.", "Optional: add chopped parsley or grated cucumber for tzatziki-style.", "Store refrigerated up to 5 days."],
+      ingredients: [{item:"Greek yogurt",store:"tj"},{item:"olive oil",store:"costco"},{item:"lemon",store:"tj"},{item:"garlic",store:"tj"},{item:"fresh parsley",store:"tj"}] },
   ]
 };
 
@@ -1587,6 +1708,77 @@ function generateWeekPlan() {
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
 const SHORT_DAYS = ['Mon','Tue','Wed','Thu','Fri'];
 
+function getPrepRecipesForWeek(plan) {
+  const prepIds = new Set();
+  (plan || []).forEach(meal => {
+    if (!meal) return;
+    const live = getAllRecipes().find(r => r.name === meal.name) || meal;
+    (live.prepIds || []).forEach(id => prepIds.add(id));
+  });
+  return [...prepIds].map(id => RECIPES.prep?.find(r => r.id === id)).filter(Boolean);
+}
+
+function renderSundayPrepCard(prepRecipes) {
+  const card = document.createElement('div');
+  card.className = 'sunday-prep-card';
+
+  const mealNames = prepRecipes.map(r =>
+    r.tags.includes('marinade') ? 'Batch Chicken' : null
+  ).filter(Boolean);
+  const uniqueMealNames = [...new Set(mealNames)];
+  const subtitleParts = [
+    prepRecipes.filter(r => r.tags.includes('marinade')).length > 0 ? 'Marinate chicken' : null,
+    prepRecipes.filter(r => r.tags.includes('dressing')).length > 0 ? 'Make dressings' : null,
+  ].filter(Boolean);
+
+  card.innerHTML = `
+    <div class="sunday-prep-header">
+      <div>
+        <div class="sunday-prep-label">☀ Sunday Prep</div>
+        <div class="sunday-prep-subtitle">${subtitleParts.join(' · ')}</div>
+      </div>
+      <div class="sunday-prep-subtitle">Cook once, eat all week</div>
+    </div>
+    <div class="sunday-prep-body">
+      <div class="sunday-prep-intro">
+        This week's meals call for batch-prepped chicken and sauces. Do this Sunday for fast weeknight assembly.
+      </div>
+      <div class="prep-recipes-list" id="prepRecipesList"></div>
+      <div class="prep-strategy">
+        <strong>Strategy:</strong> Divide 4–5 lb chicken thighs into two batches, one per marinade. Roast both trays simultaneously at 400°F for 20–25 min. Slice, cube, and refrigerate — keeps 3–4 days.
+      </div>
+    </div>
+  `;
+
+  const list = card.querySelector('#prepRecipesList');
+  prepRecipes.forEach(pr => {
+    const row = document.createElement('div');
+    row.className = 'prep-recipe-row';
+    row.innerHTML = `
+      <div class="prep-recipe-summary">
+        <div>
+          <div class="prep-recipe-name">${pr.name}</div>
+          <div class="prep-recipe-desc">${pr.summary}</div>
+        </div>
+        <span class="prep-expand-btn">Steps ▾</span>
+      </div>
+      <div class="prep-recipe-steps">
+        <ol>${(pr.steps||[]).map(s => `<li>${s}</li>`).join('')}</ol>
+      </div>
+    `;
+    const summary = row.querySelector('.prep-recipe-summary');
+    const steps = row.querySelector('.prep-recipe-steps');
+    const btn = row.querySelector('.prep-expand-btn');
+    summary.addEventListener('click', () => {
+      const open = steps.classList.toggle('open');
+      btn.textContent = open ? 'Steps ▴' : 'Steps ▾';
+    });
+    list.appendChild(row);
+  });
+
+  return card;
+}
+
 function getWeekKey(offset) { return `w${offset}`; }
 
 function getLockKey(weekKey, dayIndex) { return `${weekKey}-${dayIndex}`; }
@@ -1615,6 +1807,12 @@ function renderWeek() {
 
   const grid = document.getElementById('weekGrid');
   grid.innerHTML = '';
+
+  // Sunday prep card — appears if any meal this week has prepIds
+  const prepRecipes = getPrepRecipesForWeek(plan);
+  if (prepRecipes.length) {
+    grid.appendChild(renderSundayPrepCard(prepRecipes));
+  }
 
   plan.forEach((meal, i) => {
     const isFri = i === 4;
@@ -1677,6 +1875,19 @@ function renderGroceryList() {
   
   const byStore = { tj:[], costco:[], wf:[], safeway:[] };
   const seen = new Set();
+
+  // Collect prep recipe ingredients first
+  getPrepRecipesForWeek(plan).forEach(pr => {
+    (pr.ingredients || []).forEach(ing => {
+      if (!seen.has(ing.item)) {
+        seen.add(ing.item);
+        if (haveIngredients[ing.item]) { checkedIngredients[`${key}-${ing.item}`] = true; return; }
+        const itemKey = `${key}-${ing.item}`;
+        const effectiveStore = getEffectiveStore(itemKey, ing);
+        (byStore[effectiveStore] || byStore.tj).push({ ...ing, _effectiveStore: effectiveStore });
+      }
+    });
+  });
   
   plan.forEach(meal => {
     if (!meal || !meal.name) return; // skip empty slots
@@ -2082,7 +2293,7 @@ function closeModalDirect() {
 const CAT_LABELS = {
   chicken:'Chicken', taco:'Tacos', pasta:'Pasta', fish:'Fish',
   burger:'Burgers', steak:'Steak', other:'Other', friday_special:'Friday',
-  easy:'Easy', slowcooker:'Slow Cooker'
+  easy:'Easy', slowcooker:'Slow Cooker', prep:'Prep Recipes'
 };
 
 function renderRotationGrid() {
@@ -2301,6 +2512,18 @@ const Store = {
 function buildGroceryByStore(weekKey, plan) {
   const byStore = { tj:[], costco:[], wf:[], safeway:[] };
   const seen = new Set();
+
+  // Prep recipe ingredients
+  getPrepRecipesForWeek(plan).forEach(pr => {
+    (pr.ingredients || []).forEach(ing => {
+      const itemKey = `${weekKey}-${ing.item}`;
+      if (!seen.has(ing.item) && !checkedIngredients[itemKey] && !haveIngredients[ing.item]) {
+        seen.add(ing.item);
+        const store = getEffectiveStore(itemKey, ing);
+        (byStore[store] || byStore.tj).push(ing.item);
+      }
+    });
+  });
   (plan || []).forEach(meal => {
     if (!meal || !meal.name) return;
     const liveMeal = getAllRecipes().find(r => r.name === meal.name) || meal;
