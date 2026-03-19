@@ -982,6 +982,18 @@
     opacity: 0.7;
   }
 
+  .recipe-modal-steps {
+    margin: 0 0 0 18px;
+    padding: 0;
+  }
+  .recipe-modal-steps li {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 8px;
+    padding-left: 4px;
+  }
+
   .no-ingredients {
     font-family: 'DM Mono', monospace;
     font-size: 11px;
@@ -1399,6 +1411,10 @@
     </div>
     <div class="recipe-modal-section-label">Ingredients</div>
     <div id="recipeModalIngredients" class="recipe-modal-ingredients"></div>
+    <div id="recipeModalStepsSection" style="display:none">
+      <div class="recipe-modal-section-label" style="margin-top:16px">Instructions</div>
+      <ol id="recipeModalSteps" class="recipe-modal-steps"></ol>
+    </div>
     <div class="recipe-modal-footer">
       <span class="recipe-modal-footer-note">Checked items won't appear in this week's grocery list</span>
     </div>
@@ -1553,10 +1569,55 @@ const RECIPES = {
       ingredients: [{item:"ground turkey",store:"costco"},{item:"brioche buns",store:"costco"},{item:"avocado",store:"costco"},{item:"salad greens",store:"costco"},{item:"tomatoes",store:"costco"}] },
   ],
   steak: [
-    { name: "Steak Dinner", tags:["burger"], shop:"costco",
+    { name: "Steak Dinner", tags:["steak"], shop:"costco",
       ingredients: [{item:"steak",store:"costco"},{item:"russet potatoes",store:"costco"},{item:"olive oil",store:"costco"},{item:"salad greens",store:"costco"},{item:"butter",store:"costco"},{item:"garlic",store:"tj"}] },
-    { name: "Tri-Tip", tags:["burger"], shop:"costco",
+    { name: "Tri-Tip", tags:["steak"], shop:"costco",
       ingredients: [{item:"marinated tri-tip",store:"costco"},{item:"garlic",store:"tj"},{item:"olive oil",store:"costco"},{item:"salad greens",store:"costco"}] },
+    { name: "Steak Salad", tags:["steak"], shop:"costco",
+      steps: [
+        "Cook your choice of steak to preferred doneness, rest then cube or slice.",
+        "Make chimichurri: combine chopped fresh parsley & cilantro, olive oil, minced fresh garlic, red chili flakes, oregano, juice of 1 lemon or lime, salt & pepper. Mix well — no measurements, do it with your heart.",
+        "Combine steak, tiny tomatoes, sliced persian cucumber, and chickpeas in a large bowl.",
+        "Pour chimichurri over everything and toss to coat. Serve immediately."
+      ],
+      ingredients: [
+        {item:"steak (your choice)",store:"costco"},
+        {item:"tiny tomatoes",store:"tj"},
+        {item:"persian cucumber",store:"tj"},
+        {item:"chickpeas",store:"tj"},
+        {item:"fresh parsley",store:"tj"},
+        {item:"fresh cilantro",store:"tj"},
+        {item:"olive oil",store:"costco"},
+        {item:"garlic",store:"tj"},
+        {item:"red chili flakes",store:"tj"},
+        {item:"dried oregano",store:"tj"},
+        {item:"lemon",store:"tj"}
+      ] },
+    { name: "Steakhouse Rigatoni & Ribeye", tags:["steak","pasta"], shop:"costco",
+      steps: [
+        "Take ribeyes out of the fridge 30 minutes before cooking. Pat dry and salt both sides with Maldon salt.",
+        "Heat 2 tbsp high-heat oil in a cast iron pan. Sear fat side down first for 2 minutes, then each flat side for 2 minutes per side.",
+        "Remove pan from heat briefly. Add 2 tbsp butter and garlic, baste steaks on very low heat for 1 minute. Rest steaks on a plate at least 5 minutes — do not discard the pan.",
+        "In the same pan, add shallot and garlic, cook until fragrant. Pour in white wine and deglaze, scraping up browned bits. Let wine cook down.",
+        "Lower heat and add 2 tbsp butter and heavy cream. Simmer gently for 3 minutes.",
+        "Add juice of lemon, salt, pepper, garlic powder, onion powder, crushed red pepper, parsley, and parmesan. Stir until creamy and silky.",
+        "Boil Rummo GF rigatoni for 11 minutes, transfer directly into sauce, finish 2 more minutes on low heat.",
+        "Slice rested ribeye. Plate rigatoni, add steak on top, spoon over steak au jus, finish with extra shaved parmesan."
+      ],
+      ingredients: [
+        {item:"grass-fed ribeye steaks",store:"costco"},
+        {item:"Rummo GF rigatoni",store:"safeway"},
+        {item:"shallot",store:"tj"},
+        {item:"garlic",store:"tj"},
+        {item:"white cooking wine",store:"tj"},
+        {item:"butter",store:"costco"},
+        {item:"heavy cream",store:"tj"},
+        {item:"lemon",store:"tj"},
+        {item:"fresh parsley",store:"tj"},
+        {item:"parmesan",store:"costco"},
+        {item:"avocado oil",store:"tj"},
+        {item:"Maldon salt",store:"safeway"}
+      ] },
   ],
   other: [
     { name: "Ground Turkey à la Sammy", tags:["quick"], shop:"costco",
@@ -1835,7 +1896,6 @@ function renderWeek() {
           <div class="meal-tags">
             ${(meal.tags||[]).map(t => `<span class="tag tag-${t}">${t}</span>`).join('')}
           </div>
-          ${meal.shop ? `<div class="shop-tag shop-${meal.shop}">📍 ${shopName(meal.shop)}</div>` : ''}
           <div class="meal-actions">
             <button class="action-btn btn-swap" onclick="openSwapModal(${i})">⇄ Swap</button>
             <button class="action-btn btn-swap" onclick="openAddLibraryModal(${i})">＋ Add</button>
@@ -2451,6 +2511,16 @@ function openRecipeModal(recipeName) {
   }
 
   document.getElementById('recipeModal').classList.add('open');
+
+  // Show steps if recipe has them
+  const stepsSection = document.getElementById('recipeModalStepsSection');
+  const stepsList = document.getElementById('recipeModalSteps');
+  if (recipe.steps && recipe.steps.length) {
+    stepsList.innerHTML = recipe.steps.map(s => `<li>${s}</li>`).join('');
+    stepsSection.style.display = 'block';
+  } else {
+    stepsSection.style.display = 'none';
+  }
 }
 
 // ─── SUPABASE CONFIG ──────────────────────────────────────────────────────────
