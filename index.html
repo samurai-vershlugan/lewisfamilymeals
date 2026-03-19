@@ -228,6 +228,27 @@
     margin-bottom: 8px;
     color: var(--text);
   }
+  .meal-name-tappable {
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .meal-name-tappable:hover { color: var(--accent); }
+  .protein-label {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+  .meal-category-badge {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0.6;
+    margin-bottom: 5px;
+  }
 
   .meal-tags {
     display: flex;
@@ -245,15 +266,126 @@
     text-transform: uppercase;
   }
 
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+
+  /* Category mirror tags — shown in swap modal only, not on cards */
   .tag-chicken { background: rgba(160,92,42,0.25); color: #d4895a; border: 1px solid rgba(160,92,42,0.4); }
-  .tag-taco { background: rgba(74,122,58,0.25); color: #7ab86a; border: 1px solid rgba(74,122,58,0.4); }
-  .tag-fish { background: rgba(42,90,122,0.25); color: #5a9abe; border: 1px solid rgba(42,90,122,0.4); }
-  .tag-pasta { background: rgba(106,74,138,0.25); color: #9a7ac8; border: 1px solid rgba(106,74,138,0.4); }
-  .tag-burger { background: rgba(122,58,58,0.25); color: #c87a7a; border: 1px solid rgba(122,58,58,0.4); }
-  .tag-shabbat { background: rgba(138,122,42,0.25); color: #c8b85a; border: 1px solid rgba(138,122,42,0.4); }
-  .tag-veg { background: rgba(58,122,90,0.25); color: #6ab895; border: 1px solid rgba(58,122,90,0.4); }
-  .tag-quick { background: rgba(74,127,165,0.2); color: #7ab0d4; border: 1px solid rgba(74,127,165,0.3); }
-  .tag-soup { background: rgba(165,100,74,0.25); color: #d4905a; border: 1px solid rgba(165,100,74,0.4); }
+  .tag-taco    { background: rgba(74,122,58,0.25);  color: #7ab86a; border: 1px solid rgba(74,122,58,0.4); }
+  .tag-fish    { background: rgba(42,90,122,0.25);  color: #5a9abe; border: 1px solid rgba(42,90,122,0.4); }
+  .tag-pasta   { background: rgba(106,74,138,0.25); color: #9a7ac8; border: 1px solid rgba(106,74,138,0.4); }
+  .tag-burger  { background: rgba(122,58,58,0.25);  color: #c87a7a; border: 1px solid rgba(122,58,58,0.4); }
+  .tag-steak   { background: rgba(122,58,58,0.25);  color: #c87a7a; border: 1px solid rgba(122,58,58,0.4); }
+  .tag-soup    { background: rgba(165,100,74,0.25); color: #d4905a; border: 1px solid rgba(165,100,74,0.4); }
+
+  /* Meaningful built-in tags — shown on cards */
+  .tag-shabbat     { background: rgba(138,122,42,0.25);  color: #c8b85a; border: 1px solid rgba(138,122,42,0.4); }
+  .tag-quick       { background: rgba(74,127,165,0.2);   color: #7ab0d4; border: 1px solid rgba(74,127,165,0.3); }
+  .tag-gluten-free { background: rgba(58,138,90,0.2);    color: #5ab87a; border: 1px solid rgba(58,138,90,0.3); }
+  .tag-kid-friendly{ background: rgba(232,184,75,0.2);   color: #c8a840; border: 1px solid rgba(232,184,75,0.3); }
+  .tag-date-night  { background: rgba(180,60,120,0.2);   color: #d06090; border: 1px solid rgba(180,60,120,0.3); }
+  .tag-meal-prep   { background: rgba(74,153,100,0.2);   color: #4a9964; border: 1px solid rgba(74,153,100,0.3); }
+  .tag-vegetarian  { background: rgba(80,150,60,0.2);    color: #60b040; border: 1px solid rgba(80,150,60,0.3); }
+  .tag-dairy-free  { background: rgba(100,160,200,0.2);  color: #60a8d0; border: 1px solid rgba(100,160,200,0.3); }
+  .tag-spicy       { background: rgba(200,60,40,0.2);    color: #d05040; border: 1px solid rgba(200,60,40,0.3); }
+  .tag-custom-user { background: rgba(154,122,200,0.2);  color: #9a7ac8; border: 1px solid rgba(154,122,200,0.3); }
+
+  /* Tag editor in recipe modal */
+  .recipe-tag-editor { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .recipe-tag-editor-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .tag-toggle-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .tag-toggle {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    padding: 3px 9px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .tag-toggle.on { opacity: 1; }
+  .tag-toggle.off { opacity: 0.4; }
+  .tag-custom-input-row { display: flex; gap: 6px; margin-top: 6px; }
+  .tag-custom-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 5px 9px;
+    outline: none;
+  }
+  .tag-custom-input:focus { border-color: var(--accent); }
+  .tag-add-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 5px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 5px 12px;
+    cursor: pointer;
+  }
+  .custom-tags-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .custom-tag-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    background: rgba(154,122,200,0.2);
+    color: #9a7ac8;
+    border: 1px solid rgba(154,122,200,0.3);
+  }
+  .custom-tag-pill button {
+    background: none; border: none; color: inherit;
+    font-size: 10px; cursor: pointer; padding: 0; line-height: 1;
+    opacity: 0.6;
+  }
+  .custom-tag-pill button:hover { opacity: 1; }
+
+  /* Swap modal tag filter row */
+  .swap-tag-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 8px 0 4px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+  .swap-tag-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    width: 100%;
+    margin-bottom: 2px;
+  }
 
   .shop-tag {
     font-family: 'DM Mono', monospace;
@@ -872,6 +1004,35 @@
   }
   .recipe-modal-tags { display: flex; gap: 6px; flex-wrap: wrap; }
 
+  .recipe-modal-protein-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: rgba(154,122,200,0.08);
+    border: 1px solid rgba(154,122,200,0.25);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+  }
+  .recipe-modal-protein-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .protein-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 5px 12px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .protein-btn:hover { border-color: #9a7ac8; color: #9a7ac8; }
+  .protein-btn.selected { background: rgba(154,122,200,0.2); border-color: #9a7ac8; color: #9a7ac8; }
+
   .recipe-modal-add-bar {
     display: flex;
     align-items: center;
@@ -907,6 +1068,7 @@
     transition: all 0.15s;
   }
   .recipe-modal-day-btn:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .recipe-modal-day-btn.active-day { background: rgba(232,184,75,0.15); border-color: var(--accent); color: var(--accent); }
 
   .recipe-modal-section-label {
     font-family: 'DM Mono', monospace;
@@ -1330,6 +1492,9 @@
       <button class="nav-btn" onclick="changeWeek(1)">›</button>
     </div>
     <div class="week-nav-actions">
+      <select id="generateTagFilter" class="wake-select" style="height:34px;padding:0 10px" title="Generate preference">
+        <option value="">Any meal</option>
+      </select>
       <button class="nav-action generate-btn" onclick="generateWeek()">↻ Generate</button>
       <button class="nav-action save-btn" onclick="saveWeekSnapshot()" title="Save this week to history">Save Week</button>
       <button class="nav-action share-btn" onclick="sharePlan()">Share</button>
@@ -1405,6 +1570,10 @@
       <div id="recipeModalTitle" class="recipe-modal-name"></div>
       <div id="recipeModalTags" class="recipe-modal-tags"></div>
     </div>
+    <div id="recipeModalProteinBar" style="display:none" class="recipe-modal-protein-bar">
+      <span class="recipe-modal-add-label">Protein:</span>
+      <div id="recipeModalProteinBtns" class="recipe-modal-protein-btns"></div>
+    </div>
     <div class="recipe-modal-add-bar">
       <span class="recipe-modal-add-label">Add to week:</span>
       <div id="recipeModalDayBtns" class="recipe-modal-day-btns"></div>
@@ -1417,6 +1586,15 @@
     </div>
     <div class="recipe-modal-footer">
       <span class="recipe-modal-footer-note">Checked items won't appear in this week's grocery list</span>
+      <div class="recipe-tag-editor" id="recipeTagEditor">
+        <div class="recipe-tag-editor-label">Tags</div>
+        <div class="tag-toggle-grid" id="tagToggleGrid"></div>
+        <div class="tag-custom-input-row">
+          <input class="tag-custom-input" id="customTagInput" placeholder="Add custom tag…" maxlength="24" />
+          <button class="tag-add-btn" onclick="addCustomTag()">＋</button>
+        </div>
+        <div class="custom-tags-list" id="customTagsList"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1444,7 +1622,8 @@
     <label class="input-label" style="margin-top:12px">Category</label>
     <select id="libraryCatInput" class="text-input" style="cursor:pointer">
       <option value="chicken">Chicken</option>
-      <option value="taco">Taco / Mexican</option>
+      <option value="mediterranean">Mediterranean</option>
+      <option value="taco">Mexican</option>
       <option value="pasta">Pasta</option>
       <option value="fish">Fish / Seafood</option>
       <option value="burger">Burger / Steak</option>
@@ -1478,6 +1657,9 @@
     <h3>Swap Meal</h3>
     <p id="swapDay">Choose a replacement for Monday</p>
     <div class="modal-cats" id="modalCats"></div>
+    <div class="swap-tag-filter" id="swapTagFilter">
+      <div class="swap-tag-label">Filter by tag</div>
+    </div>
     <div class="swap-options" id="swapOptions"></div>
   </div>
 </div>
@@ -1489,91 +1671,83 @@
 
 const RECIPES = {
   chicken: [
-    { name: "Greek Chicken", tags:["chicken","quick"], shop:"costco", url:"https://www.thekitchn.com/_/print",
+    { name: "Greek Chicken", tags:["chicken","quick","kid-friendly"], shop:"costco", url:"https://www.thekitchn.com/_/print",
       ingredients: [{item:"bone-in chicken thighs (2 lbs)",store:"costco"},{item:"lemons",store:"tj"},{item:"shallot",store:"tj"},{item:"garlic",store:"tj"},{item:"olive oil",store:"costco"},{item:"dried oregano",store:"tj"},{item:"paprika",store:"costco"},{item:"fresh parsley",store:"tj"}] },
-    { name: "Mama's Chicken Thighs", tags:["chicken","quick"], shop:"costco",
+    { name: "Mama's Chicken Thighs", tags:["chicken","quick","kid-friendly"], shop:"costco",
       ingredients: [{item:"bone-in chicken thighs",store:"costco"},{item:"olive oil",store:"costco"},{item:"garlic",store:"tj"},{item:"paprika",store:"costco"},{item:"lemon",store:"tj"}] },
-    { name: "Chicken Shawarma", tags:["chicken"], shop:"costco", url:"https://www.recipetineats.com/chicken-shawarma-middle-eastern/",
-      ingredients: [{item:"chicken thighs",store:"costco"},{item:"pita bread",store:"tj"},{item:"cucumber",store:"tj"},{item:"tomatoes",store:"costco"},{item:"red onion",store:"tj"},{item:"hummus",store:"costco"},{item:"olives",store:"tj"},{item:"fresh parsley",store:"tj"},{item:"lemons",store:"tj"},{item:"garlic",store:"tj"}] },
-    { name: "Teriyaki Chicken", tags:["chicken","quick"], shop:"costco",
+    { name: "Teriyaki Chicken", tags:["chicken","quick","kid-friendly","dairy-free"], shop:"costco",
       ingredients: [{item:"chicken thighs",store:"costco"},{item:"soy sauce",store:"tj"},{item:"brown sugar",store:"costco"},{item:"garlic",store:"tj"},{item:"ginger",store:"tj"},{item:"white jasmine rice",store:"tj"},{item:"broccoli",store:"costco"}] },
-    { name: "Chicken Wings", tags:["chicken","quick"], shop:"costco",
+    { name: "Chicken Wings", tags:["chicken","quick","kid-friendly","gluten-free","dairy-free"], shop:"costco",
       ingredients: [{item:"frozen chicken wings",store:"costco"},{item:"hot sauce",store:"tj"},{item:"butter",store:"costco"},{item:"celery",store:"costco"},{item:"carrots",store:"costco"},{item:"ranch dressing",store:"costco"}] },
-    { name: "Rotisserie Chicken + Sides", tags:["chicken","quick"], shop:"costco",
+    { name: "Rotisserie Chicken + Sides", tags:["chicken","quick","kid-friendly","gluten-free"], shop:"costco",
       ingredients: [{item:"rotisserie chicken",store:"costco"},{item:"dinner rolls",store:"costco"},{item:"broccoli",store:"costco"},{item:"salad greens",store:"costco"}] },
-    { name: "BBQ Chicken Sheet Pan", tags:["chicken"], shop:"costco",
+    { name: "BBQ Chicken Sheet Pan", tags:["chicken","kid-friendly","gluten-free","dairy-free","meal-prep"], shop:"costco",
       ingredients: [{item:"chicken thighs",store:"costco"},{item:"BBQ sauce",store:"tj"},{item:"broccoli",store:"costco"},{item:"sweet potatoes",store:"tj"}] },
-    { name: "Chicken Burrito Bowls", tags:["chicken","quick"], shop:"costco",
+    { name: "Chicken Burrito Bowls", tags:["chicken","quick","kid-friendly","gluten-free","dairy-free"], shop:"costco",
       ingredients: [{item:"chicken thighs",store:"costco"},{item:"white jasmine rice",store:"tj"},{item:"black beans",store:"tj"},{item:"salsa",store:"costco"},{item:"avocado",store:"costco"},{item:"shredded Mexican cheese",store:"costco"},{item:"lime",store:"tj"},{item:"fresh cilantro",store:"tj"}] },
-    { name: "Mediterranean Pitas", tags:["chicken","quick"], shop:"costco",
-      prepIds: ["lemon-oregano-marinade","garlic-yogurt-marinade","yogurt-lemon-sauce"],
-      ingredients: [{item:"boneless chicken thighs (2–2.5 lb)",store:"costco"},{item:"pita bread",store:"tj"},{item:"romaine lettuce",store:"costco"},{item:"roma tomatoes (2)",store:"tj"},{item:"cucumber",store:"tj"},{item:"red onion",store:"tj"},{item:"Greek yogurt",store:"tj"},{item:"lemon",store:"tj"},{item:"olive oil",store:"costco"},{item:"garlic",store:"tj"},{item:"paprika",store:"costco"},{item:"dried oregano",store:"tj"}] },
-    { name: "Mediterranean Bowl", tags:["chicken","quick"], shop:"costco",
-      prepIds: ["lemon-oregano-marinade","garlic-yogurt-marinade","tahini-dressing"],
-      ingredients: [{item:"boneless chicken thighs (2–2.5 lb)",store:"costco"},{item:"white jasmine rice",store:"tj"},{item:"roasting vegetables",store:"costco"},{item:"cucumber",store:"tj"},{item:"roma tomatoes (2)",store:"tj"},{item:"avocado",store:"costco"},{item:"tahini",store:"tj"},{item:"lemon",store:"tj"},{item:"olive oil",store:"costco"},{item:"garlic",store:"tj"},{item:"dried oregano",store:"tj"}] },
-    { name: "Chicken Enchiladas", tags:["chicken"], shop:"costco",
+    { name: "Chicken Enchiladas", tags:["chicken","kid-friendly"], shop:"costco",
       ingredients: [{item:"chicken thighs",store:"costco"},{item:"flour tortillas",store:"costco"},{item:"enchilada sauce",store:"tj"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"},{item:"fresh cilantro",store:"tj"}] },
-    { name: "Chicken Parm", tags:["chicken"], shop:"costco",
+    { name: "Chicken Parm", tags:["chicken","kid-friendly"], shop:"costco",
       ingredients: [{item:"chicken breast",store:"costco"},{item:"panko breadcrumbs",store:"tj"},{item:"shredded mozzarella",store:"costco"},{item:"marinara sauce",store:"costco"},{item:"grated parmesan",store:"costco"},{item:"eggs",store:"costco"},{item:"olive oil",store:"costco"}] },
-    { name: "Chicken Alfredo", tags:["chicken","pasta"], shop:"costco", url:"https://www.thefoodcharlatan.com/chicken-fettuccine-alfredo/",
+    { name: "Chicken Alfredo", tags:["chicken","pasta","kid-friendly"], shop:"costco", url:"https://www.thefoodcharlatan.com/chicken-fettuccine-alfredo/",
       ingredients: [{item:"chicken breast",store:"costco"},{item:"fettuccine",store:"tj"},{item:"heavy cream",store:"tj"},{item:"grated parmesan",store:"costco"},{item:"butter",store:"costco"},{item:"garlic",store:"tj"}] },
-    { name: "Kefta Kebab Wraps", tags:["chicken"], shop:"costco",
-      ingredients: [{item:"ground beef",store:"costco"},{item:"garlic",store:"tj"},{item:"fresh parsley",store:"tj"},{item:"cumin",store:"tj"},{item:"paprika",store:"costco"},{item:"pita bread",store:"tj"},{item:"tzatziki",store:"tj"},{item:"salad greens",store:"costco"}] },
-    { name: "Marinated Chicken Thighs", tags:["chicken","quick"], shop:"costco",
+    { name: "Marinated Chicken Thighs", tags:["chicken","quick","meal-prep","gluten-free","dairy-free"], shop:"costco",
       ingredients: [{item:"boneless chicken thighs",store:"costco"},{item:"soy sauce",store:"tj"},{item:"garlic",store:"tj"},{item:"olive oil",store:"costco"},{item:"lemon",store:"tj"},{item:"honey",store:"tj"}] },
-    { name: "Chicken Sausage Orzo", tags:["chicken","pasta"], shop:"tj",
+    { name: "Chicken Sausage Orzo", tags:["chicken","pasta","quick"], shop:"tj",
       ingredients: [{item:"Italian chicken sausage",store:"tj"},{item:"orzo pasta",store:"tj"},{item:"cherry tomatoes",store:"costco"},{item:"spinach",store:"costco"},{item:"chicken broth",store:"costco"},{item:"grated parmesan",store:"costco"}] },
   ],
   taco: [
-    { name: "Turkey Tacos", tags:["taco","quick"], shop:"costco",
-      ingredients: [{item:"ground turkey",store:"costco"},{item:"flour tortillas",store:"tj"},{item:"crunchy taco shells",store:"safeway"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"},{item:"roma tomatoes (2)",store:"tj"},{item:"jalapeño",store:"tj"},{item:"onion",store:"tj"},{item:"avocado",store:"costco"},{item:"fresh cilantro",store:"tj"},{item:"lime",store:"tj"}] },
-    { name: "Beef Tacos", tags:["taco","quick"], shop:"costco",
-      ingredients: [{item:"ground beef",store:"costco"},{item:"flour tortillas",store:"tj"},{item:"crunchy taco shells",store:"safeway"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"},{item:"roma tomatoes (2)",store:"tj"},{item:"jalapeño",store:"tj"},{item:"onion",store:"tj"},{item:"avocado",store:"costco"},{item:"fresh cilantro",store:"tj"},{item:"lime",store:"tj"}] },
-    { name: "Carne Asada Tacos", tags:["taco"], shop:"costco",
+    { name: "Tacos", tags:["taco","quick","kid-friendly"], shop:"costco",
+      proteins: [
+        { label: "Ground Turkey", item: "ground turkey", store: "costco", displayName: "Turkey Tacos" },
+        { label: "Ground Beef",   item: "ground beef",   store: "costco", displayName: "Beef Tacos"   }
+      ],
+      ingredients: [{item:"flour tortillas",store:"tj"},{item:"crunchy taco shells",store:"safeway"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"},{item:"roma tomatoes (2)",store:"tj"},{item:"jalapeño",store:"tj"},{item:"onion",store:"tj"},{item:"avocado",store:"costco"},{item:"fresh cilantro",store:"tj"},{item:"lime",store:"tj"}] },
+    { name: "Carne Asada Tacos", tags:["taco","gluten-free","dairy-free","spicy"], shop:"costco",
       ingredients: [{item:"skirt steak",store:"costco"},{item:"flour tortillas",store:"tj"},{item:"lime",store:"tj"},{item:"fresh cilantro",store:"tj"},{item:"onion",store:"tj"},{item:"jalapeño",store:"tj"},{item:"roma tomatoes (2)",store:"tj"},{item:"avocado",store:"costco"}] },
-    { name: "Baja Fish Tacos", tags:["taco","fish"], shop:"wf",
+    { name: "Baja Fish Tacos", tags:["taco","fish","spicy"], shop:"wf",
       ingredients: [{item:"halibut fillet (1.25 lbs)",store:"wf"},{item:"flour tortillas",store:"tj"},{item:"red cabbage",store:"tj"},{item:"fresh cilantro",store:"tj"},{item:"lime",store:"tj"},{item:"honey",store:"tj"},{item:"mayonnaise",store:"tj"},{item:"chili powder",store:"costco"},{item:"avocado",store:"costco"},{item:"jalapeño",store:"tj"}] },
   ],
   pasta: [
-    { name: "Peanut Noodles", tags:["pasta","veg"], shop:"tj",
+    { name: "Peanut Noodles", tags:["pasta","veg","vegetarian","dairy-free","spicy"], shop:"tj",
       ingredients: [{item:"asian-style noodles",store:"tj"},{item:"peanut butter",store:"costco"},{item:"soy sauce",store:"tj"},{item:"sesame oil",store:"tj"},{item:"garlic",store:"tj"},{item:"ginger",store:"tj"},{item:"shredded carrots",store:"tj"},{item:"green onions",store:"tj"},{item:"sesame seeds",store:"tj"}] },
-    { name: "Pesto Tortellini", tags:["pasta","quick"], shop:"tj",
+    { name: "Pesto Tortellini", tags:["pasta","quick","vegetarian","kid-friendly"], shop:"tj",
       ingredients: [{item:"cheese tortellini",store:"tj"},{item:"pesto",store:"tj"},{item:"cherry tomatoes",store:"costco"},{item:"grated parmesan",store:"costco"},{item:"baby spinach",store:"costco"}] },
-    { name: "Spaghetti & Meatballs", tags:["pasta"], shop:"costco",
+    { name: "Spaghetti & Meatballs", tags:["pasta","kid-friendly"], shop:"costco",
       ingredients: [{item:"pasta",store:"costco"},{item:"ground beef",store:"costco"},{item:"marinara sauce",store:"costco"},{item:"garlic",store:"tj"},{item:"yellow onion",store:"tj"},{item:"grated parmesan",store:"costco"}] },
-    { name: "Shrimp & Pasta", tags:["pasta","fish"], shop:"costco",
+    { name: "Shrimp & Pasta", tags:["pasta","fish","quick","date-night"], shop:"costco",
       ingredients: [{item:"shrimp",store:"costco"},{item:"linguine",store:"tj"},{item:"butter",store:"costco"},{item:"garlic",store:"tj"},{item:"white wine",store:"tj"},{item:"lemon",store:"tj"},{item:"fresh parsley",store:"tj"},{item:"grated parmesan",store:"costco"}] },
-    { name: "Mac & Cheese", tags:["pasta","quick"], shop:"costco",
+    { name: "Mac & Cheese", tags:["pasta","quick","kid-friendly","vegetarian"], shop:"costco",
       ingredients: [{item:"Annie's mac & cheese",store:"costco"},{item:"butter",store:"costco"},{item:"whole milk",store:"costco"}] },
-    { name: "Ramen Night", tags:["pasta","quick"], shop:"tj", url:"https://www.foxandbriar.com/easy-chicken-ramen/",
+    { name: "Ramen Night", tags:["pasta","quick","dairy-free","kid-friendly"], shop:"tj", url:"https://www.foxandbriar.com/easy-chicken-ramen/",
       ingredients: [{item:"ramen noodles",store:"tj"},{item:"chicken broth",store:"costco"},{item:"eggs",store:"costco"},{item:"green onions",store:"tj"},{item:"soy sauce",store:"tj"},{item:"sesame oil",store:"tj"},{item:"garlic",store:"tj"},{item:"ginger",store:"tj"},{item:"miso paste",store:"tj"}] },
   ],
   fish: [
-    { name: "Grilled Shrimp Bowl", tags:["fish","quick"], shop:"costco",
+    { name: "Grilled Shrimp Bowl", tags:["fish","quick","gluten-free","dairy-free","spicy"], shop:"costco",
       ingredients: [{item:"shrimp",store:"costco"},{item:"olive oil",store:"costco"},{item:"paprika",store:"costco"},{item:"cayenne pepper",store:"tj"},{item:"frozen corn",store:"tj"},{item:"red onion",store:"tj"},{item:"fresh cilantro",store:"tj"},{item:"jalapeño",store:"tj"},{item:"lime",store:"tj"},{item:"mayonnaise",store:"tj"},{item:"sour cream",store:"tj"},{item:"garlic",store:"tj"},{item:"avocado",store:"costco"},{item:"sesame seeds",store:"tj"},{item:"green onions",store:"tj"},{item:"white jasmine rice",store:"tj"}] },
-    { name: "Salmon Rice Bowl", tags:["fish","quick"], shop:"costco",
+    { name: "Salmon Rice Bowl", tags:["fish","quick","gluten-free","dairy-free","meal-prep"], shop:"costco",
       ingredients: [{item:"wild salmon fillets",store:"costco"},{item:"white jasmine rice",store:"tj"},{item:"soy sauce",store:"tj"},{item:"cucumber",store:"tj"},{item:"avocado",store:"costco"},{item:"sesame seeds",store:"tj"},{item:"green onions",store:"tj"},{item:"rice vinegar",store:"tj"}] },
-    { name: "Grilled Salmon", tags:["fish","quick"], shop:"costco",
+    { name: "Grilled Salmon", tags:["fish","quick","gluten-free","dairy-free","date-night"], shop:"costco",
       ingredients: [{item:"wild salmon fillets",store:"costco"},{item:"olive oil",store:"costco"},{item:"lemon",store:"tj"},{item:"garlic",store:"tj"},{item:"white jasmine rice",store:"tj"},{item:"green beans",store:"costco"}] },
-    { name: "Salmon Cakes", tags:["fish"], shop:"costco", url:"https://www.foodnetwork.com/recipes/food-network-kitchen/salmon-cakes-with-salad-recipe-2043638",
+    { name: "Salmon Cakes", tags:["fish","gluten-free","dairy-free"], shop:"costco", url:"https://www.foodnetwork.com/recipes/food-network-kitchen/salmon-cakes-with-salad-recipe-2043638",
       ingredients: [{item:"wild salmon fillets",store:"costco"},{item:"panko breadcrumbs",store:"tj"},{item:"eggs",store:"costco"},{item:"lemon",store:"tj"},{item:"fresh parsley",store:"tj"},{item:"mayonnaise",store:"tj"},{item:"salad greens",store:"costco"}] },
-    { name: "Ponzu Salmon Bowl", tags:["fish"], shop:"costco",
+    { name: "Ponzu Salmon Bowl", tags:["fish","quick","gluten-free","dairy-free"], shop:"costco",
       ingredients: [{item:"wild salmon fillets",store:"costco"},{item:"ponzu sauce",store:"tj"},{item:"white jasmine rice",store:"tj"},{item:"frozen edamame",store:"tj"},{item:"shredded carrots",store:"tj"},{item:"sesame seeds",store:"tj"},{item:"green onions",store:"tj"}] },
   ],
   burger: [
-    { name: "Smash Burgers", tags:["burger"], shop:"costco",
+    { name: "Smash Burgers", tags:["burger","kid-friendly","date-night"], shop:"costco",
       ingredients: [{item:"ground beef",store:"costco"},{item:"brioche buns",store:"costco"},{item:"Tillamook cheddar slices",store:"costco"},{item:"yellow onion",store:"tj"},{item:"kosher dill pickles",store:"costco"},{item:"frozen French fries",store:"costco"}] },
-    { name: "Sliders", tags:["burger","quick"], shop:"costco",
+    { name: "Sliders", tags:["burger","quick","kid-friendly"], shop:"costco",
       ingredients: [{item:"ground beef",store:"costco"},{item:"Hawaiian rolls",store:"costco"},{item:"Tillamook cheddar slices",store:"costco"},{item:"organic romaine lettuce",store:"costco"},{item:"frozen French fries",store:"costco"}] },
-    { name: "Turkey Burgers", tags:["burger","quick"], shop:"costco",
+    { name: "Turkey Burgers", tags:["burger","quick","kid-friendly","dairy-free"], shop:"costco",
       ingredients: [{item:"ground turkey",store:"costco"},{item:"brioche buns",store:"costco"},{item:"avocado",store:"costco"},{item:"salad greens",store:"costco"},{item:"tomatoes",store:"costco"}] },
   ],
   steak: [
-    { name: "Steak Dinner", tags:["steak"], shop:"costco",
+    { name: "Steak Dinner", tags:["steak","gluten-free","date-night"], shop:"costco",
       ingredients: [{item:"steak",store:"costco"},{item:"russet potatoes",store:"costco"},{item:"olive oil",store:"costco"},{item:"salad greens",store:"costco"},{item:"butter",store:"costco"},{item:"garlic",store:"tj"}] },
-    { name: "Tri-Tip", tags:["steak"], shop:"costco",
+    { name: "Tri-Tip", tags:["steak","gluten-free","dairy-free","meal-prep"], shop:"costco",
       ingredients: [{item:"marinated tri-tip",store:"costco"},{item:"garlic",store:"tj"},{item:"olive oil",store:"costco"},{item:"salad greens",store:"costco"}] },
-    { name: "Steak Salad", tags:["steak"], shop:"costco",
+    { name: "Steak Salad", tags:["steak","gluten-free","dairy-free","date-night"], shop:"costco",
       steps: [
         "Cook your choice of steak to preferred doneness, rest then cube or slice.",
         "Make chimichurri: combine chopped fresh parsley & cilantro, olive oil, minced fresh garlic, red chili flakes, oregano, juice of 1 lemon or lime, salt & pepper. Mix well — no measurements, do it with your heart.",
@@ -1593,7 +1767,7 @@ const RECIPES = {
         {item:"dried oregano",store:"tj"},
         {item:"lemon",store:"tj"}
       ] },
-    { name: "Steakhouse Rigatoni & Ribeye", tags:["steak","pasta"], shop:"costco",
+    { name: "Steakhouse Rigatoni & Ribeye", tags:["steak","pasta","date-night","gluten-free"], shop:"costco",
       steps: [
         "Take ribeyes out of the fridge 30 minutes before cooking. Pat dry and salt both sides with Maldon salt.",
         "Heat 2 tbsp high-heat oil in a cast iron pan. Sear fat side down first for 2 minutes, then each flat side for 2 minutes per side.",
@@ -1620,50 +1794,70 @@ const RECIPES = {
       ] },
   ],
   other: [
-    { name: "Ground Turkey à la Sammy", tags:["quick"], shop:"costco",
+    { name: "Ground Turkey à la Sammy", tags:["quick","gluten-free","dairy-free","kid-friendly"], shop:"costco",
       ingredients: [{item:"ground turkey",store:"costco"},{item:"organic bell peppers",store:"costco"},{item:"yellow onion",store:"tj"},{item:"garlic",store:"tj"},{item:"green onions",store:"tj"},{item:"fresh cilantro",store:"tj"},{item:"fresh parsley",store:"tj"}] },
   ],
   friday_special: [
-    { name: "Chicken Soup Friday", tags:["soup","shabbat"], shop:"costco",
+    { name: "Chicken Soup Friday", tags:["soup","shabbat","dairy-free","kid-friendly"], shop:"costco",
       friday: true,
       ingredients: [{item:"whole organic chicken",store:"costco"},{item:"carrots",store:"costco"},{item:"celery",store:"costco"},{item:"yellow onion",store:"tj"},{item:"parsnip",store:"safeway"},{item:"fresh dill",store:"tj"},{item:"egg noodles",store:"tj"},{item:"chicken broth",store:"costco"},{item:"challah",store:"tj"}] },
-    { name: "Shabbat Roast Chicken", tags:["chicken","shabbat"], shop:"costco",
+    { name: "Shabbat Roast Chicken", tags:["chicken","shabbat","gluten-free","dairy-free","meal-prep"], shop:"costco",
       friday: true,
       ingredients: [{item:"whole organic chicken",store:"costco"},{item:"garlic",store:"tj"},{item:"lemon",store:"tj"},{item:"fresh thyme & rosemary",store:"tj"},{item:"challah",store:"tj"},{item:"roasting vegetables",store:"costco"},{item:"salad greens",store:"costco"}] },
-    { name: "Chicken Soup + Roast Chicken", tags:["soup","chicken","shabbat"], shop:"costco",
+    { name: "Chicken Soup + Roast Chicken", tags:["soup","chicken","shabbat","dairy-free","kid-friendly"], shop:"costco",
       friday: true,
       ingredients: [{item:"whole organic chicken",store:"costco"},{item:"carrots",store:"costco"},{item:"celery",store:"costco"},{item:"yellow onion",store:"tj"},{item:"parsnip",store:"safeway"},{item:"fresh dill",store:"tj"},{item:"egg noodles",store:"tj"},{item:"challah",store:"tj"},{item:"salad greens",store:"costco"}] },
-    { name: "Whole Foods Pizza Night", tags:["quick"], shop:"wf",
+    { name: "Whole Foods Pizza Night", tags:["quick","kid-friendly"], shop:"wf",
       friday: true,
       ingredients: [{item:"pizza (WF hot bar or take-and-bake)",store:"wf"},{item:"salad greens",store:"costco"},{item:"sparkling water",store:"tj"}] },
-    { name: "Shawarma Friday", tags:["chicken","shabbat"], shop:"costco",
+    { name: "Shawarma Friday", tags:["chicken","shabbat","dairy-free"], shop:"costco",
       friday: true,
       ingredients: [{item:"chicken thighs",store:"costco"},{item:"pita bread",store:"tj"},{item:"Greek yogurt",store:"tj"},{item:"cucumber",store:"tj"},{item:"tomatoes",store:"costco"},{item:"challah",store:"tj"},{item:"hummus",store:"costco"}] },
   ],
   easy: [
-    { name: "Leftovers Night", tags:["quick"], shop:null, ingredients: [] },
-    { name: "Freezer Dive", tags:["quick"], shop:null, ingredients: [] },
-    { name: "Pizza Night", tags:["quick"], shop:"costco",
+    { name: "Leftovers Night", tags:["quick","kid-friendly"], shop:null, ingredients: [] },
+    { name: "Freezer Dive", tags:["quick","kid-friendly"], shop:null, ingredients: [] },
+    { name: "Pizza Night", tags:["quick","kid-friendly","vegetarian"], shop:"costco",
       ingredients: [{item:"Kirkland cheese pizza",store:"costco"},{item:"salad greens",store:"costco"}] },
-    { name: "Frozen Pizza", tags:["quick"], shop:"costco",
+    { name: "Frozen Pizza", tags:["quick","kid-friendly","vegetarian","gluten-free"], shop:"costco",
       ingredients: [{item:"frozen gluten free pizza",store:"costco"},{item:"salad greens",store:"costco"}] },
-    { name: "Takeout (Chinese)", tags:["quick"], shop:null, ingredients: [] },
+    { name: "Takeout (Chinese)", tags:["quick","kid-friendly","dairy-free"], shop:null, ingredients: [] },
   ],
   slowcooker: [
-    { name: "Salsa Chicken", tags:["slowcooker","chicken"], shop:"costco",
+    { name: "Salsa Chicken", tags:["slowcooker","chicken","kid-friendly","meal-prep","gluten-free"], shop:"costco",
       ingredients: [{item:"boneless chicken thighs",store:"costco"},{item:"salsa",store:"costco"},{item:"flour tortillas",store:"costco"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"},{item:"lime",store:"tj"},{item:"avocado",store:"costco"}] },
-    { name: "Chicken Tortilla Soup", tags:["slowcooker","chicken"], shop:"costco",
+    { name: "Chicken Tortilla Soup", tags:["slowcooker","chicken","kid-friendly","gluten-free","spicy"], shop:"costco",
       ingredients: [{item:"boneless chicken thighs",store:"costco"},{item:"chicken broth",store:"costco"},{item:"salsa",store:"costco"},{item:"black beans",store:"tj"},{item:"frozen corn",store:"tj"},{item:"diced tomatoes",store:"costco"},{item:"taco seasoning",store:"tj"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"},{item:"fresh cilantro",store:"tj"}] },
-    { name: "Pulled Chicken Sliders", tags:["slowcooker","chicken"], shop:"costco",
+    { name: "Pulled Chicken Sliders", tags:["slowcooker","chicken","kid-friendly","meal-prep","dairy-free"], shop:"costco",
       ingredients: [{item:"boneless chicken thighs",store:"costco"},{item:"BBQ sauce",store:"costco"},{item:"Hawaiian rolls",store:"costco"},{item:"coleslaw mix",store:"costco"},{item:"apple cider vinegar",store:"tj"},{item:"honey",store:"tj"}] },
-    { name: "White Bean & Turkey Chili", tags:["slowcooker"], shop:"costco",
+    { name: "White Bean & Turkey Chili", tags:["slowcooker","gluten-free","dairy-free","meal-prep"], shop:"costco",
       ingredients: [{item:"ground turkey",store:"costco"},{item:"white beans",store:"tj"},{item:"chicken broth",store:"costco"},{item:"diced green chiles",store:"costco"},{item:"onion",store:"tj"},{item:"garlic",store:"tj"},{item:"cumin",store:"tj"},{item:"oregano",store:"tj"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"}] },
-    { name: "Beef Ragu", tags:["slowcooker"], shop:"costco",
+    { name: "Beef Ragu", tags:["slowcooker","dairy-free","meal-prep","kid-friendly"], shop:"costco",
       ingredients: [{item:"beef chuck roast",store:"costco"},{item:"marinara sauce",store:"costco"},{item:"onion",store:"tj"},{item:"garlic",store:"tj"},{item:"red wine",store:"tj"},{item:"Italian seasoning",store:"tj"},{item:"parmesan",store:"costco"},{item:"pasta",store:"costco"}] },
-    { name: "Honey Garlic Chicken", tags:["slowcooker","chicken"], shop:"costco",
+    { name: "Honey Garlic Chicken", tags:["slowcooker","chicken","quick","kid-friendly","dairy-free","meal-prep"], shop:"costco",
       ingredients: [{item:"boneless chicken thighs",store:"costco"},{item:"honey",store:"tj"},{item:"soy sauce",store:"tj"},{item:"garlic",store:"tj"},{item:"sesame oil",store:"tj"},{item:"white jasmine rice",store:"tj"},{item:"green onions",store:"tj"},{item:"sesame seeds",store:"tj"}] },
-    { name: "Lemon Herb Chicken Thighs", tags:["slowcooker","chicken"], shop:"costco",
+    { name: "Lemon Herb Chicken Thighs", tags:["slowcooker","chicken","gluten-free","dairy-free","meal-prep"], shop:"costco",
       ingredients: [{item:"bone-in chicken thighs",store:"costco"},{item:"chicken broth",store:"costco"},{item:"lemons",store:"tj"},{item:"garlic",store:"tj"},{item:"fresh rosemary",store:"tj"},{item:"fresh thyme",store:"tj"},{item:"olive oil",store:"costco"},{item:"roasting vegetables",store:"costco"}] },
+  ],
+  mediterranean: [
+    { name: "Chicken Shawarma", tags:["mediterranean","quick","dairy-free","gluten-free"], shop:"costco", url:"https://www.recipetineats.com/chicken-shawarma-middle-eastern/",
+      ingredients: [{item:"chicken thighs",store:"costco"},{item:"pita bread",store:"tj"},{item:"cucumber",store:"tj"},{item:"tomatoes",store:"costco"},{item:"red onion",store:"tj"},{item:"hummus",store:"costco"},{item:"olives",store:"tj"},{item:"fresh parsley",store:"tj"},{item:"lemons",store:"tj"},{item:"garlic",store:"tj"}] },
+    { name: "Mediterranean Pitas", tags:["mediterranean","quick","meal-prep"], shop:"costco",
+      prepIds: ["lemon-oregano-marinade","garlic-yogurt-marinade","yogurt-lemon-sauce"],
+      proteins: [
+        { label: "Chicken", item: "boneless chicken thighs (2–2.5 lb)", store: "costco" },
+        { label: "Lamb",    item: "lamb shoulder or leg (2–2.5 lb)",     store: "costco" }
+      ],
+      ingredients: [{item:"pita bread",store:"tj"},{item:"romaine lettuce",store:"costco"},{item:"roma tomatoes (2)",store:"tj"},{item:"cucumber",store:"tj"},{item:"red onion",store:"tj"},{item:"Greek yogurt",store:"tj"},{item:"lemon",store:"tj"},{item:"olive oil",store:"costco"},{item:"garlic",store:"tj"},{item:"paprika",store:"costco"},{item:"dried oregano",store:"tj"}] },
+    { name: "Mediterranean Bowl", tags:["mediterranean","quick","meal-prep","gluten-free"], shop:"costco",
+      prepIds: ["lemon-oregano-marinade","garlic-yogurt-marinade","tahini-dressing"],
+      proteins: [
+        { label: "Chicken", item: "boneless chicken thighs (2–2.5 lb)", store: "costco" },
+        { label: "Lamb",    item: "lamb shoulder or leg (2–2.5 lb)",     store: "costco" }
+      ],
+      ingredients: [{item:"white jasmine rice",store:"tj"},{item:"roasting vegetables",store:"costco"},{item:"cucumber",store:"tj"},{item:"roma tomatoes (2)",store:"tj"},{item:"avocado",store:"costco"},{item:"tahini",store:"tj"},{item:"lemon",store:"tj"},{item:"olive oil",store:"costco"},{item:"garlic",store:"tj"},{item:"dried oregano",store:"tj"}] },
+    { name: "Kefta Kebab Wraps", tags:["mediterranean","dairy-free","spicy"], shop:"costco",
+      ingredients: [{item:"ground beef",store:"costco"},{item:"garlic",store:"tj"},{item:"fresh parsley",store:"tj"},{item:"cumin",store:"tj"},{item:"paprika",store:"costco"},{item:"pita bread",store:"tj"},{item:"tzatziki",store:"tj"},{item:"salad greens",store:"costco"}] },
   ],
   prep: [
     { name: "Lemon Oregano Marinade", id: "lemon-oregano-marinade", tags:["prep","marinade"], shop:null,
@@ -1749,16 +1943,19 @@ function pickFriday() {
 }
 
 function generateWeekPlan() {
-  // Mon: Chicken dish
-  // Tue: Tacos or pasta variation
-  // Wed: Something hearty (shawarma, burger, pasta)
-  // Thu: Fish or pasta (lighter)
-  // Fri: Shabbat/Chicken Soup always
+  const tagPref = document.getElementById('generateTagFilter')?.value || '';
+
+  function pickWithTag(pool) {
+    if (!tagPref) return pickRandom(pool);
+    const tagged = pool.filter(r => (r.tags || []).includes(tagPref));
+    return tagged.length ? pickRandom(tagged) : pickRandom(pool);
+  }
+
   const pool = [
-    pickRandom([...RECIPES.chicken.slice(0,6)]),
-    pickRandom([...RECIPES.taco]),
-    pickRandom([...RECIPES.chicken.slice(3,9), ...RECIPES.pasta.slice(0,3)]),
-    pickRandom([...RECIPES.fish, ...RECIPES.pasta.slice(1,4), ...RECIPES.burger]),
+    pickWithTag([...RECIPES.chicken.slice(0,6)]),
+    pickWithTag([...RECIPES.taco]),
+    pickWithTag([...RECIPES.chicken.slice(3,9), ...RECIPES.pasta.slice(0,3), ...(RECIPES.mediterranean||[])]),
+    pickWithTag([...RECIPES.fish, ...RECIPES.pasta.slice(1,4), ...RECIPES.burger]),
     pickFriday(),
   ];
   return pool;
@@ -1892,9 +2089,10 @@ function renderWeek() {
           </div>
         </div>
         <div class="day-meal">
-          <div class="meal-name">${meal.name}</div>
+          ${getMealCategory(meal.name) ? `<div class="meal-category-badge">${CAT_LABELS[getMealCategory(meal.name)] || ''}</div>` : ''}
+          <div class="meal-name meal-name-tappable">${getMealDisplayName(meal)}</div>
           <div class="meal-tags">
-            ${(meal.tags||[]).map(t => `<span class="tag tag-${t}">${t}</span>`).join('')}
+            ${getDisplayTags(meal).map(t => `<span class="tag tag-${t}">${BUILTIN_TAGS.find(b=>b.id===t)?.label || t}</span>`).join('')}
           </div>
           <div class="meal-actions">
             <button class="action-btn btn-swap" onclick="openSwapModal(${i})">⇄ Swap</button>
@@ -1903,6 +2101,8 @@ function renderWeek() {
           </div>
         </div>
       `;
+      // Tapping the meal name opens the recipe modal
+      card.querySelector('.meal-name-tappable').addEventListener('click', () => openRecipeModal(meal.name, i));
     } else {
       card.innerHTML = `
         <div class="day-header">
@@ -1950,17 +2150,20 @@ function renderGroceryList() {
   });
   
   plan.forEach(meal => {
-    if (!meal || !meal.name) return; // skip empty slots
-    // Always pull fresh ingredients from RECIPES so edits take effect immediately
+    if (!meal || !meal.name) return;
     const liveMeal = getAllRecipes().find(r => r.name === meal.name) || meal;
-    (liveMeal.ingredients || []).forEach(ing => {
+    // Build ingredient list with selected protein first
+    const mealIngs = [];
+    const protein = meal.selectedProtein || (liveMeal.proteins ? liveMeal.proteins[0] : null);
+    if (protein) mealIngs.push(protein);
+    (liveMeal.ingredients || []).forEach(ing => mealIngs.push(ing));
+
+    mealIngs.forEach(ing => {
       if (!seen.has(ing.item)) {
         seen.add(ing.item);
         const itemKey = `${key}-${ing.item}`;
         const effectiveStore = getEffectiveStore(itemKey, ing);
-        // Include all items — have-it items show as pre-checked
         (byStore[effectiveStore] || byStore.tj).push({ ...ing, _effectiveStore: effectiveStore });
-        // Pre-check if in pantry
         if (haveIngredients[ing.item]) checkedIngredients[itemKey] = true;
       }
     });
@@ -2281,26 +2484,34 @@ function openSwapModal(dayIndex) {
   const current = weekPlans[key][dayIndex];
   document.getElementById('swapDay').textContent = `Replacing: ${DAYS[dayIndex]} — ${current.name}`;
   activeFilter = dayIndex === 4 ? 'friday_special' : 'all';
+  activeTagFilter = null;
   renderModalCats(dayIndex);
+  renderSwapTagFilter();
   renderSwapOptions();
   document.getElementById('swapModal').classList.add('open');
 }
 
 function renderModalCats(dayIndex) {
-  const cats = dayIndex === 4 
+  const cats = dayIndex === 4
     ? [['friday_special','Shabbat/Friday'],['chicken','Chicken'],['pasta','Pasta']]
-    : [['all','All'],['burger','Burgers'],['chicken','Chicken'],['fish','Fish'],['other','Other'],['pasta','Pasta'],['slowcooker','Slow Cooker'],['steak','Steak'],['taco','Tacos'],['easy','Easy Night']];
-  
+    : [['all','All'],['burger','Burgers'],['chicken','Chicken'],['fish','Fish'],['mediterranean','Mediterranean'],['other','Other'],['pasta','Pasta'],['slowcooker','Slow Cooker'],['steak','Steak'],['taco','Mexican'],['easy','Easy Night']];
+
   const el = document.getElementById('modalCats');
-  el.innerHTML = cats.map(([k,l]) => 
-    `<button class="cat-btn ${activeFilter===k?'active':''}" onclick="setFilter('${k}')">${l}</button>`
-  ).join('');
+  el.innerHTML = '';
+  cats.forEach(([k, l]) => {
+    const btn = document.createElement('button');
+    btn.className = `cat-btn${activeFilter === k ? ' active' : ''}`;
+    btn.textContent = l;
+    btn.dataset.filter = k;
+    btn.addEventListener('click', () => setFilter(k));
+    el.appendChild(btn);
+  });
 }
 
 function setFilter(f) {
   activeFilter = f;
-  document.querySelectorAll('.cat-btn').forEach(b => {
-    b.classList.toggle('active', b.onclick.toString().includes(`'${f}'`));
+  document.querySelectorAll('#modalCats .cat-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === f);
   });
   renderSwapOptions();
 }
@@ -2309,25 +2520,38 @@ function renderSwapOptions() {
   const all = getAllRecipes();
   let pool;
   if (activeFilter === 'all') {
-    pool = all.filter(r => !r.friday);
+    pool = all.filter(r => !r.friday && !CAT_TAGS.has('prep') && r.tags && !r.tags.includes('prep'));
   } else if (RECIPES[activeFilter]) {
     pool = RECIPES[activeFilter];
   } else {
     pool = all;
   }
 
+  // Apply tag filter on top of category filter
+  if (activeTagFilter) {
+    pool = pool.filter(r => (r.tags || []).includes(activeTagFilter));
+  }
+
   const el = document.getElementById('swapOptions');
-  el.innerHTML = pool.map(r => {
-    const safeName = r.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    return `
-    <div class="swap-option" onclick="applySwapByName('${safeName}')">
+  if (!pool.length) {
+    el.innerHTML = `<div style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px;padding:12px 0;text-align:center">No meals match this filter</div>`;
+    return;
+  }
+  el.innerHTML = '';
+  pool.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'swap-option';
+    const displayTags = getDisplayTags(r);
+    div.innerHTML = `
       <div>
         <div class="name">${r.name}</div>
-        <div class="meal-tags" style="margin-top:4px">${(r.tags||[]).map(t=>`<span class="tag tag-${t}">${t}</span>`).join('')}</div>
-      </div>
-      <div class="meta">${r.shop ? shopName(r.shop) : '—'}</div>
-    </div>`;
-  }).join('');
+        <div class="meal-tags" style="margin-top:4px">
+          ${displayTags.map(t => `<span class="tag tag-${t}">${BUILTIN_TAGS.find(b=>b.id===t)?.label || t}</span>`).join('')}
+        </div>
+      </div>`;
+    div.addEventListener('click', () => applySwapByName(r.name));
+    el.appendChild(div);
+  });
 }
 
 function applySwapByName(recipeName) {
@@ -2348,13 +2572,192 @@ function closeModalDirect() {
   document.getElementById('swapModal').classList.remove('open');
 }
 
+// ─── TAG SYSTEM ───────────────────────────────────────────────────────────────
+
+let activeTagFilter = null; // for swap modal
+let currentTagRecipeName = null; // which recipe is open in modal for tag editing
+
+function initTagUI() {
+  // Populate generate tag preference dropdown
+  const sel = document.getElementById('generateTagFilter');
+  if (sel) {
+    sel.innerHTML = `<option value="">Any meal</option>` +
+      BUILTIN_TAGS.map(t => `<option value="${t.id}">${t.label}</option>`).join('');
+  }
+
+  // Populate swap modal tag filter
+  renderSwapTagFilter();
+}
+
+function renderSwapTagFilter() {
+  const el = document.getElementById('swapTagFilter');
+  if (!el) return;
+  el.innerHTML = `<div class="swap-tag-label">Filter by tag</div>` +
+    BUILTIN_TAGS.map(t =>
+      `<button class="cat-btn${activeTagFilter === t.id ? ' active' : ''}"
+        onclick="setTagFilter('${t.id}')">${t.label}</button>`
+    ).join('') +
+    `<button class="cat-btn${activeTagFilter === null ? '' : ''}"
+      onclick="clearTagFilter()" style="opacity:0.5">✕ Clear</button>`;
+}
+
+function setTagFilter(tagId) {
+  activeTagFilter = activeTagFilter === tagId ? null : tagId;
+  renderSwapTagFilter();
+  renderSwapOptions();
+}
+
+function clearTagFilter() {
+  activeTagFilter = null;
+  renderSwapTagFilter();
+  renderSwapOptions();
+}
+
+// ─── RECIPE TAG EDITOR ────────────────────────────────────────────────────────
+
+function renderTagEditor(recipe) {
+  currentTagRecipeName = recipe.name;
+  const tags = recipe.tags || [];
+  const customTags = tags.filter(t => !BUILTIN_TAGS.find(b => b.id === t) && !CAT_TAGS.has(t));
+
+  // Built-in toggles
+  const grid = document.getElementById('tagToggleGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  BUILTIN_TAGS.forEach(bt => {
+    const on = tags.includes(bt.id);
+    const btn = document.createElement('button');
+    btn.className = `tag-toggle tag-${bt.id} ${on ? 'on' : 'off'}`;
+    btn.textContent = bt.label;
+    btn.title = on ? `Remove ${bt.label} tag` : `Add ${bt.label} tag`;
+    btn.addEventListener('click', () => toggleBuiltinTag(recipe, bt.id, btn));
+    grid.appendChild(btn);
+  });
+
+  // Custom tags
+  renderCustomTagsList(recipe, customTags);
+}
+
+function toggleBuiltinTag(recipe, tagId, btn) {
+  const idx = recipe.tags.indexOf(tagId);
+  if (idx >= 0) {
+    recipe.tags.splice(idx, 1);
+    btn.classList.remove('on'); btn.classList.add('off');
+  } else {
+    recipe.tags.push(tagId);
+    btn.classList.remove('off'); btn.classList.add('on');
+  }
+  saveRecipeTags(recipe);
+  renderWeek(); // refresh card tags
+}
+
+function renderCustomTagsList(recipe, customTags) {
+  const el = document.getElementById('customTagsList');
+  if (!el) return;
+  el.innerHTML = '';
+  customTags.forEach(t => {
+    const pill = document.createElement('span');
+    pill.className = 'custom-tag-pill';
+    pill.innerHTML = `${t} <button onclick="removeCustomTag('${t}')" title="Remove">✕</button>`;
+    el.appendChild(pill);
+  });
+}
+
+function addCustomTag() {
+  const input = document.getElementById('customTagInput');
+  const val = input.value.trim().toLowerCase().replace(/\s+/g, '-');
+  if (!val) return;
+  const recipe = getAllRecipes().find(r => r.name === currentTagRecipeName);
+  if (!recipe) return;
+  if (!recipe.tags.includes(val)) {
+    recipe.tags.push(val);
+    saveRecipeTags(recipe);
+    renderTagEditor(recipe);
+    renderWeek();
+  }
+  input.value = '';
+}
+
+function removeCustomTag(tagId) {
+  const recipe = getAllRecipes().find(r => r.name === currentTagRecipeName);
+  if (!recipe) return;
+  recipe.tags = recipe.tags.filter(t => t !== tagId);
+  saveRecipeTags(recipe);
+  renderTagEditor(recipe);
+  renderWeek();
+}
+
+async function saveRecipeTags(recipe) {
+  // Persist to Supabase if it's a custom recipe, localStorage for built-ins
+  try {
+    if (recipe.custom && recipe.sbId) {
+      await sb.update('recipes', { id: recipe.sbId }, { tags_json: recipe.tags });
+    }
+  } catch(e) {}
+  // Always save tag overrides to localStorage for built-in recipes
+  try {
+    const overrides = JSON.parse(localStorage.getItem('mealos-tag-overrides') || '{}');
+    overrides[recipe.name] = recipe.tags;
+    localStorage.setItem('mealos-tag-overrides', JSON.stringify(overrides));
+  } catch(e) {}
+}
+
+function loadTagOverrides() {
+  try {
+    const overrides = JSON.parse(localStorage.getItem('mealos-tag-overrides') || '{}');
+    Object.entries(overrides).forEach(([name, tags]) => {
+      const recipe = getAllRecipes().find(r => r.name === name);
+      if (recipe) recipe.tags = tags;
+    });
+  } catch(e) {}
+}
+
 // ─── ROTATION GRID ────────────────────────────────────────────────────────────
 
+
 const CAT_LABELS = {
-  chicken:'Chicken', taco:'Tacos', pasta:'Pasta', fish:'Fish',
+  chicken:'Chicken', taco:'Mexican', pasta:'Pasta', fish:'Fish',
   burger:'Burgers', steak:'Steak', other:'Other', friday_special:'Friday',
-  easy:'Easy', slowcooker:'Slow Cooker', prep:'Prep Recipes'
+  easy:'Easy', slowcooker:'Slow Cooker', prep:'Prep Recipes', mediterranean:'Mediterranean'
 };
+
+// Category mirror tags — never shown on day cards
+const CAT_TAGS = new Set(['chicken','taco','fish','pasta','burger','steak','other','friday_special','easy','slowcooker','prep','custom','marinade','dressing','veg','soup','quick-dirty','mediterranean']);
+
+// Built-in meaningful tags with display labels
+const BUILTIN_TAGS = [
+  { id: 'quick',        label: '⚡ Quick'        },
+  { id: 'gluten-free',  label: '🌾 GF'           },
+  { id: 'kid-friendly', label: '👶 Kid-Friendly'  },
+  { id: 'meal-prep',    label: '📦 Meal Prep'     },
+  { id: 'vegetarian',   label: '🥦 Vegetarian'    },
+  { id: 'dairy-free',   label: '🥛 Dairy-Free'    },
+  { id: 'spicy',        label: '🌶 Spicy'         },
+  { id: 'shabbat',      label: '✡ Shabbat'        },
+  { id: 'date-night',   label: '🕯 Date Night'     },
+];
+
+// Tags visible on day cards = only meaningful ones (not category mirrors)
+function getDisplayTags(recipe) {
+  return (recipe.tags || []).filter(t => !CAT_TAGS.has(t));
+}
+
+// Get the category key of a meal for display
+function getMealCategory(mealName) {
+  for (const [cat, recipes] of Object.entries(RECIPES)) {
+    if (recipes.some(r => r.name === mealName)) return cat;
+  }
+  return null;
+}
+
+// Get the display name for a meal, accounting for selected protein
+function getMealDisplayName(meal) {
+  if (!meal) return '';
+  if (!meal.selectedProtein) return meal.name;
+  // Use custom displayName if set, otherwise "Recipe Name (Protein)"
+  if (meal.selectedProtein.displayName) return meal.selectedProtein.displayName;
+  return `${meal.name} (${meal.selectedProtein.label})`;
+}
 
 function renderRotationGrid() {
   const el = document.getElementById('rotationGrid');
@@ -2378,6 +2781,12 @@ function renderRotationGrid() {
 
       const nameSpan = document.createElement('span');
       nameSpan.textContent = r.name;
+      if (r.proteins && r.proteins.length) {
+        const hint = document.createElement('span');
+        hint.style.cssText = 'font-family:"DM Mono",monospace;font-size:9px;color:var(--text-muted);margin-left:5px;opacity:0.6;';
+        hint.textContent = r.proteins.map(p => p.label).join(' / ');
+        nameSpan.appendChild(hint);
+      }
       nameSpan.addEventListener('click', () => openRecipeModal(r.name));
       row.appendChild(nameSpan);
 
@@ -2471,48 +2880,111 @@ function openDayPickerModal(recipeName) {
   openRecipeModal(recipeName);
 }
 
-function openRecipeModal(recipeName) {
+function renderRecipeIngredients(recipe, selectedProtein) {
+  const STORE_PILL = { costco:'costco', tj:'tj', wf:'wf', safeway:'safeway' };
+  const ingEl = document.getElementById('recipeModalIngredients');
+  ingEl.innerHTML = '';
+
+  // Build full ingredient list: protein first, then rest
+  const allIngs = [];
+  if (selectedProtein) allIngs.push({ item: selectedProtein.item, store: selectedProtein.store });
+  (recipe.ingredients || []).forEach(ing => allIngs.push(ing));
+
+  if (!allIngs.length) {
+    ingEl.innerHTML = `<div class="no-ingredients">No ingredients listed for this recipe.</div>`;
+    return;
+  }
+
+  allIngs.forEach(ing => {
+    const have = !!haveIngredients[ing.item];
+    const storeClass = STORE_PILL[ing.store] || 'tj';
+    const storeLabel = ing.store === 'costco' ? 'Costco' : ing.store === 'wf' ? 'WF' : ing.store === 'safeway' ? 'Safeway' : "TJ's";
+    const row = document.createElement('div');
+    row.className = `recipe-ing-row${have ? ' have-it' : ''}`;
+    row.innerHTML = `
+      <div class="recipe-ing-checkbox">${have ? '✓' : ''}</div>
+      <span class="recipe-ing-name">${ing.item}</span>
+      <span class="recipe-ing-store store-pill-${storeClass}">${storeLabel}</span>
+    `;
+    row.addEventListener('click', () => toggleHaveIngredient(ing.item, row));
+    ingEl.appendChild(row);
+  });
+}
+
+let currentRecipeProtein = null; // tracks selected protein for current modal
+let currentRecipeModalDayIndex = null; // which day card opened the modal
+
+function openRecipeModal(recipeName, fromDayIndex = null) {
+  currentRecipeModalDayIndex = fromDayIndex;
   const recipe = getAllRecipes().find(r => r.name === recipeName);
   if (!recipe) return;
 
+  // Default protein to first option if recipe has proteins
+  currentRecipeProtein = recipe.proteins ? recipe.proteins[0] : null;
+
   // Title + tags
   document.getElementById('recipeModalTitle').textContent = recipe.name;
-  const STORE_PILL = { costco:'costco', tj:'tj', wf:'wf', safeway:'safeway' };
   document.getElementById('recipeModalTags').innerHTML =
     (recipe.tags || []).map(t => `<span class="tag tag-${t}">${t}</span>`).join('');
 
-  // Add-to-day buttons
-  document.getElementById('recipeModalDayBtns').innerHTML = DAYS.map((d, i) =>
-    `<button class="recipe-modal-day-btn" onclick="assignRecipeToDay('${recipeName.replace(/'/g,"\\'")}', ${i})">${d}</button>`
-  ).join('');
+  // Protein picker
+  const proteinBar = document.getElementById('recipeModalProteinBar');
+  const proteinBtns = document.getElementById('recipeModalProteinBtns');
+  if (recipe.proteins && recipe.proteins.length) {
+    proteinBtns.innerHTML = '';
+    // Pre-select the protein already stored on this day if any
+    const storedProtein = fromDayIndex !== null
+      ? weekPlans[getWeekKey(currentWeekOffset)]?.[fromDayIndex]?.selectedProtein
+      : null;
+    const defaultIdx = storedProtein
+      ? recipe.proteins.findIndex(p => p.label === storedProtein.label)
+      : 0;
+    currentRecipeProtein = recipe.proteins[defaultIdx >= 0 ? defaultIdx : 0];
 
-  // Ingredient list
-  const ingEl = document.getElementById('recipeModalIngredients');
-  if (!recipe.ingredients || !recipe.ingredients.length) {
-    ingEl.innerHTML = `<div class="no-ingredients">No ingredients listed for this recipe.</div>`;
-  } else {
-    ingEl.innerHTML = '';
-    recipe.ingredients.forEach(ing => {
-      const key = ing.item;
-      const have = !!haveIngredients[key];
-      const storeClass = STORE_PILL[ing.store] || 'tj';
-      const storeLabel = ing.store === 'costco' ? 'Costco' : ing.store === 'wf' ? 'WF' : ing.store === 'safeway' ? 'Safeway' : "TJ's";
-
-      const row = document.createElement('div');
-      row.className = `recipe-ing-row${have ? ' have-it' : ''}`;
-      row.innerHTML = `
-        <div class="recipe-ing-checkbox">${have ? '✓' : ''}</div>
-        <span class="recipe-ing-name">${ing.item}</span>
-        <span class="recipe-ing-store store-pill-${storeClass}">${storeLabel}</span>
-      `;
-      row.addEventListener('click', () => toggleHaveIngredient(ing.item, row));
-      ingEl.appendChild(row);
+    recipe.proteins.forEach((p, idx) => {
+      const isSelected = idx === (defaultIdx >= 0 ? defaultIdx : 0);
+      const btn = document.createElement('button');
+      btn.className = `protein-btn${isSelected ? ' selected' : ''}`;
+      btn.textContent = p.label;
+      btn.addEventListener('click', () => {
+        currentRecipeProtein = p;
+        proteinBtns.querySelectorAll('.protein-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        renderRecipeIngredients(recipe, p);
+        // Immediately update the day card if opened from one
+        if (currentRecipeModalDayIndex !== null) {
+          const key = getWeekKey(currentWeekOffset);
+          if (weekPlans[key]?.[currentRecipeModalDayIndex]) {
+            weekPlans[key][currentRecipeModalDayIndex].selectedProtein = p;
+            persistWeekPlans();
+            renderWeek();
+          }
+        }
+      });
+      proteinBtns.appendChild(btn);
     });
+    proteinBar.style.display = 'flex';
+  } else {
+    proteinBar.style.display = 'none';
+    currentRecipeProtein = null;
   }
 
-  document.getElementById('recipeModal').classList.add('open');
+  // Add-to-day buttons — highlight current day if opened from a day card
+  const dayBtns = document.getElementById('recipeModalDayBtns');
+  dayBtns.innerHTML = '';
+  DAYS.forEach((d, i) => {
+    const btn = document.createElement('button');
+    btn.className = `recipe-modal-day-btn${fromDayIndex === i ? ' active-day' : ''}`;
+    btn.textContent = fromDayIndex === i ? `↺ ${d}` : d;
+    btn.title = fromDayIndex === i ? 'Reassign to this day with new protein' : `Assign to ${d}`;
+    btn.addEventListener('click', () => assignRecipeToDay(recipe.name, i));
+    dayBtns.appendChild(btn);
+  });
 
-  // Show steps if recipe has them
+  // Ingredients
+  renderRecipeIngredients(recipe, currentRecipeProtein);
+
+  // Steps
   const stepsSection = document.getElementById('recipeModalStepsSection');
   const stepsList = document.getElementById('recipeModalSteps');
   if (recipe.steps && recipe.steps.length) {
@@ -2521,6 +2993,11 @@ function openRecipeModal(recipeName) {
   } else {
     stepsSection.style.display = 'none';
   }
+
+  document.getElementById('recipeModal').classList.add('open');
+
+  // Tag editor
+  renderTagEditor(recipe);
 }
 
 // ─── SUPABASE CONFIG ──────────────────────────────────────────────────────────
@@ -2597,7 +3074,11 @@ function buildGroceryByStore(weekKey, plan) {
   (plan || []).forEach(meal => {
     if (!meal || !meal.name) return;
     const liveMeal = getAllRecipes().find(r => r.name === meal.name) || meal;
-    (liveMeal?.ingredients || []).forEach(ing => {
+    const mealIngs = [];
+    const protein = meal.selectedProtein || (liveMeal.proteins ? liveMeal.proteins[0] : null);
+    if (protein) mealIngs.push(protein);
+    (liveMeal?.ingredients || []).forEach(ing => mealIngs.push(ing));
+    mealIngs.forEach(ing => {
       const itemKey = `${weekKey}-${ing.item}`;
       if (!seen.has(ing.item) && !checkedIngredients[itemKey] && !haveIngredients[ing.item]) {
         seen.add(ing.item);
@@ -2668,7 +3149,7 @@ async function loadHistory() {
         weekKey: r.week_key,
         label: r.label,
         savedOn: new Date(r.updated_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }),
-        meals: (r.plan_json || []).map((m,i) => ({ day: SHORT_DAYS[i], name: m?.name || '—' })),
+        meals: (r.plan_json || []).map((m,i) => ({ day: SHORT_DAYS[i], name: getMealDisplayName(m) || '—' })),
         grocery: r.grocery_json || {}
       }));
       return;
@@ -2707,7 +3188,7 @@ async function saveWeekSnapshot() {
     const snapshot = {
       id: Date.now(), weekKey: key, label,
       savedOn: new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }),
-      meals: plan.map((m,i) => ({ day: SHORT_DAYS[i], name: m?.name || '—' })),
+      meals: plan.map((m,i) => ({ day: SHORT_DAYS[i], name: getMealDisplayName(m) || '—' })),
       grocery
     };
     savedWeeks.unshift(snapshot);
@@ -2800,11 +3281,15 @@ function assignRecipeToDay(recipeName, dayIndex) {
   const recipe = getAllRecipes().find(r => r.name === recipeName) || { name: recipeName, tags:[], shop:null, ingredients:[] };
   const key = getWeekKey(currentWeekOffset);
   if (!weekPlans[key]) weekPlans[key] = Array(5).fill(null);
-  weekPlans[key][dayIndex] = { ...recipe };
+  // Store selected protein with the meal so grocery list uses it
+  const mealToStore = { ...recipe };
+  if (currentRecipeProtein) mealToStore.selectedProtein = currentRecipeProtein;
+  weekPlans[key][dayIndex] = mealToStore;
   document.getElementById('recipeModal').classList.remove('open');
   persistWeekPlans();
   renderWeek();
-  showToast(`${recipeName} → ${DAYS[dayIndex]}!`);
+  const displayName = currentRecipeProtein?.displayName || recipeName;
+  showToast(`${displayName} → ${DAYS[dayIndex]}!`);
 }
 
 
@@ -3050,7 +3535,7 @@ function sharePlan() {
   const STORE_NAMES = { tj:"Trader Joe's", costco:'Costco', wf:'Whole Foods', safeway:'Safeway' };
 
   // Build meal list
-  const meals = plan.map((m, i) => m?.name ? `${SHORT_DAYS[i]}: ${m.name}` : null).filter(Boolean);
+  const meals = plan.map((m, i) => m?.name ? `${SHORT_DAYS[i]}: ${getMealDisplayName(m)}` : null).filter(Boolean);
 
   // Build grocery list (unchecked only)
   const byStore = { tj:[], costco:[], wf:[], safeway:[] };
@@ -3099,10 +3584,12 @@ loadHaveIngredients().then(() => {
       weekPlans[key] = generateWeekPlan();
       persistWeekPlans();
     }
+    loadTagOverrides();
     renderWeek();
     loadHistory();
     loadCustomRecipes();
     initWakeWord();
+    initTagUI();
   });
 });
 
