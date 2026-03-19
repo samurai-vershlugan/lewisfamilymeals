@@ -1703,6 +1703,26 @@ const RECIPES = {
         { label: "Ground Beef",   item: "ground beef",   store: "costco", displayName: "Beef Tacos"   }
       ],
       ingredients: [{item:"flour tortillas",store:"tj"},{item:"crunchy taco shells",store:"safeway"},{item:"shredded Mexican cheese",store:"costco"},{item:"sour cream",store:"tj"},{item:"roma tomatoes (2)",store:"tj"},{item:"jalapeño",store:"tj"},{item:"onion",store:"tj"},{item:"avocado",store:"costco"},{item:"fresh cilantro",store:"tj"},{item:"lime",store:"tj"}] },
+    { name: "Chicken Parm Tacos", tags:["taco","quick","kid-friendly"], shop:"costco",
+      steps: [
+        "Preheat oven to 425°F. Line a large rimmed baking sheet with parchment paper.",
+        "Place 6 tortillas on the pan. Use about ⅓ cup ground chicken per tortilla and flatten thinly and evenly to the edges.",
+        "Sprinkle generously with salt, garlic powder, onion powder, and Italian herb blend. Bake for 10 minutes.",
+        "Remove from oven. Spread each with marinara sauce, then top with mozzarella, pesto, pepperoni, and parmesan.",
+        "Bake again for 10–12 minutes until cheese is melted and bubbly.",
+        "Sprinkle with chili pepper flakes, fold into tacos and serve immediately."
+      ],
+      ingredients: [
+        {item:"6-inch flour tortillas (6)",store:"tj"},
+        {item:"ground chicken (1 lb)",store:"costco"},
+        {item:"marinara sauce",store:"costco"},
+        {item:"shredded mozzarella",store:"costco"},
+        {item:"pesto",store:"tj"},
+        {item:"pepperoni",store:"costco"},
+        {item:"grated parmesan",store:"costco"},
+        {item:"Italian herb blend",store:"tj"},
+        {item:"chili pepper flakes",store:"tj"}
+      ] },
     { name: "Carne Asada Tacos", tags:["taco","gluten-free","dairy-free","spicy"], shop:"costco",
       ingredients: [{item:"skirt steak",store:"costco"},{item:"flour tortillas",store:"tj"},{item:"lime",store:"tj"},{item:"fresh cilantro",store:"tj"},{item:"onion",store:"tj"},{item:"jalapeño",store:"tj"},{item:"roma tomatoes (2)",store:"tj"},{item:"avocado",store:"costco"}] },
     { name: "Baja Fish Tacos", tags:["taco","fish","spicy"], shop:"wf",
@@ -2520,11 +2540,12 @@ function renderSwapOptions() {
   const all = getAllRecipes();
   let pool;
   if (activeFilter === 'all') {
-    pool = all.filter(r => !r.friday && !CAT_TAGS.has('prep') && r.tags && !r.tags.includes('prep'));
+    // Exclude friday specials and prep recipes from the general pool
+    pool = all.filter(r => !r.friday && !(r.tags || []).includes('prep'));
   } else if (RECIPES[activeFilter]) {
-    pool = RECIPES[activeFilter];
+    pool = RECIPES[activeFilter].filter(r => !r.friday);
   } else {
-    pool = all;
+    pool = all.filter(r => !r.friday && !(r.tags || []).includes('prep'));
   }
 
   // Apply tag filter on top of category filter
