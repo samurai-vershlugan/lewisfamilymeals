@@ -254,7 +254,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
-    margin-bottom: 10px;
+    margin-top: 8px;
   }
 
   .tag {
@@ -2111,13 +2111,13 @@ function renderWeek() {
         <div class="day-meal">
           ${getMealCategory(meal.name) ? `<div class="meal-category-badge">${CAT_LABELS[getMealCategory(meal.name)] || ''}</div>` : ''}
           <div class="meal-name meal-name-tappable">${getMealDisplayName(meal)}</div>
-          <div class="meal-tags">
-            ${getDisplayTags(meal).map(t => `<span class="tag tag-${t}">${BUILTIN_TAGS.find(b=>b.id===t)?.label || t}</span>`).join('')}
-          </div>
           <div class="meal-actions">
             <button class="action-btn btn-swap" onclick="openSwapModal(${i})">⇄ Swap</button>
             <button class="action-btn btn-swap" onclick="openAddLibraryModal(${i})">＋ Add</button>
             <button class="action-btn btn-lock${isLocked ? ' locked' : ''}" onclick="toggleLock(${i})" title="${isLocked ? 'Unlock this meal' : 'Lock this meal'}">${isLocked ? '🔒' : '🔓'}</button>
+          </div>
+          <div class="meal-tags">
+            ${getDisplayTags(meal).map(t => `<span class="tag tag-${t}">${BUILTIN_TAGS.find(b=>b.id===t)?.label || t}</span>`).join('')}
           </div>
         </div>
       `;
