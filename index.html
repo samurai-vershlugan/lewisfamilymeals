@@ -373,6 +373,20 @@
   }
   .custom-tag-pill button:hover { opacity: 1; }
 
+  .swap-protein-picker {
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    margin-top: 4px;
+  }
+  .swap-protein-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .swap-protein-label span { color: var(--text); font-weight: 600; }
+
   /* Swap modal tag filter row */
   .swap-tag-filter {
     display: flex;
@@ -1666,6 +1680,15 @@
       <div class="swap-tag-label">Filter by tag</div>
     </div>
     <div class="swap-options" id="swapOptions"></div>
+    <!-- Inline protein picker — shown after selecting a recipe with proteins -->
+    <div id="swapProteinPicker" style="display:none" class="swap-protein-picker">
+      <div class="swap-protein-label">Choose protein for <span id="swapProteinRecipeName"></span></div>
+      <div id="swapProteinBtns" class="recipe-modal-protein-btns" style="margin-top:8px"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+        <button class="confirm-btn" style="background:#333;color:#ccc" onclick="cancelSwapProtein()">← Back</button>
+        <button class="confirm-btn" id="swapProteinConfirm" onclick="confirmSwapWithProtein()">Confirm Swap</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2507,9 +2530,12 @@ function openSwapModal(dayIndex) {
   swapTarget = dayIndex;
   const key = getWeekKey(currentWeekOffset);
   const current = weekPlans[key][dayIndex];
-  document.getElementById('swapDay').textContent = `Replacing: ${DAYS[dayIndex]} — ${current.name}`;
+  document.getElementById('swapDay').textContent = `Replacing: ${DAYS[dayIndex]} — ${getMealDisplayName(current)}`;
   activeFilter = dayIndex === 4 ? 'friday_special' : 'all';
   activeTagFilter = null;
+  // Hide protein picker
+  document.getElementById('swapProteinPicker').style.display = 'none';
+  document.getElementById('swapOptions').style.display = 'block';
   renderModalCats(dayIndex);
   renderSwapTagFilter();
   renderSwapOptions();
@@ -2517,9 +2543,10 @@ function openSwapModal(dayIndex) {
 }
 
 function renderModalCats(dayIndex) {
-  const cats = dayIndex === 4
-    ? [['friday_special','Shabbat/Friday'],['chicken','Chicken'],['pasta','Pasta']]
-    : [['all','All'],['burger','Burgers'],['chicken','Chicken'],['fish','Fish'],['mediterranean','Mediterranean'],['other','Other'],['pasta','Pasta'],['slowcooker','Slow Cooker'],['steak','Steak'],['taco','Mexican'],['easy','Easy Night']];
+  // Friday gets all categories, with Shabbat/Friday suggested first
+  const allCats = [['all','All'],['friday_special','Shabbat/Friday'],['burger','Burgers'],['chicken','Chicken'],['fish','Fish'],['mediterranean','Mediterranean'],['other','Other'],['pasta','Pasta'],['slowcooker','Slow Cooker'],['steak','Steak'],['taco','Mexican'],['easy','Easy Night']];
+  const weekdayCats = [['all','All'],['burger','Burgers'],['chicken','Chicken'],['fish','Fish'],['mediterranean','Mediterranean'],['other','Other'],['pasta','Pasta'],['slowcooker','Slow Cooker'],['steak','Steak'],['taco','Mexican'],['easy','Easy Night']];
+  const cats = dayIndex === 4 ? allCats : weekdayCats;
 
   const el = document.getElementById('modalCats');
   el.innerHTML = '';
@@ -2580,15 +2607,66 @@ function renderSwapOptions() {
   });
 }
 
+let pendingSwapRecipe = null;
+let pendingSwapProtein = null;
+
 function applySwapByName(recipeName) {
   const recipe = getAllRecipes().find(r => r.name === recipeName);
   if (!recipe) return;
+
+  if (recipe.proteins && recipe.proteins.length) {
+    // Show inline protein picker
+    pendingSwapRecipe = recipe;
+    pendingSwapProtein = recipe.proteins[0];
+
+    document.getElementById('swapOptions').style.display = 'none';
+    document.getElementById('swapProteinRecipeName').textContent = recipe.name;
+
+    const btns = document.getElementById('swapProteinBtns');
+    btns.innerHTML = '';
+    recipe.proteins.forEach((p, idx) => {
+      const btn = document.createElement('button');
+      btn.className = `protein-btn${idx === 0 ? ' selected' : ''}`;
+      btn.textContent = p.label;
+      btn.addEventListener('click', () => {
+        pendingSwapProtein = p;
+        btns.querySelectorAll('.protein-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      });
+      btns.appendChild(btn);
+    });
+
+    document.getElementById('swapProteinPicker').style.display = 'block';
+  } else {
+    // No protein picker needed — swap immediately
+    const key = getWeekKey(currentWeekOffset);
+    weekPlans[key][swapTarget] = { ...recipe };
+    closeModalDirect();
+    persistWeekPlans();
+    renderWeek();
+    showToast(`Swapped to ${recipe.name}!`);
+  }
+}
+
+function cancelSwapProtein() {
+  pendingSwapRecipe = null;
+  pendingSwapProtein = null;
+  document.getElementById('swapProteinPicker').style.display = 'none';
+  document.getElementById('swapOptions').style.display = 'block';
+}
+
+function confirmSwapWithProtein() {
+  if (!pendingSwapRecipe) return;
   const key = getWeekKey(currentWeekOffset);
-  weekPlans[key][swapTarget] = { ...recipe };
+  const meal = { ...pendingSwapRecipe };
+  if (pendingSwapProtein) meal.selectedProtein = pendingSwapProtein;
+  weekPlans[key][swapTarget] = meal;
+  pendingSwapRecipe = null;
+  pendingSwapProtein = null;
   closeModalDirect();
   persistWeekPlans();
   renderWeek();
-  showToast('Meal swapped!');
+  showToast(`Swapped to ${getMealDisplayName(meal)}!`);
 }
 
 function closeModal(e) {
