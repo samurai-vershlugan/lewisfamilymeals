@@ -2580,10 +2580,13 @@ function renderSwapOptions() {
     pool = all.filter(r => !r.friday && !(r.tags || []).includes('prep'));
   }
 
-  // Alphabetize
-  pool = pool.slice().sort((a, b) => a.name.localeCompare(b.name));
+  // Apply tag filter
+  if (activeTagFilter) {
     pool = pool.filter(r => (r.tags || []).includes(activeTagFilter));
   }
+
+  // Alphabetize
+  pool = pool.slice().sort((a, b) => a.name.localeCompare(b.name));
 
   const el = document.getElementById('swapOptions');
   if (!pool.length) {
