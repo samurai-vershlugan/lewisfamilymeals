@@ -1689,7 +1689,7 @@
   </div>
 </div>
 
-<header>
+<header style="display:none" id="appHeader">
   <div class="logo">
     <div class="logo-title">Lewis Family Meal OS</div>
     <div class="logo-sub" id="familyNameLabel">v2026</div>
@@ -1717,7 +1717,7 @@
   </div>
 </header>
 
-<div class="main">
+<div class="main" id="appMain" style="display:none">
   <div class="planner">
     <div class="section-label">This Week's Plan</div>
     <div class="week-grid" id="weekGrid"></div>
@@ -3409,14 +3409,14 @@ const sb = {
 
 function showLoginScreen() {
   document.getElementById('loginScreen').style.display = 'flex';
-  document.querySelector('header').style.display = 'none';
-  document.querySelector('.main') && (document.querySelector('.main').style.display = 'none');
+  document.getElementById('appHeader').style.display = 'none';
+  document.getElementById('appMain').style.display = 'none';
 }
 
 function hideLoginScreen() {
   document.getElementById('loginScreen').style.display = 'none';
-  document.querySelector('header').style.display = '';
-  document.querySelector('.main') && (document.querySelector('.main').style.display = '');
+  document.getElementById('appHeader').style.display = '';
+  document.getElementById('appMain').style.display = '';
 }
 
 function setLoginSpinner(on) {
@@ -3486,9 +3486,18 @@ function backToEmail() {
 }
 
 async function resolveFamily() {
-  // Check if user is already in a family
   try {
-    const rows = await sb.select('family_members', `user_id=eq.${currentUser.id}`);
+    // Use direct fetch to ensure auth token is sent
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/family_members?user_id=eq.${currentUser.id}`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${AUTH_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    const rows = await res.json();
+    console.log('family_members result:', rows);
+
     if (rows && rows.length) {
       FAMILY_ID = rows[0].family_id;
       await loadFamilyName();
@@ -3497,11 +3506,17 @@ async function resolveFamily() {
     }
 
     // Check for a pending invite for this email
-    const invites = await sb.select('family_invites',
-      `email=eq.${encodeURIComponent(currentUser.email)}`
-    );
+    const inviteRes = await fetch(`${SUPABASE_URL}/rest/v1/family_invites?email=eq.${encodeURIComponent(currentUser.email)}`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${AUTH_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    const invites = await inviteRes.json();
+    console.log('invites result:', invites);
+
     if (invites && invites.length) {
-      // Auto-join the invited family
       const invite = invites[0];
       await fetch(`${SUPABASE_URL}/rest/v1/family_members`, {
         method: 'POST',
@@ -3513,7 +3528,6 @@ async function resolveFamily() {
         },
         body: JSON.stringify({ family_id: invite.family_id, user_id: currentUser.id, role: 'member' })
       });
-      // Delete the used invite
       await sb.delete('family_invites', { id: invite.id });
       FAMILY_ID = invite.family_id;
       await loadFamilyName();
