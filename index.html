@@ -2326,6 +2326,7 @@ function toggleLock(dayIndex) {
   const lk = getLockKey(key, dayIndex);
   lockedDays[lk] = !lockedDays[lk];
   try { localStorage.setItem('mealos-locks', JSON.stringify(lockedDays)); } catch(e) {}
+  persistWeekPlans(); // save locks to Supabase with the plan
   renderWeek();
 }
 
@@ -3819,7 +3820,7 @@ async function persistWeekPlans() {
     if (existing && existing.length) {
       // Update existing
       await sb.update('meal_plans', { family_id: FAMILY_ID, week_key: key }, {
-        label, status, plan_json: plan, grocery_json: grocery,
+        label, status, plan_json: plan, grocery_json: grocery, locks_json: lockedDays,
         updated_at: new Date().toISOString()
       });
     } else {
@@ -3856,7 +3857,15 @@ async function loadWeekPlans() {
     });
     const rows = await res.json();
     if (rows && rows.length) {
-      rows.forEach(row => { if (row.week_key) weekPlans[row.week_key] = row.plan_json; });
+      rows.forEach(row => {
+        if (row.week_key) {
+          weekPlans[row.week_key] = row.plan_json;
+          // Restore locks
+          if (row.locks_json) {
+            Object.assign(lockedDays, row.locks_json);
+          }
+        }
+      });
       const now = new Date(); now.setHours(0,0,0,0);
       for (const row of rows) {
         if (row.status === 'active' && row.week_key) {
