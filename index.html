@@ -1495,14 +1495,207 @@
     .history-card-meals { flex-direction: column; }
     .nav-btn { width: 28px; height: 28px; font-size: 14px; }
   }
+  /* ─── LOGIN SCREEN ──────────────────────────────────────────────────────── */
+  #loginScreen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .login-wrap {
+    width: 100%;
+    max-width: 420px;
+    padding: 24px;
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px 36px;
+    text-align: center;
+  }
+  .login-logo { font-size: 40px; margin-bottom: 12px; }
+  .login-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .login-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+  .login-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-align: left;
+  }
+  .login-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    text-align: left;
+    line-height: 1.5;
+  }
+  .login-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    padding: 12px 14px;
+    outline: none;
+    box-sizing: border-box;
+    margin-bottom: 12px;
+    transition: border-color 0.15s;
+  }
+  .login-input:focus { border-color: var(--accent); }
+  .login-otp {
+    font-family: 'DM Mono', monospace;
+    font-size: 28px;
+    letter-spacing: 12px;
+    text-align: center;
+    padding: 14px;
+  }
+  .login-btn {
+    width: 100%;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 8px;
+  }
+  .login-btn:hover { background: var(--accent2); }
+  .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .login-back {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.15s;
+  }
+  .login-back:hover { color: var(--text); }
+  .login-error {
+    color: #cc4444;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    min-height: 16px;
+    margin-top: 4px;
+    text-align: left;
+  }
+  .login-spinner {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 0;
+  }
+  .login-spinner-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: spinnerPulse 1s infinite ease-in-out;
+  }
+  .login-spinner-dot:nth-child(2) { animation-delay: 0.2s; }
+  .login-spinner-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes spinnerPulse {
+    0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+
+  /* Sign out button in header */
+  .signout-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+  }
+  .signout-btn:hover { opacity: 1; }
+
 </style>
-</head>
-<body>
+
+<!-- ─── LOGIN SCREEN ─────────────────────────────────────────────────────── -->
+<div id="loginScreen" style="display:none">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">🍽</div>
+      <div class="login-title">Meal OS</div>
+      <div class="login-sub">Family meal planning, together</div>
+
+      <div id="loginStepEmail">
+        <div class="login-label">Your email</div>
+        <input id="loginEmail" class="login-input" type="email" placeholder="you@example.com"
+          onkeydown="if(event.key==='Enter') sendOTP()" />
+        <button class="login-btn" onclick="sendOTP()">Send Code</button>
+        <div id="loginEmailError" class="login-error"></div>
+      </div>
+
+      <div id="loginStepOTP" style="display:none">
+        <div class="login-label">Check your email</div>
+        <div class="login-hint" id="loginOTPHint"></div>
+        <input id="loginOTP" class="login-input login-otp" type="text"
+          placeholder="000000" maxlength="6"
+          onkeydown="if(event.key==='Enter') verifyOTP()"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+        <button class="login-btn" onclick="verifyOTP()">Verify</button>
+        <div id="loginOTPError" class="login-error"></div>
+        <button class="login-back" onclick="backToEmail()">← Use different email</button>
+      </div>
+
+      <div id="loginStepFamily" style="display:none">
+        <div class="login-label">One more thing</div>
+        <div class="login-hint">Give your family a name to get started.</div>
+        <input id="familyNameInput" class="login-input" type="text" placeholder="e.g. The Lewis Family"
+          onkeydown="if(event.key==='Enter') createFamily()" />
+        <button class="login-btn" onclick="createFamily()">Let's Go</button>
+        <div id="loginFamilyError" class="login-error"></div>
+      </div>
+
+      <div id="loginSpinner" class="login-spinner" style="display:none">
+        <div class="login-spinner-dot"></div>
+        <div class="login-spinner-dot"></div>
+        <div class="login-spinner-dot"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <header>
   <div class="logo">
     <div class="logo-title">Lewis Family Meal OS</div>
-    <div class="logo-sub">v2026</div>
+    <div class="logo-sub" id="familyNameLabel">v2026</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:4px;margin-left:auto;margin-right:12px">
+    <button class="signout-btn" onclick="signOut()" title="Sign out">Sign out</button>
   </div>
   <div class="week-nav">
     <div class="week-nav-group">
@@ -1761,8 +1954,12 @@ const RECIPES = {
       ingredients: [{item:"asian-style noodles",store:"tj"},{item:"peanut butter",store:"costco"},{item:"soy sauce",store:"tj"},{item:"sesame oil",store:"tj"},{item:"garlic",store:"tj"},{item:"ginger",store:"tj"},{item:"shredded carrots",store:"tj"},{item:"green onions",store:"tj"},{item:"sesame seeds",store:"tj"}] },
     { name: "Pesto Tortellini", tags:["pasta","quick","vegetarian","kid-friendly"], shop:"tj",
       ingredients: [{item:"cheese tortellini",store:"tj"},{item:"pesto",store:"tj"},{item:"cherry tomatoes",store:"costco"},{item:"grated parmesan",store:"costco"},{item:"baby spinach",store:"costco"}] },
-    { name: "Spaghetti & Meatballs", tags:["pasta","kid-friendly"], shop:"costco",
-      ingredients: [{item:"pasta",store:"costco"},{item:"ground beef",store:"costco"},{item:"marinara sauce",store:"costco"},{item:"garlic",store:"tj"},{item:"yellow onion",store:"tj"},{item:"grated parmesan",store:"costco"}] },
+    { name: "Spaghetti", tags:["pasta","kid-friendly"], shop:"costco",
+      proteins: [
+        { label: "Meat Sauce",  item: "ground beef",  store: "costco", displayName: "Spaghetti (Meat Sauce)" },
+        { label: "Marinara",    item: null,            store: null,     displayName: "Spaghetti (Marinara)"   }
+      ],
+      ingredients: [{item:"pasta",store:"costco"},{item:"marinara sauce",store:"costco"},{item:"garlic",store:"tj"},{item:"yellow onion",store:"tj"},{item:"grated parmesan",store:"costco"}] },
     { name: "Shrimp & Pasta", tags:["pasta","fish","quick","date-night"], shop:"costco",
       ingredients: [{item:"shrimp",store:"costco"},{item:"linguine",store:"tj"},{item:"butter",store:"costco"},{item:"garlic",store:"tj"},{item:"white wine",store:"tj"},{item:"lemon",store:"tj"},{item:"fresh parsley",store:"tj"},{item:"grated parmesan",store:"costco"}] },
     { name: "Mac & Cheese", tags:["pasta","quick","kid-friendly","vegetarian"], shop:"costco",
@@ -1869,7 +2066,7 @@ const RECIPES = {
       ingredients: [{item:"Kirkland cheese pizza",store:"costco"},{item:"salad greens",store:"costco"}] },
     { name: "Frozen Pizza", tags:["quick","kid-friendly","vegetarian","gluten-free"], shop:"costco",
       ingredients: [{item:"frozen gluten free pizza",store:"costco"},{item:"salad greens",store:"costco"}] },
-    { name: "Takeout (Chinese)", tags:["quick","kid-friendly","dairy-free"], shop:null, ingredients: [] },
+    { name: "Takeout", tags:["quick","kid-friendly","dairy-free"], shop:null, ingredients: [] },
   ],
   slowcooker: [
     { name: "Salsa Chicken", tags:["slowcooker","chicken","kid-friendly","meal-prep","gluten-free"], shop:"costco",
@@ -2203,7 +2400,7 @@ function renderGroceryList() {
     // Build ingredient list with selected protein first
     const mealIngs = [];
     const protein = meal.selectedProtein || (liveMeal.proteins ? liveMeal.proteins[0] : null);
-    if (protein) mealIngs.push(protein);
+    if (protein && protein.item) mealIngs.push(protein);
     (liveMeal.ingredients || []).forEach(ing => mealIngs.push(ing));
 
     mealIngs.forEach(ing => {
@@ -2994,7 +3191,7 @@ function renderRecipeIngredients(recipe, selectedProtein) {
 
   // Build full ingredient list: protein first, then rest
   const allIngs = [];
-  if (selectedProtein) allIngs.push({ item: selectedProtein.item, store: selectedProtein.store });
+  if (selectedProtein && selectedProtein.item) allIngs.push({ item: selectedProtein.item, store: selectedProtein.store });
   (recipe.ingredients || []).forEach(ing => allIngs.push(ing));
 
   if (!allIngs.length) {
@@ -3111,15 +3308,20 @@ function openRecipeModal(recipeName, fromDayIndex = null) {
 
 const SUPABASE_URL = 'https://pkypokkbnvfwcuofqtwq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBreXBva2tibnZmd2N1b2ZxdHdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MTk0NTIsImV4cCI6MjA4OTE5NTQ1Mn0.Jt4k5271tMijWrJvcvowogfgn5q0MGcjdpyuem5z6n4';
-const FAMILY_ID = 'lewis-family';
+
+// These get set after login
+let FAMILY_ID = null;
+let AUTH_TOKEN = null;
+let currentUser = null;
 
 const sb = {
   async query(path, options = {}) {
     try {
+      const token = AUTH_TOKEN || SUPABASE_KEY;
       const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
         headers: {
           'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
           'Prefer': options.prefer || 'return=representation',
           ...(options.headers || {})
@@ -3145,8 +3347,226 @@ const sb = {
   delete(table, match) {
     const q = Object.entries(match).map(([k,v]) => `${k}=eq.${encodeURIComponent(v)}`).join('&');
     return this.query(`${table}?${q}`, { method: 'DELETE', prefer: 'return=minimal' });
+  },
+  // Auth API calls
+  async authPost(endpoint, body) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error_description || data.msg || 'Auth error');
+      return data;
+    } catch(e) { throw e; }
+  },
+  async getSession() {
+    const raw = localStorage.getItem('mealos-session');
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch(e) { return null; }
   }
 };
+
+// ─── AUTH SYSTEM ──────────────────────────────────────────────────────────────
+
+function showLoginScreen() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.querySelector('header').style.display = 'none';
+  document.querySelector('.main') && (document.querySelector('.main').style.display = 'none');
+}
+
+function hideLoginScreen() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.querySelector('header').style.display = '';
+  document.querySelector('.main') && (document.querySelector('.main').style.display = '');
+}
+
+function setLoginSpinner(on) {
+  document.getElementById('loginSpinner').style.display = on ? 'flex' : 'none';
+}
+
+async function sendOTP() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const errEl = document.getElementById('loginEmailError');
+  errEl.textContent = '';
+  if (!email || !email.includes('@')) { errEl.textContent = 'Please enter a valid email.'; return; }
+
+  setLoginSpinner(true);
+  document.querySelector('#loginStepEmail .login-btn').disabled = true;
+  try {
+    await sb.authPost('otp', { email, options: { shouldCreateUser: true } });
+    document.getElementById('loginStepEmail').style.display = 'none';
+    document.getElementById('loginOTPHint').textContent = `We sent a 6-digit code to ${email}`;
+    document.getElementById('loginStepOTP').style.display = 'block';
+    setTimeout(() => document.getElementById('loginOTP').focus(), 100);
+  } catch(e) {
+    errEl.textContent = e.message || 'Failed to send code. Try again.';
+  } finally {
+    setLoginSpinner(false);
+    document.querySelector('#loginStepEmail .login-btn').disabled = false;
+  }
+}
+
+async function verifyOTP() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const token = document.getElementById('loginOTP').value.trim();
+  const errEl = document.getElementById('loginOTPError');
+  errEl.textContent = '';
+  if (token.length !== 6) { errEl.textContent = 'Please enter the 6-digit code.'; return; }
+
+  setLoginSpinner(true);
+  document.querySelector('#loginStepOTP .login-btn').disabled = true;
+  try {
+    const data = await sb.authPost('verify', { type: 'email', email, token });
+    // Save session
+    AUTH_TOKEN = data.access_token;
+    currentUser = data.user;
+    localStorage.setItem('mealos-session', JSON.stringify({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      user: data.user,
+      expires_at: Date.now() + (data.expires_in * 1000)
+    }));
+    await resolveFamily();
+  } catch(e) {
+    errEl.textContent = 'Invalid or expired code. Please try again.';
+    setLoginSpinner(false);
+    document.querySelector('#loginStepOTP .login-btn').disabled = false;
+  }
+}
+
+function backToEmail() {
+  document.getElementById('loginStepOTP').style.display = 'none';
+  document.getElementById('loginStepEmail').style.display = 'block';
+  document.getElementById('loginOTP').value = '';
+  document.getElementById('loginOTPError').textContent = '';
+}
+
+async function resolveFamily() {
+  // Check if user is already in a family
+  try {
+    const rows = await sb.select('family_members', `user_id=eq.${currentUser.id}`);
+    if (rows && rows.length) {
+      FAMILY_ID = rows[0].family_id;
+      await loadFamilyName();
+      await bootApp();
+    } else {
+      // New user — show family creation step
+      setLoginSpinner(false);
+      document.getElementById('loginStepOTP').style.display = 'none';
+      document.getElementById('loginStepFamily').style.display = 'block';
+      setTimeout(() => document.getElementById('familyNameInput').focus(), 100);
+    }
+  } catch(e) {
+    console.error('resolveFamily error:', e);
+    setLoginSpinner(false);
+  }
+}
+
+async function createFamily() {
+  const name = document.getElementById('familyNameInput').value.trim();
+  const errEl = document.getElementById('loginFamilyError');
+  errEl.textContent = '';
+  if (!name) { errEl.textContent = 'Please enter a family name.'; return; }
+
+  setLoginSpinner(true);
+  document.querySelector('#loginStepFamily .login-btn').disabled = true;
+  try {
+    // Create family
+    const family = await sb.upsert('families', { name }, 'id');
+    if (!family || !family[0]) throw new Error('Failed to create family');
+    const familyId = family[0].id;
+
+    // Add user as owner
+    await sb.upsert('family_members', {
+      family_id: familyId,
+      user_id: currentUser.id,
+      role: 'owner'
+    }, 'family_id,user_id');
+
+    FAMILY_ID = familyId;
+    await bootApp();
+  } catch(e) {
+    errEl.textContent = e.message || 'Something went wrong. Try again.';
+    setLoginSpinner(false);
+    document.querySelector('#loginStepFamily .login-btn').disabled = false;
+  }
+}
+
+async function loadFamilyName() {
+  try {
+    const rows = await sb.select('families', `id=eq.${FAMILY_ID}`);
+    if (rows && rows[0]) {
+      document.getElementById('familyNameLabel').textContent = rows[0].name;
+    }
+  } catch(e) {}
+}
+
+async function signOut() {
+  if (!confirm('Sign out?')) return;
+  try {
+    await sb.authPost('logout', {});
+  } catch(e) {}
+  localStorage.removeItem('mealos-session');
+  AUTH_TOKEN = null;
+  currentUser = null;
+  FAMILY_ID = null;
+  weekPlans = {};
+  savedWeeks = [];
+  haveIngredients = {};
+  showLoginScreen();
+  // Reset to email step
+  document.getElementById('loginStepEmail').style.display = 'block';
+  document.getElementById('loginStepOTP').style.display = 'none';
+  document.getElementById('loginStepFamily').style.display = 'none';
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginOTP').value = '';
+}
+
+async function refreshSessionIfNeeded(session) {
+  if (!session) return null;
+  if (Date.now() < session.expires_at - 60000) return session; // still valid
+  try {
+    const data = await sb.authPost('token?grant_type=refresh_token', {
+      refresh_token: session.refresh_token
+    });
+    const newSession = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      user: data.user,
+      expires_at: Date.now() + (data.expires_in * 1000)
+    };
+    localStorage.setItem('mealos-session', JSON.stringify(newSession));
+    return newSession;
+  } catch(e) {
+    localStorage.removeItem('mealos-session');
+    return null;
+  }
+}
+
+async function bootApp() {
+  setLoginSpinner(false);
+  hideLoginScreen();
+  await loadFamilyName();
+  loadLockedDays();
+  await loadHaveIngredients();
+  await loadWeekPlans();
+  const key = getWeekKey(currentWeekOffset);
+  if (!weekPlans[key]) {
+    weekPlans[key] = generateWeekPlan();
+    persistWeekPlans();
+  }
+  loadTagOverrides();
+  renderWeek();
+  loadHistory();
+  loadCustomRecipes();
+  initWakeWord();
+  initTagUI();
+}
 
 // Legacy Store helper (window.storage / localStorage fallback)
 const Store = {
@@ -3183,7 +3603,7 @@ function buildGroceryByStore(weekKey, plan) {
     const liveMeal = getAllRecipes().find(r => r.name === meal.name) || meal;
     const mealIngs = [];
     const protein = meal.selectedProtein || (liveMeal.proteins ? liveMeal.proteins[0] : null);
-    if (protein) mealIngs.push(protein);
+    if (protein && protein.item) mealIngs.push(protein);
     (liveMeal?.ingredients || []).forEach(ing => mealIngs.push(ing));
     mealIngs.forEach(ing => {
       const itemKey = `${weekKey}-${ing.item}`;
@@ -3681,24 +4101,22 @@ function sharePlan() {
   }
 }
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
 
-loadLockedDays();
-loadHaveIngredients().then(() => {
-  loadWeekPlans().then(() => {
-    const key = getWeekKey(currentWeekOffset);
-    if (!weekPlans[key]) {
-      weekPlans[key] = generateWeekPlan();
-      persistWeekPlans();
-    }
-    loadTagOverrides();
-    renderWeek();
-    loadHistory();
-    loadCustomRecipes();
-    initWakeWord();
-    initTagUI();
-  });
-});
+(async () => {
+  // Check for existing session
+  const session = await sb.getSession();
+  const validSession = await refreshSessionIfNeeded(session);
+
+  if (validSession) {
+    AUTH_TOKEN = validSession.access_token;
+    currentUser = validSession.user;
+    await resolveFamily();
+  } else {
+    // No session — show login
+    showLoginScreen();
+  }
+})();
 
 </script>
 </body>
