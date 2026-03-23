@@ -3802,6 +3802,7 @@ function buildGroceryByStore(weekKey, plan) {
 }
 
 async function persistWeekPlans() {
+  if (!FAMILY_ID) { console.warn('persistWeekPlans: FAMILY_ID not set'); return; }
   const key = getWeekKey(currentWeekOffset);
   const plan = weekPlans[key] || [];
   const label = document.getElementById('weekLabel')?.textContent || '';
@@ -3810,27 +3811,55 @@ async function persistWeekPlans() {
   const now = new Date(); now.setHours(0,0,0,0);
   const status = (weekStart < now && currentWeekOffset < 0) ? 'archived' : 'active';
 
-  await sb.upsert('meal_plans', {
-    family_id: FAMILY_ID, week_key: key, label, status,
-    plan_json: plan, grocery_json: grocery,
-    updated_at: new Date().toISOString()
-  }, 'family_id,week_key');
+  try {
+    // Check if row exists first
+    const existing = await sb.select('meal_plans',
+      `family_id=eq.${FAMILY_ID}&week_key=eq.${key}`
+    );
+    if (existing && existing.length) {
+      // Update existing
+      await sb.update('meal_plans', { family_id: FAMILY_ID, week_key: key }, {
+        label, status, plan_json: plan, grocery_json: grocery,
+        updated_at: new Date().toISOString()
+      });
+    } else {
+      // Insert new
+      await fetch(`${SUPABASE_URL}/rest/v1/meal_plans`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${AUTH_TOKEN}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          family_id: FAMILY_ID, week_key: key, label, status,
+          plan_json: plan, grocery_json: grocery,
+          updated_at: new Date().toISOString()
+        })
+      });
+    }
+  } catch(e) { console.error('persistWeekPlans error:', e); }
 
   try { localStorage.setItem('mealos-weekplans', JSON.stringify(weekPlans)); } catch(e) {}
 }
 
 async function loadWeekPlans() {
+  if (!FAMILY_ID) return;
   try {
-    const rows = await sb.select('meal_plans',
-      `family_id=eq.${FAMILY_ID}&status=in.(active,archived)&order=updated_at.desc`
-    );
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/meal_plans?family_id=eq.${FAMILY_ID}&status=in.(active,archived)&order=updated_at.desc`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${AUTH_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    const rows = await res.json();
     if (rows && rows.length) {
       rows.forEach(row => { if (row.week_key) weekPlans[row.week_key] = row.plan_json; });
-      // Auto-archive any active rows whose week has passed
       const now = new Date(); now.setHours(0,0,0,0);
       for (const row of rows) {
         if (row.status === 'active' && row.week_key) {
-          // New format: w2026-03-24, Old format: w0, w-1 etc
           let weekStart = null;
           const dateMatch = row.week_key.match(/w(\d{4})-(\d{2})-(\d{2})/);
           if (dateMatch) {
@@ -3846,7 +3875,7 @@ async function loadWeekPlans() {
       }
       return;
     }
-  } catch(e) { console.warn('Supabase unavailable, using localStorage'); }
+  } catch(e) { console.warn('loadWeekPlans error:', e); }
   try { const raw = localStorage.getItem('mealos-weekplans'); if (raw) weekPlans = JSON.parse(raw); } catch(e) {}
 }
 
@@ -3855,12 +3884,18 @@ async function loadWeekPlans() {
 let savedWeeks = [];
 
 async function loadHistory() {
+  if (!FAMILY_ID) return;
   savedWeeks = [];
   try {
-    const rows = await sb.select('meal_plans',
-      `family_id=eq.${FAMILY_ID}&status=eq.draft&order=updated_at.desc`
-    );
-    if (rows) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/meal_plans?family_id=eq.${FAMILY_ID}&status=eq.draft&order=updated_at.desc`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${AUTH_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    const rows = await res.json();
+    if (rows && rows.length) {
       savedWeeks = rows.map(r => ({
         id: r.id,
         weekKey: r.week_key,
@@ -3871,7 +3906,7 @@ async function loadHistory() {
       }));
       return;
     }
-  } catch(e) {}
+  } catch(e) { console.warn('loadHistory error:', e); }
   try { const raw = localStorage.getItem('mealos-history'); if (raw) savedWeeks = JSON.parse(raw); } catch(e) {}
 }
 
@@ -3880,6 +3915,7 @@ function persistHistory() {
 }
 
 async function saveWeekSnapshot() {
+  if (!FAMILY_ID) { showToast('Not logged in'); return; }
   const key = getWeekKey(currentWeekOffset);
   const plan = weekPlans[key];
   if (!plan || plan.every(m => !m)) { showToast('Generate a plan first!'); return; }
@@ -3892,25 +3928,28 @@ async function saveWeekSnapshot() {
   const label = draftName || defaultLabel;
 
   try {
-    await sb.upsert('meal_plans', {
-      family_id: FAMILY_ID, week_key: null, label, status: 'draft',
-      plan_json: plan, grocery_json: grocery,
-      updated_at: new Date().toISOString()
-    }, 'family_id,week_key');
+    // Always insert a new draft (don't upsert — drafts can have null week_key)
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/meal_plans`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${AUTH_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        family_id: FAMILY_ID, week_key: null, label, status: 'draft',
+        plan_json: plan, grocery_json: grocery,
+        updated_at: new Date().toISOString()
+      })
+    });
+    if (!res.ok) throw new Error(await res.text());
     await loadHistory();
     renderHistoryPage();
     showToast(`"${label}" saved as draft!`);
   } catch(e) {
-    // localStorage fallback
-    const snapshot = {
-      id: Date.now(), weekKey: key, label,
-      savedOn: new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }),
-      meals: plan.map((m,i) => ({ day: SHORT_DAYS[i], name: getMealDisplayName(m) || '—' })),
-      grocery
-    };
-    savedWeeks.unshift(snapshot);
-    persistHistory();
-    showToast(`"${label}" saved!`);
+    console.error('saveWeekSnapshot error:', e);
+    showToast('Failed to save — check console');
   }
 }
 
