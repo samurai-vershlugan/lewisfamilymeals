@@ -3481,21 +3481,38 @@ async function createFamily() {
   setLoginSpinner(true);
   document.querySelector('#loginStepFamily .login-btn').disabled = true;
   try {
-    // Create family
-    const family = await sb.upsert('families', { name }, 'id');
-    if (!family || !family[0]) throw new Error('Failed to create family');
-    const familyId = family[0].id;
+    // Create family with plain insert
+    const familyRes = await fetch(`${SUPABASE_URL}/rest/v1/families`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${AUTH_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({ name })
+    });
+    if (!familyRes.ok) throw new Error(await familyRes.text());
+    const families = await familyRes.json();
+    const familyId = families[0].id;
 
     // Add user as owner
-    await sb.upsert('family_members', {
-      family_id: familyId,
-      user_id: currentUser.id,
-      role: 'owner'
-    }, 'family_id,user_id');
+    const memberRes = await fetch(`${SUPABASE_URL}/rest/v1/family_members`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${AUTH_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({ family_id: familyId, user_id: currentUser.id, role: 'owner' })
+    });
+    if (!memberRes.ok) throw new Error(await memberRes.text());
 
     FAMILY_ID = familyId;
     await bootApp();
   } catch(e) {
+    console.error('createFamily error:', e);
     errEl.textContent = e.message || 'Something went wrong. Try again.';
     setLoginSpinner(false);
     document.querySelector('#loginStepFamily .login-btn').disabled = false;
