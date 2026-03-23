@@ -1695,6 +1695,7 @@
     <div class="logo-sub" id="familyNameLabel">v2026</div>
   </div>
   <div style="display:flex;align-items:center;gap:4px;margin-left:auto;margin-right:12px">
+    <button class="signout-btn" onclick="openInviteModal()" title="Invite someone to your family">Invite</button>
     <button class="signout-btn" onclick="signOut()" title="Sign out">Sign out</button>
   </div>
   <div class="week-nav">
@@ -1881,6 +1882,27 @@
         <button class="confirm-btn" style="background:#333;color:#ccc" onclick="cancelSwapProtein()">← Back</button>
         <button class="confirm-btn" id="swapProteinConfirm" onclick="confirmSwapWithProtein()">Confirm Swap</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="inviteModal" onclick="if(event.target.id==='inviteModal') closeInviteModal()">
+  <div class="modal" style="position:relative;max-width:400px;width:90%">
+    <button class="modal-close" onclick="closeInviteModal()">×</button>
+    <h3>Invite to Family</h3>
+    <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">Enter their email — they'll be able to log in and join <span id="inviteFamilyName" style="color:var(--accent)"></span>.</p>
+    <label class="input-label">Email address</label>
+    <input id="inviteEmailInput" class="text-input" type="email" placeholder="friend@example.com"
+      onkeydown="if(event.key==='Enter') sendInvite()" />
+    <div id="inviteError" style="color:#cc4444;font-family:'DM Mono',monospace;font-size:11px;min-height:16px;margin-bottom:8px"></div>
+    <div id="inviteSuccess" style="color:#4a9;font-family:'DM Mono',monospace;font-size:11px;min-height:16px;margin-bottom:8px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+      <button class="confirm-btn" style="background:#333;color:#ccc" onclick="closeInviteModal()">Cancel</button>
+      <button class="confirm-btn" id="inviteBtn" onclick="sendInvite()">Send Invite</button>
+    </div>
+    <div id="inviteList" style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;display:none">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Pending Invites</div>
+      <div id="inviteListItems"></div>
     </div>
   </div>
 </div>
@@ -2136,6 +2158,25 @@ const WEEKLY_TEMPLATE = [
 // Start on next week if today is Saturday (6) or Sunday (0)
 const _startDay = new Date().getDay();
 let currentWeekOffset = (_startDay === 0 || _startDay === 6) ? 1 : 0;
+
+function getWeekKey(offset) {
+  // Use absolute Monday date as key so it's consistent across sessions/devices
+  const monday = getMondayOfWeek(offset);
+  const y = monday.getFullYear();
+  const m = String(monday.getMonth() + 1).padStart(2, '0');
+  const d = String(monday.getDate()).padStart(2, '0');
+  return `w${y}-${m}-${d}`;
+}
+
+function getMondayOfWeek(offset) {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = (day === 0) ? -6 : 1 - day;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diff + (offset * 7));
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
 let weekPlans = {}; // keyed by weekOffset
 let checkedIngredients = {};
 let swapTarget = null;
@@ -2144,18 +2185,11 @@ let lockedDays = {}; // keyed by "weekKey-dayIndex"
 // ─── DATE HELPERS ─────────────────────────────────────────────────────────────
 
 function getMondayOfCurrentWeek() {
-  const now = new Date();
-  const day = now.getDay();
-  const diff = (day === 0) ? -6 : 1 - day;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + diff);
-  monday.setHours(0,0,0,0);
-  return monday;
+  return getMondayOfWeek(0);
 }
 
 function getWeekDates(offset) {
-  const base = getMondayOfCurrentWeek();
-  base.setDate(base.getDate() + offset * 7);
+  const base = getMondayOfWeek(offset);
   const days = [];
   for (let i = 0; i < 5; i++) {
     const d = new Date(base);
@@ -3459,17 +3493,130 @@ async function resolveFamily() {
       FAMILY_ID = rows[0].family_id;
       await loadFamilyName();
       await bootApp();
-    } else {
-      // New user — show family creation step
-      setLoginSpinner(false);
-      document.getElementById('loginStepOTP').style.display = 'none';
-      document.getElementById('loginStepFamily').style.display = 'block';
-      setTimeout(() => document.getElementById('familyNameInput').focus(), 100);
+      return;
     }
+
+    // Check for a pending invite for this email
+    const invites = await sb.select('family_invites',
+      `email=eq.${encodeURIComponent(currentUser.email)}`
+    );
+    if (invites && invites.length) {
+      // Auto-join the invited family
+      const invite = invites[0];
+      await fetch(`${SUPABASE_URL}/rest/v1/family_members`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${AUTH_TOKEN}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ family_id: invite.family_id, user_id: currentUser.id, role: 'member' })
+      });
+      // Delete the used invite
+      await sb.delete('family_invites', { id: invite.id });
+      FAMILY_ID = invite.family_id;
+      await loadFamilyName();
+      await bootApp();
+      return;
+    }
+
+    // No family, no invite — show family creation
+    setLoginSpinner(false);
+    document.getElementById('loginStepOTP').style.display = 'none';
+    document.getElementById('loginStepFamily').style.display = 'block';
+    setTimeout(() => document.getElementById('familyNameInput').focus(), 100);
   } catch(e) {
     console.error('resolveFamily error:', e);
     setLoginSpinner(false);
   }
+}
+
+// ─── INVITE SYSTEM ────────────────────────────────────────────────────────────
+
+async function openInviteModal() {
+  document.getElementById('inviteEmailInput').value = '';
+  document.getElementById('inviteError').textContent = '';
+  document.getElementById('inviteSuccess').textContent = '';
+  document.getElementById('inviteFamilyName').textContent =
+    document.getElementById('familyNameLabel').textContent;
+  document.getElementById('inviteModal').classList.add('open');
+  await loadPendingInvites();
+  setTimeout(() => document.getElementById('inviteEmailInput').focus(), 100);
+}
+
+function closeInviteModal() {
+  document.getElementById('inviteModal').classList.remove('open');
+}
+
+async function sendInvite() {
+  const email = document.getElementById('inviteEmailInput').value.trim().toLowerCase();
+  const errEl = document.getElementById('inviteError');
+  const successEl = document.getElementById('inviteSuccess');
+  errEl.textContent = '';
+  successEl.textContent = '';
+  if (!email || !email.includes('@')) { errEl.textContent = 'Please enter a valid email.'; return; }
+
+  document.getElementById('inviteBtn').disabled = true;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/family_invites`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${AUTH_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        family_id: FAMILY_ID,
+        email,
+        invited_by: currentUser.id
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      // Unique violation means already invited
+      if (err.code === '23505') throw new Error('This email is already invited.');
+      throw new Error(err.message || 'Failed to send invite.');
+    }
+    document.getElementById('inviteEmailInput').value = '';
+    successEl.textContent = `✓ Invite sent to ${email}`;
+    await loadPendingInvites();
+    showToast(`Invite sent to ${email}!`);
+  } catch(e) {
+    errEl.textContent = e.message;
+  } finally {
+    document.getElementById('inviteBtn').disabled = false;
+  }
+}
+
+async function loadPendingInvites() {
+  try {
+    const invites = await sb.select('family_invites',
+      `family_id=eq.${FAMILY_ID}&order=created_at.desc`
+    );
+    const listEl = document.getElementById('inviteList');
+    const itemsEl = document.getElementById('inviteListItems');
+    if (!invites || !invites.length) { listEl.style.display = 'none'; return; }
+    listEl.style.display = 'block';
+    itemsEl.innerHTML = '';
+    invites.forEach(inv => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)';
+      row.innerHTML = `
+        <span style="font-size:13px;color:var(--text)">${inv.email}</span>
+        <button onclick="revokeInvite('${inv.id}')" style="background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;font-family:'DM Mono',monospace">Revoke</button>
+      `;
+      itemsEl.appendChild(row);
+    });
+  } catch(e) {}
+}
+
+async function revokeInvite(inviteId) {
+  if (!confirm('Revoke this invite?')) return;
+  await sb.delete('family_invites', { id: inviteId });
+  await loadPendingInvites();
+  showToast('Invite revoked');
 }
 
 async function createFamily() {
@@ -3668,11 +3815,17 @@ async function loadWeekPlans() {
       const now = new Date(); now.setHours(0,0,0,0);
       for (const row of rows) {
         if (row.status === 'active' && row.week_key) {
-          const offset = parseInt(row.week_key.replace('w',''));
-          if (!isNaN(offset) && offset < 0) {
-            const weekStart = getWeekDates(offset)[0];
-            if (weekStart < now)
-              await sb.update('meal_plans', { family_id: FAMILY_ID, week_key: row.week_key }, { status: 'archived' });
+          // New format: w2026-03-24, Old format: w0, w-1 etc
+          let weekStart = null;
+          const dateMatch = row.week_key.match(/w(\d{4})-(\d{2})-(\d{2})/);
+          if (dateMatch) {
+            weekStart = new Date(parseInt(dateMatch[1]), parseInt(dateMatch[2])-1, parseInt(dateMatch[3]));
+          } else {
+            const offset = parseInt(row.week_key.replace('w',''));
+            if (!isNaN(offset)) weekStart = getWeekDates(offset)[0];
+          }
+          if (weekStart && weekStart < now) {
+            await sb.update('meal_plans', { family_id: FAMILY_ID, week_key: row.week_key }, { status: 'archived' });
           }
         }
       }
