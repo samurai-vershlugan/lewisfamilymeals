@@ -3398,19 +3398,18 @@ async function sendOTP() {
   setLoginSpinner(true);
   document.querySelector('#loginStepEmail .login-btn').disabled = true;
   try {
-    await sb.authPost('magiclink', { 
+    await sb.authPost('otp', {
       email,
       options: { shouldCreateUser: true }
     });
-    // Show "check your email" message instead of OTP input
     document.getElementById('loginStepEmail').style.display = 'none';
-    document.getElementById('loginOTPHint').textContent = `We sent a login link to ${email} — click it to sign in.`;
+    document.getElementById('loginOTPHint').textContent = `We sent a 6-digit code to ${email}`;
     document.getElementById('loginStepOTP').style.display = 'block';
-    // Hide the code input and verify button, just show the hint
-    document.getElementById('loginOTP').style.display = 'none';
-    document.querySelector('#loginStepOTP .login-btn').style.display = 'none';
+    document.getElementById('loginOTP').style.display = '';
+    document.querySelector('#loginStepOTP .login-btn').style.display = '';
+    setTimeout(() => document.getElementById('loginOTP').focus(), 100);
   } catch(e) {
-    errEl.textContent = e.message || 'Failed to send link. Try again.';
+    errEl.textContent = e.message || 'Failed to send code. Try again.';
   } finally {
     setLoginSpinner(false);
     document.querySelector('#loginStepEmail .login-btn').disabled = false;
