@@ -1500,10 +1500,11 @@
     position: fixed; inset: 0;
     background: var(--bg);
     z-index: 9999;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
   }
+  #loginScreen.visible { display: flex; }
   .login-wrap {
     width: 100%;
     max-width: 420px;
@@ -1644,7 +1645,7 @@
 </style>
 
 <!-- ─── LOGIN SCREEN ─────────────────────────────────────────────────────── -->
-<div id="loginScreen" style="display:none">
+<div id="loginScreen">
   <div class="login-wrap">
     <div class="login-card">
       <div class="login-logo">🍽</div>
@@ -3408,13 +3409,13 @@ const sb = {
 // ─── AUTH SYSTEM ──────────────────────────────────────────────────────────────
 
 function showLoginScreen() {
-  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginScreen').classList.add('visible');
   document.getElementById('appHeader').style.display = 'none';
   document.getElementById('appMain').style.display = 'none';
 }
 
 function hideLoginScreen() {
-  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('loginScreen').classList.remove('visible');
   document.getElementById('appHeader').style.display = '';
   document.getElementById('appMain').style.display = '';
 }
@@ -4293,45 +4294,48 @@ function sharePlan() {
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
 
 (async () => {
-  // Check for magic link token in URL hash (e.g. #access_token=...&type=magiclink)
-  const hash = window.location.hash;
-  if (hash && hash.includes('access_token')) {
-    const params = new URLSearchParams(hash.replace('#', ''));
-    const accessToken = params.get('access_token');
-    const refreshToken = params.get('refresh_token');
-    if (accessToken) {
-      // Get user from token
-      try {
-        const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${accessToken}` }
-        });
-        const user = await res.json();
-        AUTH_TOKEN = accessToken;
-        currentUser = user;
-        localStorage.setItem('mealos-session', JSON.stringify({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          user,
-          expires_at: Date.now() + 3600000
-        }));
-        // Clean URL
-        window.history.replaceState(null, '', window.location.pathname);
-        await resolveFamily();
-        return;
-      } catch(e) { console.error('Magic link parse error:', e); }
+  try {
+    // Check for magic link token in URL hash
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.replace('#', ''));
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+      if (accessToken) {
+        try {
+          const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${accessToken}` }
+          });
+          const user = await res.json();
+          AUTH_TOKEN = accessToken;
+          currentUser = user;
+          localStorage.setItem('mealos-session', JSON.stringify({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            user,
+            expires_at: Date.now() + 3600000
+          }));
+          window.history.replaceState(null, '', window.location.pathname);
+          await resolveFamily();
+          return;
+        } catch(e) { console.error('Magic link parse error:', e); }
+      }
     }
-  }
 
-  // Check for existing session
-  const session = await sb.getSession();
-  const validSession = await refreshSessionIfNeeded(session);
+    // Check for existing session
+    const session = await sb.getSession();
+    const validSession = await refreshSessionIfNeeded(session);
 
-  if (validSession) {
-    AUTH_TOKEN = validSession.access_token;
-    currentUser = validSession.user;
-    await resolveFamily();
-  } else {
-    showLoginScreen();
+    if (validSession) {
+      AUTH_TOKEN = validSession.access_token;
+      currentUser = validSession.user;
+      await resolveFamily();
+    } else {
+      showLoginScreen();
+    }
+  } catch(e) {
+    console.error('Boot error:', e);
+    showLoginScreen(); // Always show login if anything goes wrong
   }
 })();
 
