@@ -3398,13 +3398,19 @@ async function sendOTP() {
   setLoginSpinner(true);
   document.querySelector('#loginStepEmail .login-btn').disabled = true;
   try {
-    await sb.authPost('otp', { email, options: { shouldCreateUser: true } });
+    await sb.authPost('magiclink', { 
+      email,
+      options: { shouldCreateUser: true }
+    });
+    // Show "check your email" message instead of OTP input
     document.getElementById('loginStepEmail').style.display = 'none';
-    document.getElementById('loginOTPHint').textContent = `We sent a 6-digit code to ${email}`;
+    document.getElementById('loginOTPHint').textContent = `We sent a login link to ${email} — click it to sign in.`;
     document.getElementById('loginStepOTP').style.display = 'block';
-    setTimeout(() => document.getElementById('loginOTP').focus(), 100);
+    // Hide the code input and verify button, just show the hint
+    document.getElementById('loginOTP').style.display = 'none';
+    document.querySelector('#loginStepOTP .login-btn').style.display = 'none';
   } catch(e) {
-    errEl.textContent = e.message || 'Failed to send code. Try again.';
+    errEl.textContent = e.message || 'Failed to send link. Try again.';
   } finally {
     setLoginSpinner(false);
     document.querySelector('#loginStepEmail .login-btn').disabled = false;
@@ -4104,6 +4110,35 @@ function sharePlan() {
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
 
 (async () => {
+  // Check for magic link token in URL hash (e.g. #access_token=...&type=magiclink)
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token')) {
+    const params = new URLSearchParams(hash.replace('#', ''));
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    if (accessToken) {
+      // Get user from token
+      try {
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${accessToken}` }
+        });
+        const user = await res.json();
+        AUTH_TOKEN = accessToken;
+        currentUser = user;
+        localStorage.setItem('mealos-session', JSON.stringify({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          user,
+          expires_at: Date.now() + 3600000
+        }));
+        // Clean URL
+        window.history.replaceState(null, '', window.location.pathname);
+        await resolveFamily();
+        return;
+      } catch(e) { console.error('Magic link parse error:', e); }
+    }
+  }
+
   // Check for existing session
   const session = await sb.getSession();
   const validSession = await refreshSessionIfNeeded(session);
@@ -4113,7 +4148,6 @@ function sharePlan() {
     currentUser = validSession.user;
     await resolveFamily();
   } else {
-    // No session — show login
     showLoginScreen();
   }
 })();
