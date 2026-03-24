@@ -1915,6 +1915,23 @@
 
 const RECIPES = {
   chicken: [
+    { name: "Greek Marinated Chicken", tags:["chicken","quick","gluten-free","dairy-free","meal-prep"], shop:"costco",
+      prepIds: ["greek-chicken-marinade"],
+      steps: [
+        "Combine Greek yogurt, olive oil, dried oregano, red wine vinegar, garlic, lemon juice, kosher salt, and black pepper in a medium bowl. Whisk well.",
+        "Add chicken breasts and turn to coat. Cover and refrigerate at least 30 minutes, up to 3 hours.",
+        "Remove chicken, discard extra marinade. Grill, pan-fry, or bake until cooked through. Slice and serve."
+      ],
+      ingredients: [
+        {item:"boneless skinless chicken breasts (1.5 lbs)",store:"costco"},
+        {item:"Greek yogurt",store:"tj"},
+        {item:"olive oil",store:"costco"},
+        {item:"dried oregano",store:"tj"},
+        {item:"red wine vinegar",store:"tj"},
+        {item:"garlic",store:"tj"},
+        {item:"lemon",store:"tj"},
+        {item:"kosher salt",store:"costco"}
+      ] },
     { name: "Greek Chicken", tags:["chicken","quick","kid-friendly"], shop:"costco", url:"https://www.thekitchn.com/_/print",
       ingredients: [{item:"bone-in chicken thighs (2 lbs)",store:"costco"},{item:"lemon",store:"tj"},{item:"shallot",store:"tj"},{item:"garlic",store:"tj"},{item:"olive oil",store:"costco"},{item:"dried oregano",store:"tj"},{item:"paprika",store:"costco"},{item:"fresh parsley",store:"tj"}] },
     { name: "Mama's Chicken Thighs", tags:["chicken","quick","kid-friendly"], shop:"costco",
@@ -2108,23 +2125,6 @@ const RECIPES = {
       ingredients: [{item:"bone-in chicken thighs",store:"costco"},{item:"chicken broth",store:"costco"},{item:"lemon",store:"tj"},{item:"garlic",store:"tj"},{item:"fresh rosemary",store:"tj"},{item:"fresh thyme",store:"tj"},{item:"olive oil",store:"costco"},{item:"roasting vegetables",store:"costco"}] },
   ],
   mediterranean: [
-    { name: "Greek Marinated Chicken", tags:["mediterranean","quick","gluten-free","dairy-free","meal-prep"], shop:"costco",
-      prepIds: ["greek-chicken-marinade"],
-      steps: [
-        "Combine Greek yogurt, olive oil, dried oregano, red wine vinegar, garlic, lemon juice, kosher salt, and black pepper in a medium bowl. Whisk well to combine.",
-        "Add chicken breasts and turn to evenly coat with the marinade. Cover and refrigerate for at least 30 minutes, up to 3 hours.",
-        "Remove chicken and discard extra marinade. Grill, pan-fry in a skillet, or bake until cooked through. Slice if desired and serve."
-      ],
-      ingredients: [
-        {item:"boneless skinless chicken breasts (1.5 lbs)",store:"costco"},
-        {item:"Greek yogurt",store:"tj"},
-        {item:"olive oil",store:"costco"},
-        {item:"dried oregano",store:"tj"},
-        {item:"red wine vinegar",store:"tj"},
-        {item:"garlic",store:"tj"},
-        {item:"lemon",store:"tj"},
-        {item:"kosher salt",store:"costco"}
-      ] },
     { name: "Chicken Shawarma", tags:["mediterranean","quick","dairy-free","gluten-free"], shop:"costco", url:"https://www.recipetineats.com/chicken-shawarma-middle-eastern/",
       ingredients: [{item:"chicken thighs",store:"costco"},{item:"pita bread",store:"tj"},{item:"cucumber",store:"tj"},{item:"tomatoes",store:"costco"},{item:"red onion",store:"tj"},{item:"hummus",store:"costco"},{item:"olives",store:"tj"},{item:"fresh parsley",store:"tj"},{item:"lemon",store:"tj"},{item:"garlic",store:"tj"}] },
     { name: "Mediterranean Pitas", tags:["mediterranean","quick","meal-prep"], shop:"costco",
@@ -2292,14 +2292,24 @@ function renderSundayPrepCard(prepRecipes) {
   const card = document.createElement('div');
   card.className = 'sunday-prep-card';
 
-  const mealNames = prepRecipes.map(r =>
-    r.tags.includes('marinade') ? 'Batch Chicken' : null
-  ).filter(Boolean);
-  const uniqueMealNames = [...new Set(mealNames)];
+  const hasMarinade = prepRecipes.some(r => r.tags.includes('marinade'));
+  const hasDressing = prepRecipes.some(r => r.tags.includes('dressing'));
+  const marinadeCount = prepRecipes.filter(r => r.tags.includes('marinade')).length;
+
   const subtitleParts = [
-    prepRecipes.filter(r => r.tags.includes('marinade')).length > 0 ? 'Marinate chicken' : null,
-    prepRecipes.filter(r => r.tags.includes('dressing')).length > 0 ? 'Make dressings' : null,
+    hasMarinade ? 'Marinate protein' : null,
+    hasDressing ? 'Make dressings' : null,
   ].filter(Boolean);
+
+  // Build dynamic strategy based on what's needed
+  let strategy = '';
+  if (marinadeCount >= 2) {
+    strategy = 'Divide your protein into batches, one per marinade. Roast simultaneously at 400°F for 20–25 min. Slice, cube, and refrigerate — keeps 3–4 days.';
+  } else if (marinadeCount === 1) {
+    strategy = 'Marinate your protein for at least 30 minutes (up to 3 hours for best flavor). Grill, pan-fry, or bake until cooked through. Refrigerate — keeps 3–4 days.';
+  } else if (hasDressing) {
+    strategy = 'Make dressings and sauces ahead. Store in sealed jars in the fridge — most keep 5–7 days.';
+  }
 
   card.innerHTML = `
     <div class="sunday-prep-header">
@@ -2310,13 +2320,8 @@ function renderSundayPrepCard(prepRecipes) {
       <div class="sunday-prep-subtitle">Cook once, eat all week</div>
     </div>
     <div class="sunday-prep-body">
-      <div class="sunday-prep-intro">
-        This week's meals call for batch-prepped chicken and sauces. Do this Sunday for fast weeknight assembly.
-      </div>
       <div class="prep-recipes-list" id="prepRecipesList"></div>
-      <div class="prep-strategy">
-        <strong>Strategy:</strong> Divide 4–5 lb chicken thighs into two batches, one per marinade. Roast both trays simultaneously at 400°F for 20–25 min. Slice, cube, and refrigerate — keeps 3–4 days.
-      </div>
+      ${strategy ? `<div class="prep-strategy"><strong>Strategy:</strong> ${strategy}</div>` : ''}
     </div>
   `;
 
@@ -2328,7 +2333,7 @@ function renderSundayPrepCard(prepRecipes) {
       <div class="prep-recipe-summary">
         <div>
           <div class="prep-recipe-name">${pr.name}</div>
-          <div class="prep-recipe-desc">${pr.summary}</div>
+          ${pr.summary ? `<div class="prep-recipe-desc">${pr.summary}</div>` : ''}
         </div>
         <span class="prep-expand-btn">Steps ▾</span>
       </div>
