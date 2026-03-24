@@ -1656,7 +1656,7 @@
         <div class="login-label">Your email</div>
         <input id="loginEmail" class="login-input" type="email" placeholder="you@example.com"
           onkeydown="if(event.key==='Enter') sendOTP()" />
-        <button class="login-btn" onclick="sendOTP()">Send Code</button>
+        <button class="login-btn" onclick="sendOTP()">Send Login Link</button>
         <div id="loginEmailError" class="login-error"></div>
       </div>
 
@@ -1667,7 +1667,7 @@
           placeholder="000000" maxlength="6"
           onkeydown="if(event.key==='Enter') verifyOTP()"
           oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
-        <button class="login-btn" onclick="verifyOTP()">Verify</button>
+        <button class="login-btn" onclick="verifyOTP()">Verify Code</button>
         <div id="loginOTPError" class="login-error"></div>
         <button class="login-back" onclick="backToEmail()">← Use different email</button>
       </div>
@@ -2108,6 +2108,23 @@ const RECIPES = {
       ingredients: [{item:"bone-in chicken thighs",store:"costco"},{item:"chicken broth",store:"costco"},{item:"lemon",store:"tj"},{item:"garlic",store:"tj"},{item:"fresh rosemary",store:"tj"},{item:"fresh thyme",store:"tj"},{item:"olive oil",store:"costco"},{item:"roasting vegetables",store:"costco"}] },
   ],
   mediterranean: [
+    { name: "Greek Marinated Chicken", tags:["mediterranean","quick","gluten-free","dairy-free","meal-prep"], shop:"costco",
+      prepIds: ["greek-chicken-marinade"],
+      steps: [
+        "Combine Greek yogurt, olive oil, dried oregano, red wine vinegar, garlic, lemon juice, kosher salt, and black pepper in a medium bowl. Whisk well to combine.",
+        "Add chicken breasts and turn to evenly coat with the marinade. Cover and refrigerate for at least 30 minutes, up to 3 hours.",
+        "Remove chicken and discard extra marinade. Grill, pan-fry in a skillet, or bake until cooked through. Slice if desired and serve."
+      ],
+      ingredients: [
+        {item:"boneless skinless chicken breasts (1.5 lbs)",store:"costco"},
+        {item:"Greek yogurt",store:"tj"},
+        {item:"olive oil",store:"costco"},
+        {item:"dried oregano",store:"tj"},
+        {item:"red wine vinegar",store:"tj"},
+        {item:"garlic",store:"tj"},
+        {item:"lemon",store:"tj"},
+        {item:"kosher salt",store:"costco"}
+      ] },
     { name: "Chicken Shawarma", tags:["mediterranean","quick","dairy-free","gluten-free"], shop:"costco", url:"https://www.recipetineats.com/chicken-shawarma-middle-eastern/",
       ingredients: [{item:"chicken thighs",store:"costco"},{item:"pita bread",store:"tj"},{item:"cucumber",store:"tj"},{item:"tomatoes",store:"costco"},{item:"red onion",store:"tj"},{item:"hummus",store:"costco"},{item:"olives",store:"tj"},{item:"fresh parsley",store:"tj"},{item:"lemon",store:"tj"},{item:"garlic",store:"tj"}] },
     { name: "Mediterranean Pitas", tags:["mediterranean","quick","meal-prep"], shop:"costco",
@@ -2128,6 +2145,21 @@ const RECIPES = {
       ingredients: [{item:"ground beef",store:"costco"},{item:"garlic",store:"tj"},{item:"fresh parsley",store:"tj"},{item:"cumin",store:"tj"},{item:"paprika",store:"costco"},{item:"pita bread",store:"tj"},{item:"tzatziki",store:"tj"},{item:"salad greens",store:"costco"}] },
   ],
   prep: [
+    { name: "Greek Chicken Marinade", id: "greek-chicken-marinade", tags:["prep","marinade"], shop:null,
+      steps: [
+        "Combine 3 tbsp Greek yogurt, 2 tbsp olive oil, 1 tbsp dried oregano, 2 tsp red wine vinegar, 4 cloves garlic (smashed), juice of 1 lemon, ¼ tsp kosher salt, and 8–10 cracks black pepper. Whisk well.",
+        "Add 1½ lbs boneless skinless chicken breasts, turn to coat. Cover and marinate in the fridge 30 minutes to 3 hours.",
+        "Remove chicken, discard extra marinade. Grill, pan-fry, or bake until cooked through."
+      ],
+      ingredients: [
+        {item:"Greek yogurt",store:"tj"},
+        {item:"olive oil",store:"costco"},
+        {item:"dried oregano",store:"tj"},
+        {item:"red wine vinegar",store:"tj"},
+        {item:"garlic",store:"tj"},
+        {item:"lemon",store:"tj"},
+        {item:"kosher salt",store:"costco"}
+      ] },
     { name: "Lemon Oregano Marinade", id: "lemon-oregano-marinade", tags:["prep","marinade"], shop:null,
       summary: "Bright citrus marinade for bowls & salads. Marinate 30 min – overnight.",
       steps: ["Whisk 3 tbsp olive oil, juice of 1 lemon, 2 minced garlic cloves, 1 tsp dried oregano, ½ tsp salt, ¼ tsp black pepper.", "Add chicken and coat well.", "Marinate 30 minutes to overnight — overnight gives best flavor.", "Roast at 400°F for 20–25 min until internal temp reaches 165°F.", "Slice or cube, store in airtight container up to 4 days."],
@@ -2405,7 +2437,7 @@ function renderWeek() {
 }
 
 function shopName(s) {
-  return { tj:"Trader Joe's", costco:"Costco", wf:"Whole Foods", safeway:"Safeway" }[s] || s;
+  return { tj:"Trader Joes", costco:"Costco", wf:"Whole Foods", safeway:"Safeway" }[s] || s;
 }
 
 // ─── GROCERY LIST ─────────────────────────────────────────────────────────────
@@ -2454,7 +2486,7 @@ function renderGroceryList() {
   el.innerHTML = '';
 
   const storeOrder = [
-    { key:'tj', label:"Trader Joe's", cls:'tj' },
+    { key:'tj', label:"Trader Joes", cls:'tj' },
     { key:'costco', label:'Costco', cls:'costco' },
     { key:'wf', label:'Whole Foods', cls:'wf' },
     { key:'safeway', label:'Safeway', cls:'safeway' },
@@ -2566,20 +2598,31 @@ function renderAlexaCommands() {
   plan.forEach(meal => {
     if (!meal || !meal.name) return;
     const liveMeal = getAllRecipes().find(r => r.name === meal.name) || meal;
-    (liveMeal.ingredients||[]).forEach(ing => {
-      if (!seen.has(ing.item)) {
-        seen.add(ing.item);
-        const itemKey = `${key}-${ing.item}`;
-        const store = getEffectiveStore(itemKey, ing);
-        const list = store === 'wf' ? 'Whole Foods' : store === 'costco' ? 'Costco' : store === 'safeway' ? 'Safeway' : "Trader Joe's";
-        items.push({ item: ing.item, list });
-      }
+    const allIngs = [...(liveMeal.ingredients || [])];
+    // Include selected protein ingredient if present
+    const protein = meal.selectedProtein || (liveMeal.proteins ? liveMeal.proteins[0] : null);
+    if (protein && protein.item) allIngs.unshift({ item: protein.item, store: protein.store });
+
+    allIngs.forEach(ing => {
+      if (!ing.item) return;
+      const itemKey = `${key}-${ing.item}`;
+      // Skip if already checked off in grocery list
+      if (haveIngredients[ing.item] || checkedIngredients[itemKey]) return;
+      if (seen.has(ing.item)) return;
+      seen.add(ing.item);
+      const store = getEffectiveStore(itemKey, ing);
+      const list = store === 'wf' ? 'Whole Foods' : store === 'costco' ? 'Costco' : store === 'safeway' ? 'Safeway' : 'Trader Joes';
+      items.push({ item: ing.item, list });
     });
   });
 
   const el = document.getElementById('alexaCommands');
   el.innerHTML = '';
-  items.slice(0, 30).forEach(({ item, list }) => {
+  if (!items.length) {
+    el.innerHTML = `<div style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px;padding:8px 0">All groceries checked off!</div>`;
+    return;
+  }
+  items.forEach(({ item, list }) => {
     const div = document.createElement('div');
     div.className = 'alexa-cmd';
     div.innerHTML = `<span>${wake},</span> ask our groceries to add <span>${item}</span> to ${list}`;
@@ -2596,7 +2639,7 @@ function alexaForMeal(dayIndex) {
     return;
   }
   const cmds = meal.ingredients.map(ing => {
-    const list = ing.store === 'wf' ? 'Whole Foods' : ing.store === 'costco' ? 'Costco' : "Trader Joe's";
+    const list = ing.store === 'wf' ? 'Whole Foods' : ing.store === 'costco' ? 'Costco' : "Trader Joes";
     return `Alexa, ask our groceries to add ${ing.item} to ${list}`;
   }).join('\n');
   copyToClipboard(cmds);
@@ -2641,7 +2684,7 @@ function confirmPlan() {
       if (!seen.has(ing.item) && !checkedIngredients[itemKey] && !haveIngredients[ing.item]) {
         seen.add(ing.item);
         const store = getEffectiveStore(itemKey, ing);
-        const list = store === 'wf' ? 'Whole Foods' : store === 'costco' ? 'Costco' : store === 'safeway' ? 'Safeway' : "Trader Joe's";
+        const list = store === 'wf' ? 'Whole Foods' : store === 'costco' ? 'Costco' : store === 'safeway' ? 'Safeway' : "Trader Joes";
         items.push(`Alexa, ask our groceries to add ${ing.item} to ${list}`);
       }
     });
@@ -2692,7 +2735,7 @@ function speakAllCommands() {
       if (!seen.has(ing.item) && !checkedIngredients[itemKey] && !haveIngredients[ing.item]) {
         seen.add(ing.item);
         const store = getEffectiveStore(itemKey, ing);
-        const list = store === 'wf' ? 'Whole Foods' : store === 'costco' ? 'Costco' : store === 'safeway' ? 'Safeway' : "Trader Joe's";
+        const list = store === 'wf' ? 'Whole Foods' : store === 'costco' ? 'Costco' : store === 'safeway' ? 'Safeway' : "Trader Joes";
         cmds.push({ text: `${wake}, ask our groceries to add ${ing.item} to ${list}`, item: ing.item });
       }
     });
@@ -3433,19 +3476,41 @@ async function sendOTP() {
 
   setLoginSpinner(true);
   document.querySelector('#loginStepEmail .login-btn').disabled = true;
+
   try {
+    // Check if user already exists
+    const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/check_user_exists`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email_input: email })
+    });
+    const isKnown = checkRes.ok && (await checkRes.json()) === true;
+
     await sb.authPost('otp', {
       email,
       options: { shouldCreateUser: true }
     });
+
     document.getElementById('loginStepEmail').style.display = 'none';
-    document.getElementById('loginOTPHint').textContent = `We sent a 6-digit code to ${email}`;
     document.getElementById('loginStepOTP').style.display = 'block';
     document.getElementById('loginOTP').style.display = '';
     document.querySelector('#loginStepOTP .login-btn').style.display = '';
-    setTimeout(() => document.getElementById('loginOTP').focus(), 100);
+
+    if (isKnown) {
+      document.querySelector('#loginStepOTP .login-label').textContent = 'Welcome back!';
+      document.getElementById('loginOTPHint').textContent = `We sent a login link to ${email} — click it to sign in.`;
+      document.getElementById('loginOTP').style.display = 'none';
+      document.querySelector('#loginStepOTP .login-btn').style.display = 'none';
+    } else {
+      document.querySelector('#loginStepOTP .login-label').textContent = 'Check your email';
+      document.getElementById('loginOTPHint').textContent = `We sent a 6-digit code to ${email}`;
+      setTimeout(() => document.getElementById('loginOTP').focus(), 100);
+    }
   } catch(e) {
-    errEl.textContent = e.message || 'Failed to send code. Try again.';
+    errEl.textContent = e.message || 'Failed to send. Try again.';
   } finally {
     setLoginSpinner(false);
     document.querySelector('#loginStepEmail .login-btn').disabled = false;
@@ -3591,10 +3656,23 @@ async function sendInvite() {
     });
     if (!res.ok) {
       const err = await res.json();
-      // Unique violation means already invited
       if (err.code === '23505') throw new Error('This email is already invited.');
       throw new Error(err.message || 'Failed to send invite.');
     }
+
+    // Send invite email via Edge Function
+    const familyName = document.getElementById('familyNameLabel').textContent;
+    const invitedBy = currentUser.email;
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/send-invite`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${AUTH_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, familyName, invitedBy })
+      });
+    } catch(e) { console.warn('Invite email failed:', e); }
     document.getElementById('inviteEmailInput').value = '';
     successEl.textContent = `✓ Invite sent to ${email}`;
     await loadPendingInvites();
@@ -4160,7 +4238,7 @@ function renderHistoryPage() {
   }
 
   const STORE_INFO = [
-    { key:'tj', label:"Trader Joe's", cls:'tj' },
+    { key:'tj', label:"Trader Joes", cls:'tj' },
     { key:'costco', label:'Costco', cls:'costco' },
     { key:'wf', label:'Whole Foods', cls:'wf' },
     { key:'safeway', label:'Safeway', cls:'safeway' },
@@ -4225,7 +4303,7 @@ function viewSnapshot(id) {
   if (!s) return;
 
   const STORE_INFO = [
-    { key:'tj', label:"Trader Joe's", cls:'tj' },
+    { key:'tj', label:"Trader Joes", cls:'tj' },
     { key:'costco', label:'Costco', cls:'costco' },
     { key:'wf', label:'Whole Foods', cls:'wf' },
     { key:'safeway', label:'Safeway', cls:'safeway' },
@@ -4297,7 +4375,7 @@ function sharePlan() {
   const key = getWeekKey(currentWeekOffset);
   const plan = weekPlans[key] || [];
   const label = document.getElementById('weekLabel').textContent;
-  const STORE_NAMES = { tj:"Trader Joe's", costco:'Costco', wf:'Whole Foods', safeway:'Safeway' };
+  const STORE_NAMES = { tj:"Trader Joes", costco:'Costco', wf:'Whole Foods', safeway:'Safeway' };
 
   // Build meal list
   const meals = plan.map((m, i) => m?.name ? `${SHORT_DAYS[i]}: ${getMealDisplayName(m)}` : null).filter(Boolean);
