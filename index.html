@@ -1007,6 +1007,9 @@
   .swap-option:hover { border-color: var(--accent); }
   .swap-option .name { font-size: 14px; font-weight: 500; }
   .swap-option .meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-muted); }
+  .swap-option-none { border-style: dashed; background: transparent; margin-bottom: 10px; }
+  .swap-option-none .name { color: var(--text-muted); font-style: italic; }
+  .swap-option-none:hover { border-color: var(--accent); background: var(--surface2); }
 
   .modal-close {
     position: absolute;
@@ -3340,13 +3343,24 @@ function pickRandom(arr) {
 }
 
 function pickFriday() {
+  const pool = RECIPES.friday_special || [];
+  if (!pool.length) {
+    // Safety net: if there are no Friday-special recipes left (e.g. all
+    // deleted), fall back to a general pool rather than silently leaving
+    // Friday blank when Generate runs.
+    const fallbackPool = [
+      ...(RECIPES.chicken || []), ...(RECIPES.taco || []),
+      ...(RECIPES.pasta || []), ...(RECIPES.burger || [])
+    ];
+    return fallbackPool.length ? pickRandom(fallbackPool) : null;
+  }
   // Bias toward chicken soup 50% of the time (fall back safely if not present)
   const r = Math.random();
   if (r < 0.5) {
-    const soup = RECIPES.friday_special.find(r => r.name.includes("Chicken Soup"));
+    const soup = pool.find(rr => rr.name.includes("Chicken Soup"));
     if (soup) return soup;
   }
-  return pickRandom(RECIPES.friday_special);
+  return pickRandom(pool);
 }
 
 function generateWeekPlan() {
@@ -4774,11 +4788,25 @@ function renderSwapOptions() {
   pool = pool.slice().sort((a, b) => a.name.localeCompare(b.name));
 
   const el = document.getElementById('swapOptions');
+  el.innerHTML = '';
+
+  const noneDiv = document.createElement('div');
+  noneDiv.className = 'swap-option swap-option-none';
+  noneDiv.innerHTML = `
+    <div>
+      <div class="name">None</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Leave this day blank</div>
+    </div>`;
+  noneDiv.addEventListener('click', () => clearSwapDay());
+  el.appendChild(noneDiv);
+
   if (!pool.length) {
-    el.innerHTML = `<div style="color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px;padding:12px 0;text-align:center">No meals match this filter</div>`;
+    const empty = document.createElement('div');
+    empty.style.cssText = "color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px;padding:12px 0;text-align:center";
+    empty.textContent = 'No meals match this filter';
+    el.appendChild(empty);
     return;
   }
-  el.innerHTML = '';
   pool.forEach(r => {
     const div = document.createElement('div');
     div.className = 'swap-option';
@@ -4793,6 +4821,16 @@ function renderSwapOptions() {
     div.addEventListener('click', () => applySwapByName(r.name));
     el.appendChild(div);
   });
+}
+
+function clearSwapDay() {
+  const key = getWeekKey(currentWeekOffset);
+  if (!weekPlans[key]) return;
+  weekPlans[key][swapTarget] = null;
+  closeModalDirect();
+  persistWeekPlans();
+  renderWeek();
+  showToast('Day cleared');
 }
 
 let pendingSwapRecipe = null;
