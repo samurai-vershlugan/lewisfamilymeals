@@ -3770,9 +3770,17 @@ function planIngredients(key) {
   // unparsed raw text (e.g. "4 cubes frozen garlic") that still needs splitting.
   // Returns an ARRAY since a combined line like "Kosher salt and black pepper"
   // needs to become two separate grocery items, not one merged one.
+  function cleanDisplayName(rawNameOrItem) {
+    const cleaned = normalizeIngredient(rawNameOrItem || '');
+    return cleaned ? cleaned.charAt(0).toUpperCase() + cleaned.slice(1) : (rawNameOrItem || '');
+  }
   function resolveIngredientPartsList(ing) {
-    if (ing.amount) return [{ name: ing.name || ing.item, amount: ing.amount }];
     const raw = ing.item || ing.name || '';
+    if (ing.amount) {
+      // Amount already given separately — still clean the descriptive name text,
+      // don't try to re-extract an amount from it (that part's already correct).
+      return [{ name: cleanDisplayName(ing.name || ing.item), amount: ing.amount }];
+    }
     const saltPepperMatch = raw.match(/^(.*?\bsalt\b.*?)\s*(?:,|&|\band\b)\s*(.*?\bpepper\b.*?)$/i);
     if (saltPepperMatch) {
       return [parseIngredientParts(saltPepperMatch[1].trim()), parseIngredientParts(saltPepperMatch[2].trim())];
@@ -3970,6 +3978,7 @@ function renderGroceryList() {
     nameSpan.textContent = it.name;
     nameSpan.title = 'Click to rename';
     if (it.amount) {
+      nameSpan.appendChild(document.createTextNode(' '));
       const amt = document.createElement('span');
       amt.className = 'ing-amount';
       amt.textContent = it.amount;
@@ -8270,11 +8279,13 @@ async function importDiscoverRecipe(r, btnEl) {
       body: JSON.stringify({ recipeName: r.name + ' ' + (r.source || '') })
     });
     const data = await resp.json();
+    console.log('import-recipe response:', data);
 
     if (data.error && !data.ingredients) {
       showToast(data.error + ' — opening manual editor');
-      // Fall back to the manual edit modal with what we have
-      openDiscoverEditModal(r);
+      // Fall back to the manual edit modal — name already known from the suggestion,
+      // but grab a fallback image if the server found one on the page.
+      openDiscoverEditModal(Object.assign({}, r, { image: r.image || data.fallbackImage || '' }));
       btnEl.textContent = origText;
       btnEl.disabled = false;
       return;
@@ -8827,7 +8838,16 @@ async function importRecipeFromUrl() {
     const data = await resp.json();
 
     if (data.error) {
-      showToast(data.error);
+      // Still salvage a title/image from basic meta tags if the server found any,
+      // even though full structured ingredients/steps couldn't be parsed.
+      if (data.fallbackName && !document.getElementById('deRecipeName').value.trim()) {
+        document.getElementById('deRecipeName').value = data.fallbackName;
+      }
+      if (data.fallbackImage && !document.getElementById('deImage').value.trim()) {
+        document.getElementById('deImage').value = data.fallbackImage;
+        updateDeImagePreview();
+      }
+      showToast(data.error + (data.fallbackName ? ' — grabbed the title/image, add ingredients manually' : ''));
       btn.textContent = origText;
       btn.disabled = false;
       return;
