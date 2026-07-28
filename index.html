@@ -1973,6 +1973,23 @@
   }
   .discover-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
   .discover-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  .discover-loading-primary {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-top: 16px;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+  .discover-loading-secondary {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    max-width: 320px;
+  }
   .discover-modal-overlay {
     display: none;
     position: fixed;
@@ -2928,7 +2945,8 @@
     <div class="discover-modal-overlay" id="discoverModalOverlay">
       <div class="discover-loading">
         <div class="discover-loading-dots"><span>✦</span><span>✦</span><span>✦</span></div>
-        <div style="margin-top:12px" id="discoverModalOverlayText">Searching...</div>
+        <div class="discover-loading-primary" id="discoverModalOverlayPrimary">Building a list of options</div>
+        <div class="discover-loading-secondary" id="discoverModalOverlayText"></div>
       </div>
     </div>
   </div>
