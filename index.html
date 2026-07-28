@@ -7883,6 +7883,13 @@ function analyzeLibraryLocally() {
   return results;
 }
 
+function extractClaudeText(data) {
+  // With web_search enabled, Claude's response often has multiple content
+  // blocks (tool calls, search results, then text) — content[0] is no longer
+  // reliably the answer. Filter for actual text blocks and join them.
+  return (data.content || []).filter(c => c && c.type === 'text').map(c => c.text).join('\n');
+}
+
 async function runRobot() {
   await ensureFreshToken();
   var pantrySize = Object.keys(haveIngredients).filter(function(k) { return haveIngredients[k]; }).length;
@@ -7940,7 +7947,7 @@ Only suggest recipes where missing ingredients are common, cheap, and easy to fi
     });
     const rawText = await response.text();
     const data = JSON.parse(rawText);
-    const text = data.content?.[0]?.text || '';
+    const text = extractClaudeText(data);
     const clean = text.replace(/```json|```/g, '').trim();
     newRecipes = JSON.parse(clean);
   } catch(e) { console.warn('Robot new recipe fetch failed:', e); }
@@ -8337,7 +8344,7 @@ Tags must be from: quick, gluten-free, kid-friendly, meal-prep, vegetarian, dair
     if (data.error) {
       throw new Error('Service error: ' + (typeof data.error === 'string' ? data.error : JSON.stringify(data.error)));
     }
-    const text = data.content?.[0]?.text || '';
+    const text = extractClaudeText(data);
     console.log('Claude text:', text);
     const clean = text.replace(/```json|```/g, '').trim();
     let recipes;
