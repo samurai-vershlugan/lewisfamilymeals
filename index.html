@@ -2763,6 +2763,7 @@
     <button class="modal-close" onclick="closeModalDirect()">×</button>
     <h3>Swap Meal</h3>
     <p id="swapDay">Choose a replacement for Monday</p>
+    <input id="swapSearchInput" class="text-input" type="text" placeholder="Search recipes..." style="width:100%;box-sizing:border-box;margin-bottom:10px" oninput="renderSwapOptions()" />
     <div class="modal-cats" id="modalCats"></div>
     <div class="swap-tag-filter" id="swapProteinFilter">
       <div class="swap-tag-label">By protein</div>
@@ -4720,6 +4721,8 @@ function openSwapModal(dayIndex) {
   activeFilter = 'all';
   activeTagFilter = null;
   activeProteinFilter = null;
+  const swapSearchEl = document.getElementById('swapSearchInput');
+  if (swapSearchEl) swapSearchEl.value = '';
   // Hide protein picker
   document.getElementById('swapProteinPicker').style.display = 'none';
   document.getElementById('swapOptions').style.display = 'block';
@@ -4782,6 +4785,13 @@ function renderSwapOptions() {
   // Apply tag filter
   if (activeTagFilter) {
     pool = pool.filter(r => (r.tags || []).includes(activeTagFilter));
+  }
+
+  // Apply search-by-name
+  const searchEl = document.getElementById('swapSearchInput');
+  const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  if (q) {
+    pool = pool.filter(r => r.name.toLowerCase().includes(q));
   }
 
   // Alphabetize
