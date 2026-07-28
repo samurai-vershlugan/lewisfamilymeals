@@ -2394,8 +2394,6 @@
   /* Quick day picker popover */
   .quick-day-picker {
     position: fixed;
-    bottom: 24px; left: 50%;
-    transform: translateX(-50%);
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 14px;
@@ -5297,7 +5295,7 @@ function allDaysLocked() {
   return currentWeekDayIndexes().every(i => !!lockedDays[getLockKey(key, i)]);
 }
 
-function quickAddRecipeToDay(recipeName) {
+function quickAddRecipeToDay(recipeName, anchorEl) {
   // Show a compact day picker popover, then assign
   const existing = document.getElementById('quickDayPicker');
   if (existing) existing.remove();
@@ -5332,6 +5330,7 @@ function quickAddRecipeToDay(recipeName) {
   pop.appendChild(cancel);
 
   document.body.appendChild(pop);
+  positionQuickDayPicker(pop, anchorEl);
   // Dismiss on outside click
   setTimeout(() => {
     const handler = (e) => {
@@ -5339,6 +5338,31 @@ function quickAddRecipeToDay(recipeName) {
     };
     document.addEventListener('click', handler);
   }, 50);
+}
+
+function positionQuickDayPicker(pop, anchorEl) {
+  if (!anchorEl || !document.body.contains(anchorEl)) {
+    // No anchor given (or it's gone) — fall back to the old centered-bottom placement
+    pop.style.left = '50%';
+    pop.style.bottom = '24px';
+    pop.style.transform = 'translateX(-50%)';
+    return;
+  }
+  const rect = anchorEl.getBoundingClientRect();
+  const popWidth = Math.min(280, window.innerWidth - 24);
+  pop.style.width = popWidth + 'px';
+  let left = rect.left;
+  if (left + popWidth > window.innerWidth - 12) left = window.innerWidth - popWidth - 12;
+  if (left < 12) left = 12;
+  pop.style.left = left + 'px';
+  pop.style.top = (rect.bottom + 8) + 'px';
+  requestAnimationFrame(() => {
+    const popRect = pop.getBoundingClientRect();
+    if (popRect.bottom > window.innerHeight - 12) {
+      const flipped = rect.top - popRect.height - 8;
+      pop.style.top = Math.max(12, flipped) + 'px';
+    }
+  });
 }
 
 function renderRotationGrid() {
@@ -5413,7 +5437,7 @@ function renderRotationGrid() {
     const addBtn = document.createElement('button');
     addBtn.className = 'mini-recipe-add';
     addBtn.textContent = '＋ Add to day';
-    addBtn.addEventListener('click', (e) => { e.stopPropagation(); quickAddRecipeToDay(r.name); });
+    addBtn.addEventListener('click', (e) => { e.stopPropagation(); quickAddRecipeToDay(r.name, addBtn); });
     card.appendChild(addBtn);
 
     grid.appendChild(card);
@@ -7026,8 +7050,6 @@ function printSnapshot() {
   /* Quick day picker popover */
   .quick-day-picker {
     position: fixed;
-    bottom: 24px; left: 50%;
-    transform: translateX(-50%);
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 14px;
@@ -7827,7 +7849,7 @@ function buildRobotCard(recipe, missing, isNew) {
     ${missingHtml}
     <div class="robot-result-actions">
       ${missing.length ? `<button class="discover-action-btn" onclick="robotAddToGrocery(${JSON.stringify(missing).replace(/"/g,'&quot;')})">＋ Add missing to list</button>` : ''}
-      <button class="discover-action-btn primary" onclick="openRobotDayPicker('${recipe.name.replace(/'/g,"\\'")}')">Assign to day →</button>
+      <button class="discover-action-btn primary" onclick="quickAddRecipeToDay('${recipe.name.replace(/'/g,"\\'")}', this)">Assign to day →</button>
     </div>
   `;
   return div;
@@ -7927,24 +7949,6 @@ async function addManualGroceryItem(rawName, store) {
   renderAlexaCommands();
   persistWeekPlans();
   showToast('Added "' + parts.name + '"');
-}
-
-let robotAssignRecipeName = null;
-
-function openRobotDayPicker(recipeName) {
-  robotAssignRecipeName = recipeName;
-  const day = prompt(`Assign "${recipeName}" to which day?\n0=Mon  1=Tue  2=Wed  3=Thu  4=Fri`, '0');
-  if (day === null) return;
-  const idx = parseInt(day);
-  if (isNaN(idx) || idx < 0 || idx > 4) { showToast('Invalid day'); return; }
-  const key = getWeekKey(currentWeekOffset);
-  const recipe = getAllRecipes().find(r => r.name === recipeName);
-  if (!recipe) { showToast('Recipe not found'); return; }
-  weekPlans[key][idx] = { ...recipe };
-  persistWeekPlans();
-  renderWeek();
-  closeRobotModal();
-  showToast(`${recipeName} → ${DAYS[idx]}!`);
 }
 
 let discoverMood = 'comfort';
