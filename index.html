@@ -1897,29 +1897,49 @@
     color: var(--text-muted);
     margin-bottom: 2px;
   }
-  .recipe-candidate-btn {
+  .recipe-candidate-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
     width: 100%;
-    text-align: left;
-    padding: 9px 12px;
+    padding: 8px 10px;
     border-radius: 6px;
     border: 1px solid var(--border);
     background: var(--surface2);
-    color: var(--text);
-    cursor: pointer;
     font-size: 13px;
-    transition: all 0.15s;
   }
-  .recipe-candidate-btn:hover { border-color: var(--accent); }
-  .recipe-candidate-site { font-weight: 500; }
-  .recipe-candidate-arrow {
+  .recipe-candidate-site { font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .recipe-candidate-view {
     font-family: 'DM Mono', monospace;
     font-size: 10px;
-    color: var(--accent);
+    color: var(--text-muted);
+    text-decoration: none;
     flex-shrink: 0;
-    margin-left: 10px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: color 0.15s;
+  }
+  .recipe-candidate-view:hover { color: var(--accent); }
+  .recipe-candidate-import-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    color: var(--accent);
+    background: none;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 5px 9px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .recipe-candidate-import-btn:hover { background: var(--accent); color: var(--bg); }
+  .recipe-candidate-import-btn:disabled { opacity: 0.6; cursor: default; }
+  .recipe-candidate-status {
+    font-size: 12px;
+    color: #c0392b;
+    padding: 4px 2px;
   }
   .recipe-candidate-cancel {
     background: none;
@@ -8010,7 +8030,7 @@ async function addManualGroceryItem(rawName, store) {
   showToast('Added "' + parts.name + '"');
 }
 
-let discoverMood = 'comfort';
+let discoverMood = null;
 let discoverProtein = null;
 let discoverCuisine = null;
 let discoverSimilarTo = null;
@@ -8370,14 +8390,38 @@ function renderRecipeCandidates(r, candidates, actionsEl, candEl) {
   label.textContent = 'Pick a source to import from:';
   candEl.appendChild(label);
 
+  const statusEl = document.createElement('div');
+  statusEl.className = 'recipe-candidate-status';
+  statusEl.style.display = 'none';
+  candEl.appendChild(statusEl);
+
   candidates.forEach(c => {
     let hostname = c.site;
     try { hostname = c.site || new URL(c.url).hostname.replace(/^www\./, ''); } catch (_) {}
-    const btn = document.createElement('button');
-    btn.className = 'recipe-candidate-btn';
-    btn.innerHTML = `<span class="recipe-candidate-site">${hostname}</span><span class="recipe-candidate-arrow">Import →</span>`;
-    btn.addEventListener('click', () => importFromChosenUrl(c.url, r, candEl, actionsEl));
-    candEl.appendChild(btn);
+
+    const row = document.createElement('div');
+    row.className = 'recipe-candidate-row';
+
+    const siteSpan = document.createElement('span');
+    siteSpan.className = 'recipe-candidate-site';
+    siteSpan.textContent = hostname;
+    row.appendChild(siteSpan);
+
+    const viewLink = document.createElement('a');
+    viewLink.className = 'recipe-candidate-view';
+    viewLink.href = c.url;
+    viewLink.target = '_blank';
+    viewLink.rel = 'noopener';
+    viewLink.textContent = '↗ View';
+    row.appendChild(viewLink);
+
+    const importBtn = document.createElement('button');
+    importBtn.className = 'recipe-candidate-import-btn';
+    importBtn.textContent = 'Import →';
+    importBtn.addEventListener('click', () => importFromChosenUrl(c.url, r, importBtn, statusEl));
+    row.appendChild(importBtn);
+
+    candEl.appendChild(row);
   });
 
   const cancelBtn = document.createElement('button');
@@ -8393,8 +8437,12 @@ function renderRecipeCandidates(r, candidates, actionsEl, candEl) {
   candEl.appendChild(cancelBtn);
 }
 
-async function importFromChosenUrl(url, r, candEl, actionsEl) {
-  candEl.innerHTML = `<div class="recipe-candidate-loading">Importing…</div>`;
+async function importFromChosenUrl(url, r, importBtn, statusEl) {
+  const origText = importBtn.textContent;
+  importBtn.textContent = 'Importing…';
+  importBtn.disabled = true;
+  statusEl.style.display = 'none';
+
   await ensureFreshToken();
   try {
     const resp = await fetch(SUPABASE_URL + '/functions/v1/import-recipe', {
@@ -8406,8 +8454,11 @@ async function importFromChosenUrl(url, r, candEl, actionsEl) {
     console.log('import-recipe response:', data);
 
     if (data.error && !data.ingredients) {
-      showToast(data.error + ' — try another source below');
-      candEl.querySelector('.recipe-candidate-loading')?.remove();
+      // Keep the candidate list intact — just show the failure and let them try another
+      statusEl.textContent = data.error + ' — try another source below';
+      statusEl.style.display = 'block';
+      importBtn.textContent = origText;
+      importBtn.disabled = false;
       return;
     }
 
@@ -8415,13 +8466,16 @@ async function importFromChosenUrl(url, r, candEl, actionsEl) {
       name: data.name || r.name,
       ingredients: (data.ingredients || []).map(function(i) { return { item: i, store: 'tj' }; }),
       steps: data.steps || [],
+      image: data.image || r.image || '',
       url: data.foundUrl || url
     });
     openDiscoverEditModal(enriched);
   } catch (e) {
     console.error('importFromChosenUrl error:', e);
-    showToast('Import failed — try another source below');
-    candEl.querySelector('.recipe-candidate-loading')?.remove();
+    statusEl.textContent = 'Import failed — try another source below';
+    statusEl.style.display = 'block';
+    importBtn.textContent = origText;
+    importBtn.disabled = false;
   }
 }
 
