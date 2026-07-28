@@ -4399,6 +4399,21 @@ function normalizeIngredient(name) {
   return s;
 }
 
+const CHEESE_TYPE_WORDS = ['cheddar','mozzarella','parmesan','parmigiano','swiss','provolone','gouda','brie','feta','colby','muenster','havarti','gruyere','pepperjack','montereyjack','american','ricotta','pepper jack','monterey jack'];
+function cheeseTypeEquivalent(a, b) {
+  // "Sliced cheddar" (normalizes to "cheddar" once "sliced" is stripped) and
+  // "cheddar cheese" are the same thing, but exact-match normalization treats
+  // them as different strings. Handle named cheese types as a narrow special
+  // case rather than loosening matching generally (which previously caused
+  // false positives like pantry "salt" matching recipe "kosher salt").
+  for (const type of CHEESE_TYPE_WORDS) {
+    const aIsType = a === type || a === type + ' cheese';
+    const bIsType = b === type || b === type + ' cheese';
+    if (aIsType && bIsType) return true;
+  }
+  return false;
+}
+
 function havePantryItem(itemName) {
   if (haveIngredients[itemName]) return true; // exact match fast path
   const norm = normalizeIngredient(itemName);
@@ -4409,7 +4424,7 @@ function havePantryItem(itemName) {
     if (!pn) continue;
     // Exact normalized match only (no loose substring — that caused false positives
     // like pantry "salt" matching "kosher salt", or "apple" matching unrelated items)
-    if (pn === norm) return true;
+    if (pn === norm || cheeseTypeEquivalent(pn, norm)) return true;
   }
   return false;
 }
