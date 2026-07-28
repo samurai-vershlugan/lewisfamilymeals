@@ -8995,9 +8995,12 @@ async function confirmDiscoverEdit() {
     renderWeek();
     showToast(`"${name}" saved and added to ${DAYS[dayIdx]}!`);
   } else {
-    // Opened from Discover/Robot/Similar with no day context — offer to plan it right away
-    showToast(`"${name}" saved to your library!`);
-    setTimeout(() => quickAddRecipeToDay(name), 150);
+    // Opened from Discover/Robot/Similar/general editing with no day context —
+    // take them to the recipe's own detail view instead of a separate popup.
+    // Shows the freshly saved version and lets them pick a day right there,
+    // using the same day-assignment buttons every recipe card already has.
+    showToast(`"${name}" saved!`);
+    openRecipeModal(name);
   }
 }
 
