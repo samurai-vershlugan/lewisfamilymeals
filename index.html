@@ -6311,6 +6311,7 @@ async function bootApp() {
   initWakeWord();
   initTagUI();
   initDarkMode();
+  initDiscoverFilterListeners();
 }
 
 // Legacy Store helper (window.storage / localStorage fallback)
@@ -7948,7 +7949,7 @@ function buildRobotNewCard(r) {
   const manualBtn = document.createElement('button');
   manualBtn.className = 'discover-action-btn';
   manualBtn.textContent = 'Add manually';
-  manualBtn.addEventListener('click', () => openDiscoverEditModal(r));
+  manualBtn.addEventListener('click', () => { closeSourceDiscoveryModal(); openDiscoverEditModal(r); });
   actionsEl.appendChild(manualBtn);
   return div;
 }
@@ -8041,42 +8042,43 @@ function openDiscoverModal() {
   updateDiscoverModalHeader();
   document.getElementById('discoverResults').innerHTML = '';
   document.getElementById('discoverModal').classList.add('open');
-  // Wire mood buttons
-  document.querySelectorAll('#discoverMoodBtns .cat-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.mood === discoverMood);
-    btn.addEventListener('click', () => {
-      discoverMood = btn.dataset.mood;
-      document.querySelectorAll('#discoverMoodBtns .cat-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
+  syncDiscoverFilterHighlights();
+}
+
+// Attached once, ever — fixes a bug where openDiscoverModal() used to call
+// addEventListener on these buttons every time it opened, stacking duplicate
+// listeners that made toggling look broken (an even number of accumulated
+// listeners on one click cancels itself out).
+function initDiscoverFilterListeners() {
+  document.getElementById('discoverMoodBtns').addEventListener('click', (e) => {
+    const btn = e.target.closest('.cat-btn');
+    if (!btn) return;
+    discoverMood = btn.dataset.mood;
+    syncDiscoverFilterHighlights();
   });
-  // Wire protein buttons
-  document.querySelectorAll('#discoverProteinBtns .cat-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.protein === discoverProtein);
-    btn.addEventListener('click', () => {
-      if (discoverProtein === btn.dataset.protein) {
-        discoverProtein = null;
-        btn.classList.remove('active');
-      } else {
-        discoverProtein = btn.dataset.protein;
-        document.querySelectorAll('#discoverProteinBtns .cat-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      }
-    });
+  document.getElementById('discoverProteinBtns').addEventListener('click', (e) => {
+    const btn = e.target.closest('.cat-btn');
+    if (!btn) return;
+    discoverProtein = (discoverProtein === btn.dataset.protein) ? null : btn.dataset.protein;
+    syncDiscoverFilterHighlights();
   });
-  // Wire cuisine buttons
-  document.querySelectorAll('#discoverCuisineBtns .cat-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.cuisine === discoverCuisine);
-    btn.addEventListener('click', () => {
-      if (discoverCuisine === btn.dataset.cuisine) {
-        discoverCuisine = null;
-        btn.classList.remove('active');
-      } else {
-        discoverCuisine = btn.dataset.cuisine;
-        document.querySelectorAll('#discoverCuisineBtns .cat-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      }
-    });
+  document.getElementById('discoverCuisineBtns').addEventListener('click', (e) => {
+    const btn = e.target.closest('.cat-btn');
+    if (!btn) return;
+    discoverCuisine = (discoverCuisine === btn.dataset.cuisine) ? null : btn.dataset.cuisine;
+    syncDiscoverFilterHighlights();
+  });
+}
+
+function syncDiscoverFilterHighlights() {
+  document.querySelectorAll('#discoverMoodBtns .cat-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mood === discoverMood);
+  });
+  document.querySelectorAll('#discoverProteinBtns .cat-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.protein === discoverProtein);
+  });
+  document.querySelectorAll('#discoverCuisineBtns .cat-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.cuisine === discoverCuisine);
   });
 }
 
@@ -8146,18 +8148,9 @@ function discoverSimilarFromEditor() {
   updateDiscoverModalHeader();
 
   discoverMood = 'new';
-  if (cuisine) {
-    discoverCuisine = cuisine;
-    document.querySelectorAll('#discoverCuisineBtns .cat-btn').forEach(function(b){
-      b.classList.toggle('active', b.dataset.cuisine === cuisine);
-    });
-  }
-  if (proteinFocus) {
-    discoverProtein = proteinFocus;
-    document.querySelectorAll('#discoverProteinBtns .cat-btn').forEach(function(b){
-      b.classList.toggle('active', b.dataset.protein === proteinFocus);
-    });
-  }
+  if (cuisine) discoverCuisine = cuisine;
+  if (proteinFocus) discoverProtein = proteinFocus;
+  syncDiscoverFilterHighlights();
   showToast('Finding recipes like ' + (refName || 'this one') + '...');
   setTimeout(function(){ runDiscover(); }, 300);
 }
@@ -8342,7 +8335,7 @@ function renderDiscoverResults(recipes) {
     const manualBtn = document.createElement('button');
     manualBtn.className = 'discover-action-btn';
     manualBtn.textContent = 'Add manually';
-    manualBtn.addEventListener('click', () => openDiscoverEditModal(r));
+    manualBtn.addEventListener('click', () => { closeSourceDiscoveryModal(); openDiscoverEditModal(r); });
     actionsEl.appendChild(manualBtn);
     el.appendChild(div);
   });
@@ -8437,6 +8430,16 @@ function renderRecipeCandidates(r, candidates, actionsEl, candEl) {
   candEl.appendChild(cancelBtn);
 }
 
+function closeSourceDiscoveryModal() {
+  // importFromChosenUrl/Add-manually are shared between Discover and Robot —
+  // close whichever of those is actually open before showing the editor on top,
+  // so nothing lingers hidden behind it.
+  const discEl = document.getElementById('discoverModal');
+  if (discEl && discEl.classList.contains('open')) { closeDiscoverModal(); return; }
+  const robotEl = document.getElementById('robotModal');
+  if (robotEl && robotEl.classList.contains('open')) { closeRobotModal(); return; }
+}
+
 async function importFromChosenUrl(url, r, importBtn, statusEl) {
   const origText = importBtn.textContent;
   importBtn.textContent = 'Importing…';
@@ -8469,6 +8472,7 @@ async function importFromChosenUrl(url, r, importBtn, statusEl) {
       image: data.image || r.image || '',
       url: data.foundUrl || url
     });
+    closeSourceDiscoveryModal();
     openDiscoverEditModal(enriched);
   } catch (e) {
     console.error('importFromChosenUrl error:', e);
@@ -8760,7 +8764,7 @@ function openDiscoverEditModal(r) {
         </div>
         <div style="display:flex;gap:6px;justify-content:space-between;align-items:center;flex:0 0 auto;padding-top:12px;border-top:1px solid var(--border);margin-top:4px;flex-wrap:nowrap">
           <div style="display:flex;gap:6px;flex:0 0 auto">
-            <button class="confirm-btn" style="background:transparent;border:1.5px solid var(--accent2);color:var(--accent2);white-space:nowrap;padding:7px 10px;font-size:11px" onclick="discoverSimilarFromEditor()">✦ Discover Similar</button>
+            <button class="confirm-btn" style="background:transparent;border:1.5px solid var(--accent2);color:var(--accent2);white-space:nowrap;padding:7px 10px;font-size:11px" onclick="discoverSimilarFromEditor()">✦ Discover</button>
             <button class="confirm-btn" id="deDeleteBtn" style="background:transparent;border:1.5px solid #c0392b;color:#c0392b;white-space:nowrap;padding:7px 10px;font-size:11px;display:none" onclick="deleteRecipeFromEditor()">🗑 Delete</button>
           </div>
           <div style="display:flex;gap:6px;flex:0 0 auto">
