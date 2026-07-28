@@ -2828,8 +2828,12 @@
 <div class="modal-overlay" id="swapModal" onclick="closeModal(event)">
   <div class="modal" style="position:relative">
     <button class="modal-close" onclick="closeModalDirect()">×</button>
-    <h3>Swap Meal</h3>
+    <h3 id="swapModalTitle">Swap Meal</h3>
     <p id="swapDay">Choose a replacement for Monday</p>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="discover-action-btn primary" style="flex:1" onclick="openDiscoverFromSwap()">✦ Discover</button>
+      <button class="discover-action-btn primary" style="flex:1" onclick="openRobotFromSwap()">🤖 Robot</button>
+    </div>
     <input id="swapSearchInput" class="text-input" type="text" placeholder="Search recipes..." style="width:100%;box-sizing:border-box;margin-bottom:10px" oninput="renderSwapOptions()" />
     <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px" id="swapCuisineFilters"></div>
     <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px" id="swapProteinFilters"></div>
@@ -4775,7 +4779,9 @@ function openSwapModal(dayIndex) {
   swapTarget = dayIndex;
   const key = getWeekKey(currentWeekOffset);
   const current = weekPlans[key][dayIndex];
-  document.getElementById('swapDay').textContent = current && current.name
+  const hasMeal = !!(current && current.name);
+  document.getElementById('swapModalTitle').textContent = hasMeal ? 'Swap Meal' : 'Choose Meal';
+  document.getElementById('swapDay').textContent = hasMeal
     ? `Replacing: ${DAYS[dayIndex]} — ${getMealDisplayName(current)}`
     : `Add a meal for ${DAYS[dayIndex]}`;
   swapSearchCuisine = null;
@@ -4961,6 +4967,21 @@ function confirmSwapWithProtein() {
 function closeModal(e) {
   if (e.target === document.getElementById('swapModal')) closeModalDirect();
 }
+function openDiscoverFromSwap() {
+  const targetDay = swapTarget;
+  closeModalDirect();
+  openDiscoverModal(); // resets addLibraryDayIndex to null — must set it after
+  addLibraryDayIndex = targetDay;
+  updateDiscoverModalHeader();
+}
+
+function openRobotFromSwap() {
+  const targetDay = swapTarget;
+  closeModalDirect();
+  openRobotModal(); // resets addLibraryDayIndex to null — must set it after
+  addLibraryDayIndex = targetDay;
+}
+
 function closeModalDirect() {
   document.getElementById('swapModal').classList.remove('open');
 }
@@ -7648,6 +7669,18 @@ async function robotRemovePantryItem(item) {
 }
 
 
+function robotAssignToDay(recipeName, anchorEl) {
+  if (addLibraryDayIndex !== null) {
+    const dayIdx = addLibraryDayIndex;
+    assignRecipeToDay(recipeName, dayIdx);
+    addLibraryDayIndex = null;
+    closeRobotModal();
+    showToast('Added "' + recipeName + '" to ' + DAYS[dayIdx] + '!');
+    return;
+  }
+  quickAddRecipeToDay(recipeName, anchorEl);
+}
+
 function closeRobotModal() {
   document.getElementById('robotModal').classList.remove('open');
 }
@@ -7919,7 +7952,7 @@ function buildRobotCard(recipe, missing, isNew) {
     ${missingHtml}
     <div class="robot-result-actions">
       ${missing.length ? `<button class="discover-action-btn" onclick="robotAddToGrocery(${JSON.stringify(missing).replace(/"/g,'&quot;')})">＋ Add missing to list</button>` : ''}
-      <button class="discover-action-btn primary" onclick="quickAddRecipeToDay('${recipe.name.replace(/'/g,"\\'")}', this)">Assign to day →</button>
+      <button class="discover-action-btn primary" onclick="robotAssignToDay('${recipe.name.replace(/'/g,"\\'")}', this)">Assign to day →</button>
     </div>
   `;
   return div;
@@ -8112,6 +8145,9 @@ function updateDiscoverModalHeader() {
   if (discoverSimilarTo) {
     titleEl.textContent = '✦ Discover: Similar to "' + discoverSimilarTo + '"';
     subEl.textContent = 'Finding recipes with a similar style, key ingredients, and vibe — feel free to adjust the filters below.';
+  } else if (addLibraryDayIndex !== null) {
+    titleEl.textContent = '✦ Discover for ' + DAYS[addLibraryDayIndex];
+    subEl.textContent = 'Whatever you pick here gets added straight to ' + DAYS[addLibraryDayIndex] + ' once saved.';
   } else {
     titleEl.textContent = '✦ Discover New Recipes';
     subEl.textContent = "Based on your meal history and preferences, we'll suggest recipes from trusted sources you haven't tried yet.";
