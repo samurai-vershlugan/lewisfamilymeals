@@ -5532,7 +5532,8 @@ async function deleteRecipeFromEditor() {
 }
 
 async function deleteRecipeFromLibrary(name, cat) {
-  if (!confirm(`Remove "${name}" from the library?`)) return;
+  // Note: callers already confirm with the user before calling this —
+  // don't ask again here.
   // Remove from ALL categories (name may exist in more than one place)
   Object.keys(RECIPES).forEach(function(c){
     RECIPES[c] = RECIPES[c].filter(function(r){ return r.name !== name; });
