@@ -2764,13 +2764,8 @@
     <h3>Swap Meal</h3>
     <p id="swapDay">Choose a replacement for Monday</p>
     <input id="swapSearchInput" class="text-input" type="text" placeholder="Search recipes..." style="width:100%;box-sizing:border-box;margin-bottom:10px" oninput="renderSwapOptions()" />
-    <div class="modal-cats" id="modalCats"></div>
-    <div class="swap-tag-filter" id="swapProteinFilter">
-      <div class="swap-tag-label">By protein</div>
-    </div>
-    <div class="swap-tag-filter" id="swapTagFilter">
-      <div class="swap-tag-label">Filter by tag</div>
-    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px" id="swapCuisineFilters"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px" id="swapProteinFilters"></div>
     <div class="swap-options" id="swapOptions"></div>
     <!-- Inline protein picker — shown after selecting a recipe with proteins -->
     <div id="swapProteinPicker" style="display:none" class="swap-protein-picker">
@@ -4709,8 +4704,6 @@ function finishSpeaking() {
 
 
 
-let activeFilter = 'all';
-
 function openSwapModal(dayIndex) {
   swapTarget = dayIndex;
   const key = getWeekKey(currentWeekOffset);
@@ -4718,73 +4711,66 @@ function openSwapModal(dayIndex) {
   document.getElementById('swapDay').textContent = current && current.name
     ? `Replacing: ${DAYS[dayIndex]} — ${getMealDisplayName(current)}`
     : `Add a meal for ${DAYS[dayIndex]}`;
-  activeFilter = 'all';
-  activeTagFilter = null;
-  activeProteinFilter = null;
+  swapSearchCuisine = null;
+  swapSearchType = null;
   const swapSearchEl = document.getElementById('swapSearchInput');
   if (swapSearchEl) swapSearchEl.value = '';
   // Hide protein picker
   document.getElementById('swapProteinPicker').style.display = 'none';
   document.getElementById('swapOptions').style.display = 'block';
-  renderModalCats(dayIndex);
-  renderSwapProteinFilter();
-  renderSwapTagFilter();
+  renderSwapFilters();
   renderSwapOptions();
   document.getElementById('swapModal').classList.add('open');
 }
 
-function renderModalCats(dayIndex) {
-  const weekdayCats = [
-    ['all','All'],['burger','Burgers'],['easy','Easy Night'],
-    ['mediterranean','Mediterranean'],['taco','Mexican'],
-    ['other','Other'],['pasta','Pasta'],['slowcooker','Slow Cooker'],['steak','Steak']
-  ];
-  const fridayCats = [
-    ['all','All'],['friday_special','Shabbat/Friday'],['burger','Burgers'],
-    ['easy','Easy Night'],['mediterranean','Mediterranean'],['taco','Mexican'],
-    ['other','Other'],['pasta','Pasta'],['slowcooker','Slow Cooker'],['steak','Steak']
-  ];
-  const cats = dayIndex === 4 ? fridayCats : weekdayCats;
+let swapSearchCuisine = null;
+let swapSearchType = null;
 
-  const el = document.getElementById('modalCats');
-  el.innerHTML = '';
-  cats.forEach(([k, l]) => {
-    const btn = document.createElement('button');
-    btn.className = `cat-btn${activeFilter === k ? ' active' : ''}`;
-    btn.textContent = l;
-    btn.dataset.filter = k;
-    btn.addEventListener('click', () => setFilter(k));
-    el.appendChild(btn);
-  });
-}
-
-function setFilter(f) {
-  activeFilter = f;
-  document.querySelectorAll('#modalCats .cat-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.filter === f);
-  });
-  renderSwapOptions();
+function renderSwapFilters() {
+  const cEl = document.getElementById('swapCuisineFilters');
+  if (cEl) {
+    cEl.innerHTML = '<span style="font-family:var(--font-mono,monospace);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);align-self:center;margin-right:4px">Cuisine:</span>';
+    getActiveCuisineOptions().forEach(label => {
+      const btn = document.createElement('button');
+      btn.className = 'cat-btn' + (swapSearchCuisine === label ? ' active' : '');
+      btn.textContent = label;
+      btn.style.cssText = 'font-size:9px;padding:3px 9px';
+      btn.onclick = () => {
+        swapSearchCuisine = swapSearchCuisine === label ? null : label;
+        renderSwapFilters(); renderSwapOptions();
+      };
+      cEl.appendChild(btn);
+    });
+  }
+  const pEl = document.getElementById('swapProteinFilters');
+  if (pEl) {
+    pEl.innerHTML = '<span style="font-family:var(--font-mono,monospace);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);align-self:center;margin-right:4px">Protein:</span>';
+    getActiveProteinOptions().forEach(label => {
+      const btn = document.createElement('button');
+      btn.className = 'cat-btn' + (swapSearchType === label ? ' active' : '');
+      btn.textContent = label;
+      btn.style.cssText = 'font-size:9px;padding:3px 9px';
+      btn.onclick = () => {
+        swapSearchType = swapSearchType === label ? null : label;
+        renderSwapFilters(); renderSwapOptions();
+      };
+      pEl.appendChild(btn);
+    });
+  }
 }
 
 function renderSwapOptions() {
   const all = getAllRecipes();
-  let pool;
-  if (activeFilter === 'all') {
-    pool = all.filter(r => !r.friday && !(r.tags || []).includes('prep'));
-  } else if (RECIPES[activeFilter]) {
-    pool = RECIPES[activeFilter].filter(r => !r.friday);
-  } else {
-    pool = all.filter(r => !r.friday && !(r.tags || []).includes('prep'));
+  let pool = all.filter(r => !r.friday && !(r.tags || []).includes('prep'));
+
+  // Apply cuisine filter (same logic as the main Recipes tab)
+  if (swapSearchCuisine) {
+    pool = pool.filter(r => recipeCuisines(r).includes(swapSearchCuisine));
   }
 
-  // Apply protein filter
-  if (activeProteinFilter) {
-    pool = pool.filter(r => recipeUsesProtein(r, activeProteinFilter));
-  }
-
-  // Apply tag filter
-  if (activeTagFilter) {
-    pool = pool.filter(r => (r.tags || []).includes(activeTagFilter));
+  // Apply protein filter (same logic as the main Recipes tab)
+  if (swapSearchType) {
+    pool = pool.filter(r => recipeTypes(r).includes(swapSearchType));
   }
 
   // Apply search-by-name
@@ -4914,8 +4900,6 @@ function closeModalDirect() {
 
 // ─── TAG SYSTEM ───────────────────────────────────────────────────────────────
 
-let activeTagFilter = null; // for swap modal
-let activeProteinFilter = null; // for swap modal protein row
 let currentTagRecipeName = null;
 
 // Proteins to detect — maps label to ingredient keywords
@@ -4953,29 +4937,6 @@ function recipeUsesProtein(recipe, proteinLabel) {
   return false;
 }
 
-function renderSwapProteinFilter() {
-  const el = document.getElementById('swapProteinFilter');
-  if (!el) return;
-  el.innerHTML = `<div class="swap-tag-label">By protein</div>` +
-    PROTEIN_FILTERS.map(p =>
-      `<button class="cat-btn${activeProteinFilter === p.label ? ' active' : ''}"
-        onclick="setProteinFilter('${p.label}')">${p.label}</button>`
-    ).join('') +
-    `<button class="cat-btn" onclick="clearProteinFilter()" style="opacity:0.5">✕</button>`;
-}
-
-function setProteinFilter(label) {
-  activeProteinFilter = activeProteinFilter === label ? null : label;
-  renderSwapProteinFilter();
-  renderSwapOptions();
-}
-
-function clearProteinFilter() {
-  activeProteinFilter = null;
-  renderSwapProteinFilter();
-  renderSwapOptions();
-}
-
 function initTagUI() {
   // Populate generate tag preference dropdown
   const sel = document.getElementById('generateTagFilter');
@@ -4983,34 +4944,6 @@ function initTagUI() {
     sel.innerHTML = `<option value="">Any meal</option>` +
       BUILTIN_TAGS.map(t => `<option value="${t.id}">${t.label}</option>`).join('');
   }
-
-  // Populate swap modal tag filter
-  renderSwapProteinFilter();
-  renderSwapTagFilter();
-}
-
-function renderSwapTagFilter() {
-  const el = document.getElementById('swapTagFilter');
-  if (!el) return;
-  el.innerHTML = `<div class="swap-tag-label">Filter by tag</div>` +
-    BUILTIN_TAGS.map(t =>
-      `<button class="cat-btn${activeTagFilter === t.id ? ' active' : ''}"
-        onclick="setTagFilter('${t.id}')">${t.label}</button>`
-    ).join('') +
-    `<button class="cat-btn${activeTagFilter === null ? '' : ''}"
-      onclick="clearTagFilter()" style="opacity:0.5">✕ Clear</button>`;
-}
-
-function setTagFilter(tagId) {
-  activeTagFilter = activeTagFilter === tagId ? null : tagId;
-  renderSwapTagFilter();
-  renderSwapOptions();
-}
-
-function clearTagFilter() {
-  activeTagFilter = null;
-  renderSwapTagFilter();
-  renderSwapOptions();
 }
 
 // ─── RECIPE TAG EDITOR ────────────────────────────────────────────────────────
@@ -5312,7 +5245,7 @@ function getActiveCuisineOptions() {
       if (c && !seen.has(c.toLowerCase())) { seen.add(c.toLowerCase()); opts.push(c); }
     });
   });
-  return opts;
+  return opts.sort((a, b) => a.localeCompare(b));
 }
 
 function getActiveProteinOptions() {
@@ -5323,7 +5256,7 @@ function getActiveProteinOptions() {
       if (p && !seen.has(p.toLowerCase())) { seen.add(p.toLowerCase()); opts.push(p); }
     });
   });
-  return opts;
+  return opts.sort((a, b) => a.localeCompare(b));
 }
 
 function renderRecipeFilters() {
