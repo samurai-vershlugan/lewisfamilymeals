@@ -1973,6 +1973,16 @@
   }
   .discover-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
   .discover-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  .discover-modal-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: var(--surface);
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    border-radius: 12px;
+  }
 
 
   .robot-section {
@@ -2916,6 +2926,12 @@
     </button>
 
     <div id="discoverResults"></div>
+    <div class="discover-modal-overlay" id="discoverModalOverlay">
+      <div class="discover-loading">
+        <div class="discover-loading-dots"><span>✦</span><span>✦</span><span>✦</span></div>
+        <div style="margin-top:12px" id="discoverModalOverlayText">Searching...</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2936,9 +2952,9 @@
       <div class="robot-section">
         <div class="robot-section-toggle" onclick="robotToggle('robotProteinBody','robotProteinArrow')">
           <span>Protein focus <span id="robotProteinLabel" style="color:var(--accent);font-weight:600"></span></span>
-          <span id="robotProteinArrow" class="robot-arrow">+</span>
+          <span id="robotProteinArrow" class="robot-arrow open">+</span>
         </div>
-        <div id="robotProteinBody" style="display:none" class="robot-section-body">
+        <div id="robotProteinBody" style="display:block" class="robot-section-body">
           <div style="display:flex;flex-wrap:wrap;gap:5px;padding:8px 0" id="robotProteinBtns">
             <button class="cat-btn" data-protein="beef">Beef</button>
             <button class="cat-btn" data-protein="chicken">Chicken</button>
@@ -2954,9 +2970,9 @@
       <div class="robot-section">
         <div class="robot-section-toggle" onclick="robotToggle('robotPantryBody','robotPantryArrow')">
           <span>My Pantry <span id="robotPantryCount2" style="color:var(--accent4)"></span></span>
-          <span id="robotPantryArrow" class="robot-arrow">+</span>
+          <span id="robotPantryArrow" class="robot-arrow open">+</span>
         </div>
-        <div id="robotPantryBody" style="display:none" class="robot-section-body">
+        <div id="robotPantryBody" style="display:block" class="robot-section-body">
           <div id="robotPantryChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;max-height:150px;overflow-y:auto"></div>
           <div style="display:flex;gap:6px;margin-top:6px">
             <input id="robotPantryAdd" class="login-input" type="text" placeholder="Add to pantry..."
@@ -8380,11 +8396,23 @@ function renderDiscoverResults(recipes) {
 // Shared by Discover and Robot's "new recipe" suggestions: search for several
 // real candidate URLs instead of picking one and importing blind, so a single
 // failed/blocked site doesn't dead-end into a blank manual editor.
+function showDiscoverOverlay(message) {
+  const overlay = document.getElementById('discoverModalOverlay');
+  const textEl = document.getElementById('discoverModalOverlayText');
+  if (textEl) textEl.textContent = message || 'Searching...';
+  if (overlay) overlay.style.display = 'flex';
+}
+function hideDiscoverOverlay() {
+  const overlay = document.getElementById('discoverModalOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
 async function findRecipeOptions(r, btnEl, actionsEl, candEl) {
   await ensureFreshToken();
   const origText = btnEl.textContent;
   btnEl.textContent = 'Searching…';
   btnEl.disabled = true;
+  showDiscoverOverlay('Searching for "' + r.name + '"...');
   try {
     const resp = await fetch(SUPABASE_URL + '/functions/v1/import-recipe', {
       method: 'POST',
@@ -8398,14 +8426,17 @@ async function findRecipeOptions(r, btnEl, actionsEl, candEl) {
       showToast('No sources found — try Add manually');
       btnEl.textContent = origText;
       btnEl.disabled = false;
+      hideDiscoverOverlay();
       return;
     }
     renderRecipeCandidates(r, candidates, actionsEl, candEl);
+    hideDiscoverOverlay();
   } catch (e) {
     console.error('findRecipeOptions error:', e);
     showToast('Search failed — try again');
     btnEl.textContent = origText;
     btnEl.disabled = false;
+    hideDiscoverOverlay();
   }
 }
 
