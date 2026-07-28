@@ -1975,8 +1975,7 @@
   .discover-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
   .discover-modal-overlay {
     display: none;
-    position: absolute;
-    inset: 0;
+    position: fixed;
     background: var(--surface);
     align-items: center;
     justify-content: center;
@@ -8396,15 +8395,32 @@ function renderDiscoverResults(recipes) {
 // Shared by Discover and Robot's "new recipe" suggestions: search for several
 // real candidate URLs instead of picking one and importing blind, so a single
 // failed/blocked site doesn't dead-end into a blank manual editor.
+let discoverModalSavedScroll = 0;
+
 function showDiscoverOverlay(message) {
+  const modal = document.querySelector('#discoverModal .modal');
   const overlay = document.getElementById('discoverModalOverlay');
   const textEl = document.getElementById('discoverModalOverlayText');
   if (textEl) textEl.textContent = message || 'Searching...';
-  if (overlay) overlay.style.display = 'flex';
+  if (!modal || !overlay) return;
+
+  discoverModalSavedScroll = modal.scrollTop;
+  const rect = modal.getBoundingClientRect();
+  overlay.style.top = rect.top + 'px';
+  overlay.style.left = rect.left + 'px';
+  overlay.style.width = rect.width + 'px';
+  overlay.style.height = rect.height + 'px';
+  overlay.style.display = 'flex';
+  modal.style.overflowY = 'hidden';
 }
 function hideDiscoverOverlay() {
+  const modal = document.querySelector('#discoverModal .modal');
   const overlay = document.getElementById('discoverModalOverlay');
   if (overlay) overlay.style.display = 'none';
+  if (modal) {
+    modal.style.overflowY = '';
+    modal.scrollTop = discoverModalSavedScroll;
+  }
 }
 
 async function findRecipeOptions(r, btnEl, actionsEl, candEl) {
