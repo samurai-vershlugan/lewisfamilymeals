@@ -1888,6 +1888,55 @@
     font-weight: 700;
   }
   .discover-action-btn.primary:hover { background: var(--accent2); border-color: var(--accent2); }
+  .recipe-candidates { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .recipe-candidate-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .recipe-candidate-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    padding: 9px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+  .recipe-candidate-btn:hover { border-color: var(--accent); }
+  .recipe-candidate-site { font-weight: 500; }
+  .recipe-candidate-arrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-left: 10px;
+  }
+  .recipe-candidate-cancel {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-align: center;
+    padding: 6px;
+    cursor: pointer;
+  }
+  .recipe-candidate-loading {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 10px 0;
+  }
   .discover-loading {
     text-align: center;
     padding: 32px 0;
@@ -2801,8 +2850,8 @@
 <div class="modal-overlay" id="discoverModal" onclick="if(event.target.id==='discoverModal') closeDiscoverModal()">
   <div class="modal" style="position:relative;max-width:560px;width:95%">
     <button class="modal-close" onclick="closeDiscoverModal()">×</button>
-    <h3>✦ Discover New Recipes</h3>
-    <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;line-height:1.6">
+    <h3 id="discoverModalTitle">✦ Discover New Recipes</h3>
+    <p id="discoverModalSubtitle" style="color:var(--text-muted);font-size:13px;margin-bottom:16px;line-height:1.6">
       Based on your meal history and preferences, we'll suggest recipes from trusted sources you haven't tried yet.
     </p>
 
@@ -7866,11 +7915,21 @@ function buildRobotNewCard(r) {
     <div style="font-family:'DM Mono',monospace;font-size:9px;color:#8888cc;letter-spacing:1px;margin-bottom:4px;text-transform:uppercase">${r.source}</div>
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;line-height:1.5">${r.description||''}</div>
     ${missingHtml}
-    <div class="robot-result-actions">
-      <a href="https://www.google.com/search?q=${encodeURIComponent(r.name+' '+r.source)}" target="_blank" class="discover-action-btn">Find Recipe ↗</a>
-      <button class="discover-action-btn primary" onclick="addDiscoveredRecipe(${JSON.stringify(r).replace(/"/g,'&quot;')})">＋ Add to Library</button>
-    </div>
+    <div class="robot-result-actions"></div>
+    <div class="recipe-candidates" style="display:none"></div>
   `;
+  const actionsEl = div.querySelector('.robot-result-actions');
+  const candEl = div.querySelector('.recipe-candidates');
+  const findBtn = document.createElement('button');
+  findBtn.className = 'discover-action-btn primary';
+  findBtn.textContent = '🔍 Find recipe options';
+  findBtn.addEventListener('click', () => findRecipeOptions(r, findBtn, actionsEl, candEl));
+  actionsEl.appendChild(findBtn);
+  const manualBtn = document.createElement('button');
+  manualBtn.className = 'discover-action-btn';
+  manualBtn.textContent = 'Add manually';
+  manualBtn.addEventListener('click', () => openDiscoverEditModal(r));
+  actionsEl.appendChild(manualBtn);
   return div;
 }
 
@@ -7959,6 +8018,7 @@ let discoverSimilarTo = null;
 function openDiscoverModal() {
   discoverSimilarTo = null;
   addLibraryDayIndex = null;
+  updateDiscoverModalHeader();
   document.getElementById('discoverResults').innerHTML = '';
   document.getElementById('discoverModal').classList.add('open');
   // Wire mood buttons
@@ -8023,6 +8083,19 @@ function buildLibraryNames() {
 }
 
 
+function updateDiscoverModalHeader() {
+  const titleEl = document.getElementById('discoverModalTitle');
+  const subEl = document.getElementById('discoverModalSubtitle');
+  if (!titleEl || !subEl) return;
+  if (discoverSimilarTo) {
+    titleEl.textContent = '✦ Discover: Similar to "' + discoverSimilarTo + '"';
+    subEl.textContent = 'Finding recipes with a similar style, key ingredients, and vibe — feel free to adjust the filters below.';
+  } else {
+    titleEl.textContent = '✦ Discover New Recipes';
+    subEl.textContent = "Based on your meal history and preferences, we'll suggest recipes from trusted sources you haven't tried yet.";
+  }
+}
+
 function discoverSimilarFromEditor() {
   // Build a reference recipe object from the editor state to derive classification
   const refName = document.getElementById('deRecipeName').value.trim();
@@ -8045,11 +8118,12 @@ function discoverSimilarFromEditor() {
   let proteinFocus = null;
   for (var i=0;i<types.length;i++) { if (proteinMap[types[i]]) { proteinFocus = proteinMap[types[i]]; break; } }
 
-  // Build a focused "similar" instruction using the recipe name itself
-  discoverSimilarTo = refName || null;
-
   closeDiscoverEditModal();
   openDiscoverModal();
+
+  // Must come AFTER openDiscoverModal(), which resets this to null
+  discoverSimilarTo = refName || null;
+  updateDiscoverModalHeader();
 
   discoverMood = 'new';
   if (cuisine) {
@@ -8235,71 +8309,120 @@ function renderDiscoverResults(recipes) {
           return bt ? `<span class="tag tag-${t}">${bt.label}</span>` : '';
         }).join('')}
       </div>
-      <div class="discover-result-actions">
-        <a href="https://www.google.com/search?q=${encodeURIComponent(r.name + ' ' + r.source)}" target="_blank" class="discover-action-btn">Find ↗</a>
-        <button class="discover-action-btn primary" onclick="importDiscoverRecipe(${JSON.stringify(r).replace(/"/g, '&quot;')}, this)">＋ Add to Library</button>
-      </div>
+      <div class="discover-result-actions"></div>
+      <div class="recipe-candidates" style="display:none"></div>
     `;
+    const actionsEl = div.querySelector('.discover-result-actions');
+    const candEl = div.querySelector('.recipe-candidates');
+    const findBtn = document.createElement('button');
+    findBtn.className = 'discover-action-btn primary';
+    findBtn.textContent = '🔍 Find recipe options';
+    findBtn.addEventListener('click', () => findRecipeOptions(r, findBtn, actionsEl, candEl));
+    actionsEl.appendChild(findBtn);
+    const manualBtn = document.createElement('button');
+    manualBtn.className = 'discover-action-btn';
+    manualBtn.textContent = 'Add manually';
+    manualBtn.addEventListener('click', () => openDiscoverEditModal(r));
+    actionsEl.appendChild(manualBtn);
     el.appendChild(div);
   });
 }
 
-let importInProgress = false;
-
-async function importDiscoverRecipe(r, btnEl) {
+// Shared by Discover and Robot's "new recipe" suggestions: search for several
+// real candidate URLs instead of picking one and importing blind, so a single
+// failed/blocked site doesn't dead-end into a blank manual editor.
+async function findRecipeOptions(r, btnEl, actionsEl, candEl) {
   await ensureFreshToken();
-  if (importInProgress) {
-    showToast('Hang on — finishing the current import first');
-    return;
-  }
-  importInProgress = true;
   const origText = btnEl.textContent;
-  btnEl.textContent = 'Working...';
+  btnEl.textContent = 'Searching…';
   btnEl.disabled = true;
-
   try {
-    // Ask edge function to find URL by name + parse it
     const resp = await fetch(SUPABASE_URL + '/functions/v1/import-recipe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + AUTH_TOKEN },
-      body: JSON.stringify({ recipeName: r.name + ' ' + (r.source || '') })
+      body: JSON.stringify({ recipeName: r.name + ' ' + (r.source || ''), action: 'search' })
+    });
+    const data = await resp.json();
+    console.log('recipe search candidates:', data);
+    const candidates = data.candidates || [];
+    if (!candidates.length) {
+      showToast('No sources found — try Add manually');
+      btnEl.textContent = origText;
+      btnEl.disabled = false;
+      return;
+    }
+    renderRecipeCandidates(r, candidates, actionsEl, candEl);
+  } catch (e) {
+    console.error('findRecipeOptions error:', e);
+    showToast('Search failed — try again');
+    btnEl.textContent = origText;
+    btnEl.disabled = false;
+  }
+}
+
+function renderRecipeCandidates(r, candidates, actionsEl, candEl) {
+  actionsEl.style.display = 'none';
+  candEl.style.display = 'block';
+  candEl.innerHTML = '';
+
+  const label = document.createElement('div');
+  label.className = 'recipe-candidate-label';
+  label.textContent = 'Pick a source to import from:';
+  candEl.appendChild(label);
+
+  candidates.forEach(c => {
+    let hostname = c.site;
+    try { hostname = c.site || new URL(c.url).hostname.replace(/^www\./, ''); } catch (_) {}
+    const btn = document.createElement('button');
+    btn.className = 'recipe-candidate-btn';
+    btn.innerHTML = `<span class="recipe-candidate-site">${hostname}</span><span class="recipe-candidate-arrow">Import →</span>`;
+    btn.addEventListener('click', () => importFromChosenUrl(c.url, r, candEl, actionsEl));
+    candEl.appendChild(btn);
+  });
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'recipe-candidate-cancel';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.addEventListener('click', () => {
+    candEl.style.display = 'none';
+    candEl.innerHTML = '';
+    actionsEl.style.display = '';
+    const findBtn = actionsEl.querySelector('.discover-action-btn.primary, .discover-action-btn:first-child');
+    if (findBtn) { findBtn.textContent = '🔍 Find recipe options'; findBtn.disabled = false; }
+  });
+  candEl.appendChild(cancelBtn);
+}
+
+async function importFromChosenUrl(url, r, candEl, actionsEl) {
+  candEl.innerHTML = `<div class="recipe-candidate-loading">Importing…</div>`;
+  await ensureFreshToken();
+  try {
+    const resp = await fetch(SUPABASE_URL + '/functions/v1/import-recipe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + AUTH_TOKEN },
+      body: JSON.stringify({ url })
     });
     const data = await resp.json();
     console.log('import-recipe response:', data);
 
     if (data.error && !data.ingredients) {
-      showToast(data.error + ' — opening manual editor');
-      // Fall back to the manual edit modal — name already known from the suggestion,
-      // but grab a fallback image if the server found one on the page.
-      openDiscoverEditModal(Object.assign({}, r, { image: r.image || data.fallbackImage || '' }));
-      btnEl.textContent = origText;
-      btnEl.disabled = false;
+      showToast(data.error + ' — try another source below');
+      candEl.querySelector('.recipe-candidate-loading')?.remove();
       return;
     }
 
-    // Merge parsed data into the recipe object, then open edit modal pre-filled
     const enriched = Object.assign({}, r, {
       name: data.name || r.name,
       ingredients: (data.ingredients || []).map(function(i) { return { item: i, store: 'tj' }; }),
       steps: data.steps || [],
-      url: data.foundUrl || r.url || ''
+      url: data.foundUrl || url
     });
     openDiscoverEditModal(enriched);
-    showToast('Imported ' + (data.ingredients ? data.ingredients.length : 0) + ' ingredients — review & save');
-  } catch(e) {
-    console.error('Import error:', e);
-    showToast('Import failed — opening manual editor');
-    openDiscoverEditModal(r);
-  } finally {
-    btnEl.textContent = origText;
-    btnEl.disabled = false;
-    importInProgress = false;
+  } catch (e) {
+    console.error('importFromChosenUrl error:', e);
+    showToast('Import failed — try another source below');
+    candEl.querySelector('.recipe-candidate-loading')?.remove();
   }
-}
-
-function addDiscoveredRecipe(r) {
-  // Open an edit modal so user can verify/adjust before saving
-  openDiscoverEditModal(r);
 }
 
 let pendingDiscoverRecipe = null;
@@ -8583,7 +8706,7 @@ function openDiscoverEditModal(r) {
         </div>
         <div style="display:flex;gap:6px;justify-content:space-between;align-items:center;flex:0 0 auto;padding-top:12px;border-top:1px solid var(--border);margin-top:4px;flex-wrap:nowrap">
           <div style="display:flex;gap:6px;flex:0 0 auto">
-            <button class="confirm-btn" style="background:transparent;border:1.5px solid var(--accent2);color:var(--accent2);white-space:nowrap;padding:7px 10px;font-size:11px" onclick="discoverSimilarFromEditor()">✦ Similar</button>
+            <button class="confirm-btn" style="background:transparent;border:1.5px solid var(--accent2);color:var(--accent2);white-space:nowrap;padding:7px 10px;font-size:11px" onclick="discoverSimilarFromEditor()">✦ Discover Similar</button>
             <button class="confirm-btn" id="deDeleteBtn" style="background:transparent;border:1.5px solid #c0392b;color:#c0392b;white-space:nowrap;padding:7px 10px;font-size:11px;display:none" onclick="deleteRecipeFromEditor()">🗑 Delete</button>
           </div>
           <div style="display:flex;gap:6px;flex:0 0 auto">
