@@ -4362,6 +4362,102 @@ function stemWord(w) {
 
 // Shared cleaning steps used by BOTH the matching key and the display name —
 // they only diverge on whether the result gets stemmed afterward.
+// Canonical ingredient library: groups genuine synonyms (different WORDS for the
+// same thing — "scallion"/"green onion", "cilantro"/"coriander") that stemming
+// alone can never unify, and guarantees a clean, consistent display name for the
+// most common ~150 home-cooking ingredients regardless of how a recipe phrased it.
+// Key = canonical matching key (already in stemmed/normalized form).
+const INGREDIENT_LIBRARY = {
+  // Proteins
+  'chicken breast': { display: 'Chicken breast', aliases: ['boneless skinless chicken breast','chicken breasts','skinless chicken breast'] },
+  'chicken thigh': { display: 'Chicken thighs', aliases: ['boneless skinless chicken thigh','chicken thighs','bone in chicken thigh'] },
+  'ground beef': { display: 'Ground beef', aliases: ['beef mince','minced beef','ground chuck'] },
+  'ground turkey': { display: 'Ground turkey', aliases: ['turkey mince'] },
+  'ground pork': { display: 'Ground pork', aliases: ['pork mince'] },
+  'bacon': { display: 'Bacon', aliases: ['bacon strips','streaky bacon'] },
+  'shrimp': { display: 'Shrimp', aliases: ['prawns','prawn'] },
+  'salmon': { display: 'Salmon', aliases: ['salmon fillet','salmon filet'] },
+  'egg': { display: 'Eggs', aliases: ['large egg','eggs','large eggs'] },
+
+  // Dairy
+  'butter': { display: 'Butter', aliases: ['unsalted butter','salted butter'] },
+  'milk': { display: 'Milk', aliases: ['whole milk','2 percent milk'] },
+  'heavy cream': { display: 'Heavy cream', aliases: ['heavy whipping cream','whipping cream'] },
+  'sour cream': { display: 'Sour cream', aliases: [] },
+  'cream cheese': { display: 'Cream cheese', aliases: [] },
+  'parmesan': { display: 'Parmesan cheese', aliases: ['parmesan cheese','parmigiano reggiano','grated parmesan'] },
+  'cheddar': { display: 'Cheddar cheese', aliases: ['cheddar cheese','shredded cheddar','sharp cheddar'] },
+  'mozzarella': { display: 'Mozzarella cheese', aliases: ['mozzarella cheese','shredded mozzarella','fresh mozzarella'] },
+  'greek yogurt': { display: 'Greek yogurt', aliases: ['plain greek yogurt'] },
+  'yogurt': { display: 'Yogurt', aliases: ['plain yogurt'] },
+
+  // Produce
+  'scallion': { display: 'Scallions', aliases: ['green onion','green onions','scallions','spring onion','spring onions'] },
+  'cilantro': { display: 'Cilantro', aliases: ['coriander','fresh coriander'] },
+  'bell pepper': { display: 'Bell pepper', aliases: ['red bell pepper','green bell pepper','yellow bell pepper','capsicum'] },
+  'red onion': { display: 'Red onion', aliases: [] },
+  'yellow onion': { display: 'Yellow onion', aliases: ['white onion','brown onion'] },
+  'garlic': { display: 'Garlic', aliases: ['garlic clove','garlic cloves'] },
+  'ginger': { display: 'Ginger', aliases: ['fresh ginger','ginger root'] },
+  'lime': { display: 'Lime', aliases: [] },
+  'lemon': { display: 'Lemon', aliases: [] },
+  'tomato': { display: 'Tomatoes', aliases: ['tomatoes','roma tomato','cherry tomato','cherry tomatoes'] },
+  'avocado': { display: 'Avocado', aliases: [] },
+  'zucchini': { display: 'Zucchini', aliases: ['courgette'] },
+  'eggplant': { display: 'Eggplant', aliases: ['aubergine'] },
+  'arugula': { display: 'Arugula', aliases: ['rocket'] },
+
+  // Pantry staples / spices
+  'salt': { display: 'Salt', aliases: ['kosher salt','table salt','sea salt','fine salt'] },
+  'black pepper': { display: 'Black pepper', aliases: ['pepper','ground black pepper','cracked pepper','freshly ground pepper'] },
+  'olive oil': { display: 'Olive oil', aliases: ['extra virgin olive oil','evoo'] },
+  'vegetable oil': { display: 'Vegetable oil', aliases: ['canola oil','neutral oil'] },
+  'soy sauce': { display: 'Soy sauce', aliases: ['tamari','low sodium soy sauce'] },
+  'flour': { display: 'Flour', aliases: ['all purpose flour','ap flour'] },
+  'sugar': { display: 'Sugar', aliases: ['granulated sugar','white sugar'] },
+  'brown sugar': { display: 'Brown sugar', aliases: ['light brown sugar','dark brown sugar'] },
+  'honey': { display: 'Honey', aliases: [] },
+  'vanilla extract': { display: 'Vanilla extract', aliases: ['pure vanilla extract','vanilla'] },
+  'baking powder': { display: 'Baking powder', aliases: [] },
+  'baking soda': { display: 'Baking soda', aliases: ['bicarbonate of soda'] },
+  'cumin': { display: 'Cumin', aliases: ['ground cumin'] },
+  'paprika': { display: 'Paprika', aliases: ['smoked paprika','sweet paprika'] },
+  'chili powder': { display: 'Chili powder', aliases: [] },
+  'red pepper flakes': { display: 'Red pepper flakes', aliases: ['crushed red pepper','chili flakes'] },
+  'cinnamon': { display: 'Cinnamon', aliases: ['ground cinnamon'] },
+  'oregano': { display: 'Oregano', aliases: ['dried oregano'] },
+  'basil': { display: 'Basil', aliases: ['fresh basil','dried basil'] },
+  'thyme': { display: 'Thyme', aliases: ['fresh thyme','dried thyme'] },
+  'rosemary': { display: 'Rosemary', aliases: ['fresh rosemary','dried rosemary'] },
+  'chicken stock': { display: 'Chicken stock', aliases: ['chicken broth'] },
+  'vegetable stock': { display: 'Vegetable stock', aliases: ['vegetable broth'] },
+  'beef stock': { display: 'Beef stock', aliases: ['beef broth'] },
+  'rice': { display: 'Rice', aliases: ['white rice','jasmine rice','basmati rice'] },
+  'pasta': { display: 'Pasta', aliases: [] },
+  'tortilla': { display: 'Tortillas', aliases: ['flour tortilla','corn tortilla','tortillas'] },
+  'panko': { display: 'Panko breadcrumbs', aliases: ['panko breadcrumbs','bread crumbs','breadcrumbs'] },
+  'dijon mustard': { display: 'Dijon mustard', aliases: ['dijon'] },
+  'mayonnaise': { display: 'Mayonnaise', aliases: ['mayo'] },
+  'ketchup': { display: 'Ketchup', aliases: ['catsup'] },
+  'worcestershire sauce': { display: 'Worcestershire sauce', aliases: ['worcestershire'] },
+  'sesame oil': { display: 'Sesame oil', aliases: ['toasted sesame oil'] },
+  'rice vinegar': { display: 'Rice vinegar', aliases: ['rice wine vinegar'] },
+  'balsamic vinegar': { display: 'Balsamic vinegar', aliases: ['balsamic'] },
+  'coconut milk': { display: 'Coconut milk', aliases: ['canned coconut milk'] },
+  'peanut butter': { display: 'Peanut butter', aliases: [] },
+  'almonds': { display: 'Almonds', aliases: ['sliced almonds','slivered almonds'] },
+};
+
+const INGREDIENT_ALIAS_MAP = {};
+Object.entries(INGREDIENT_LIBRARY).forEach(([key, entry]) => {
+  entry.key = key;
+  INGREDIENT_ALIAS_MAP[key] = entry;
+  entry.aliases.forEach(alias => {
+    const stemmedAlias = alias.split(' ').map(stemWord).join(' ');
+    INGREDIENT_ALIAS_MAP[stemmedAlias] = entry;
+  });
+});
+
 function cleanIngredientCore(name) {
   if (!name) return '';
   let s = name.toLowerCase().trim();
@@ -4394,16 +4490,25 @@ function cleanIngredientCore(name) {
 }
 
 // For MATCHING ONLY (pantry checks, grocery dedup keys) — stemmed so plural and
-// singular forms group together. Never shown to the user directly.
+// singular forms group together. Never shown to the user directly. Checks the
+// curated ingredient library first, so genuine synonyms (different words for the
+// same thing — "scallion"/"green onion") unify, which stemming alone never could.
 function normalizeIngredient(name) {
   const s = cleanIngredientCore(name);
   if (!s) return '';
-  return s.split(' ').filter(Boolean).map(stemWord).join(' ').trim();
+  const stemmed = s.split(' ').filter(Boolean).map(stemWord).join(' ').trim();
+  const lib = INGREDIENT_ALIAS_MAP[stemmed];
+  return lib ? lib.key : stemmed;
 }
 
 // For DISPLAY in the grocery list — cleaned the same way but NOT stemmed, so
 // plurals stay natural ("chocolate chips" stays "chocolate chips", not "chip").
+// Uses the library's canonical display name when the ingredient is recognized.
 function cleanIngredientDisplay(name) {
+  // Deliberately does NOT consult the library — a recipe that says "kosher salt"
+  // should still display as "Kosher salt", not get genericized down to "Salt",
+  // even though those correctly match as the same thing in the pantry. The
+  // library's job is matching; what's shown should always be what was written.
   return cleanIngredientCore(name);
 }
 
@@ -4431,21 +4536,6 @@ function parseIngredientParts(raw) {
   return { amount: amount, name: displayName };
 }
 
-const CHEESE_TYPE_WORDS = ['cheddar','mozzarella','parmesan','parmigiano','swiss','provolone','gouda','brie','feta','colby','muenster','havarti','gruyere','pepperjack','montereyjack','american','ricotta','pepper jack','monterey jack'];
-function cheeseTypeEquivalent(a, b) {
-  // "Sliced cheddar" (normalizes to "cheddar" once "sliced" is stripped) and
-  // "cheddar cheese" are the same thing, but exact-match normalization treats
-  // them as different strings. Handle named cheese types as a narrow special
-  // case rather than loosening matching generally (which previously caused
-  // false positives like pantry "salt" matching recipe "kosher salt").
-  for (const type of CHEESE_TYPE_WORDS) {
-    const aIsType = a === type || a === type + ' cheese';
-    const bIsType = b === type || b === type + ' cheese';
-    if (aIsType && bIsType) return true;
-  }
-  return false;
-}
-
 function havePantryItem(itemName) {
   if (haveIngredients[itemName]) return true; // exact match fast path
   const norm = normalizeIngredient(itemName);
@@ -4455,8 +4545,10 @@ function havePantryItem(itemName) {
     const pn = normalizeIngredient(k);
     if (!pn) continue;
     // Exact normalized match only (no loose substring — that caused false positives
-    // like pantry "salt" matching "kosher salt", or "apple" matching unrelated items)
-    if (pn === norm || cheeseTypeEquivalent(pn, norm)) return true;
+    // like pantry "salt" matching "kosher salt", or "apple" matching unrelated items).
+    // The ingredient library (normalizeIngredient) already resolves genuine synonyms
+    // like "cheddar"/"cheddar cheese"/"sliced cheddar" to the same key.
+    if (pn === norm) return true;
   }
   return false;
 }
@@ -7882,7 +7974,7 @@ function analyzeLibraryLocally() {
     if (!norm) return false;
     for (const ex of extra) {
       const en = normalizeIngredient(ex);
-      if (en && (en === norm || cheeseTypeEquivalent(en, norm))) return true;
+      if (en && en === norm) return true;
     }
     return false;
   }
@@ -7997,7 +8089,7 @@ ${plannedThisWeek ? `\nAlready planned for this week (don't suggest these either
 Family profile: Family with kids, shops at Costco and Trader Joes, enjoys Mediterranean, Mexican, American comfort food.
 ${robotProtein ? `Protein focus: All 3 recipes MUST feature ${robotProtein} as the main protein.` : ''}
 
-Suggest exactly 3 NEW recipes (not in their library) that they can make with mostly what they have — requiring at most 2 additional common ingredients.
+Suggest exactly 3 NEW recipes (not in their library) that they could plausibly make with what they have, plus maybe a couple extra common ingredients — don't worry about being precise on quantity of missing items, we'll verify that ourselves.
 
 Respond ONLY with JSON, no markdown:
 [
@@ -8005,13 +8097,13 @@ Respond ONLY with JSON, no markdown:
     "name": "Recipe Name",
     "source": "Source Name (NYT Cooking, Serious Eats, Smitten Kitchen, Half Baked Harvest, The Kitchn, Budget Bytes, Bon Appétit, Food52)",
     "description": "One sentence why this works with what they have",
-    "missing": ["ingredient 1", "ingredient 2"],
+    "ingredients": ["1 lb chicken thighs", "2 cloves garlic", "1 tbsp soy sauce"],
     "tags": ["quick"],
     "category": "chicken|taco|pasta|fish|burger|steak|mediterranean|other"
   }
 ]
 
-Only suggest recipes where missing ingredients are common, cheap, and easy to find. Tags from: quick, gluten-free, kid-friendly, meal-prep, vegetarian, dairy-free, spicy, date-night.`;
+List the recipe's FULL ingredient list (not just what's missing) so pantry-fit can be verified precisely — we'll compute what's actually missing ourselves rather than trust an estimate. Tags from: quick, gluten-free, kid-friendly, meal-prep, vegetarian, dairy-free, spicy, date-night.`;
 
   let newRecipes = [];
   try {
@@ -8027,29 +8119,48 @@ Only suggest recipes where missing ingredients are common, cheap, and easy to fi
     newRecipes = JSON.parse(clean);
   } catch(e) { console.warn('Robot new recipe fetch failed:', e); }
 
+  // Independently verify each suggestion's pantry-fit using the same matching
+  // engine as library recipes — don't trust the AI's own guess about what's
+  // missing. Merge into the SAME now/close buckets as local matches, so the
+  // user sees one unified, consistently-computed view spanning both sources.
+  newRecipes.forEach(nr => {
+    const ings = (nr.ingredients || []).filter(Boolean);
+    const missing = ings.filter(ing => !havePantryItem(ing));
+    const entry = { recipe: nr, missing, isNew: true };
+    if (missing.length === 0) local.now.push(entry);
+    else if (missing.length <= 2) local.close.push(entry);
+    // else: silently drop — despite the prompt, verify rather than trust
+  });
+
   btn.disabled = false;
   hideRobotOverlay();
   document.getElementById('robotSetupView').style.display = 'none';
   document.getElementById('robotResultsView').style.display = 'block';
   document.getElementById('robotModal').querySelector('.modal').scrollTop = 0;
-  renderRobotResults(local, newRecipes);
+  renderRobotResults(local);
 }
 
-function renderRobotResults(local, newRecipes) {
+function renderRobotResults(local) {
   const el = document.getElementById('robotResults');
   el.innerHTML = '';
 
-  const hasAny = local.now.length || local.close.length || newRecipes.length;
+  const hasAny = local.now.length || local.close.length;
   if (!hasAny) {
     el.innerHTML = `<div style="color:var(--text-muted);font-size:13px;padding:16px 0">No matches found. Try adding more ingredients.</div>`;
     return;
   }
 
+  function buildEntryCard(entry) {
+    return entry.isNew
+      ? buildRobotNewCard(entry.recipe, entry.missing)
+      : buildRobotCard(entry.recipe, entry.missing);
+  }
+
   // Make it now
   if (local.now.length) {
     el.innerHTML += `<div class="robot-section-label robot-section-now">✓ Make it right now (${local.now.length})</div>`;
-    local.now.sort((a,b) => a.recipe.name.localeCompare(b.recipe.name)).forEach(({recipe}) => {
-      el.appendChild(buildRobotCard(recipe, [], false));
+    local.now.sort((a,b) => a.recipe.name.localeCompare(b.recipe.name)).forEach(entry => {
+      el.appendChild(buildEntryCard(entry));
     });
   }
 
@@ -8057,21 +8168,13 @@ function renderRobotResults(local, newRecipes) {
   if (local.close.length) {
     el.innerHTML += `<div class="robot-section-label robot-section-close" style="margin-top:12px">Almost there — 1–2 items needed (${local.close.length})</div>`;
     local.close.sort((a,b) => a.missing.length - b.missing.length || a.recipe.name.localeCompare(b.recipe.name))
-      .forEach(({recipe, missing}) => {
-        el.appendChild(buildRobotCard(recipe, missing, false));
+      .forEach(entry => {
+        el.appendChild(buildEntryCard(entry));
       });
-  }
-
-  // New suggestions
-  if (newRecipes.length) {
-    el.innerHTML += `<div class="robot-section-label robot-section-new" style="margin-top:12px">✦ New recipes you could make (${newRecipes.length})</div>`;
-    newRecipes.forEach(r => {
-      el.appendChild(buildRobotNewCard(r));
-    });
   }
 }
 
-function buildRobotCard(recipe, missing, isNew) {
+function buildRobotCard(recipe, missing) {
   const div = document.createElement('div');
   div.className = 'robot-result';
   const missingHtml = missing.length
@@ -8089,12 +8192,13 @@ function buildRobotCard(recipe, missing, isNew) {
   return div;
 }
 
-function buildRobotNewCard(r) {
+function buildRobotNewCard(r, missing) {
   const div = document.createElement('div');
   div.className = 'robot-result';
-  const missingHtml = r.missing?.length
-    ? `<div class="robot-result-missing">Need: ${r.missing.join(', ')}</div>`
-    : '';
+  missing = missing || [];
+  const missingHtml = missing.length
+    ? `<div class="robot-result-missing">Need: ${missing.join(', ')}</div>`
+    : `<div class="robot-result-missing" style="color:#4ab87a">All ingredients on hand ✓</div>`;
   div.innerHTML = `
     <div class="robot-result-title">${r.name}</div>
     <div style="font-family:'DM Mono',monospace;font-size:9px;color:#8888cc;letter-spacing:1px;margin-bottom:4px;text-transform:uppercase">${r.source}</div>
