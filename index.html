@@ -3898,10 +3898,21 @@ function planIngredients(key) {
   function resolveIngredientPartsList(ing) {
     const raw = ing.item || ing.name || '';
     if (isOptionalIngredient(raw)) return []; // skip "(optional)" ingredients entirely
+    // Prefer re-parsing the raw item text fresh with the CURRENT parser every
+    // time. Stored name/amount fields are a cache computed by whatever parser
+    // version existed when the recipe was imported/saved — they can be stale
+    // relative to since-fixed parsing bugs, so `item` (the original raw text)
+    // is the reliable source of truth. Only trust stored name/amount when
+    // there's no raw item text to re-derive from at all.
+    if (ing.item) {
+      const saltPepperMatch = ing.item.match(/^(.*?\bsalt\b.*?)\s*(?:,|&|\band\b)\s*(.*?\bpepper\b.*?)$/i);
+      if (saltPepperMatch) {
+        return [parseIngredientParts(saltPepperMatch[1].trim()), parseIngredientParts(saltPepperMatch[2].trim())];
+      }
+      return [parseIngredientParts(ing.item)];
+    }
     if (ing.amount) {
-      // Amount already given separately — still clean the descriptive name text,
-      // don't try to re-extract an amount from it (that part's already correct).
-      return [{ name: cleanDisplayName(ing.name || ing.item), amount: ing.amount }];
+      return [{ name: cleanDisplayName(ing.name), amount: ing.amount }];
     }
     const saltPepperMatch = raw.match(/^(.*?\bsalt\b.*?)\s*(?:,|&|\band\b)\s*(.*?\bpepper\b.*?)$/i);
     if (saltPepperMatch) {
@@ -4475,12 +4486,18 @@ function cleanIngredientCore(name) {
   s = s.replace(/^(a|an)\s+/, '');
   // Remove common units and measurement words (now also catches stray single letters)
   s = s.replace(/\b(tsp|teaspoon|teaspoons|tbsp|tablespoon|tablespoons|cup|cups|oz|ounce|ounces|lb|lbs|pound|pounds|g|gram|grams|kg|ml|l|liter|litre|tin|tins|can|cans|clove|cloves|cube|cubes|inch|inches|pinch|drop|drops|dash|dashes|handful|bunch|sprig|sprigs|slice|slices|stick|sticks|piece|pieces|fillet|fillets)\b/g, '');
-  // Remove prep / descriptor words
+  // Remove prep / descriptor words. Note: some of these ("bone-in", "skin-on")
+  // commonly sit directly before a comma in real ingredient lines ("bone-in,
+  // skin-on chicken thighs") — removing them can leave a leading comma behind,
+  // which the comma-split step below has to be careful not to choke on.
   s = s.replace(/\b(fresh|freshly|dried|ground|crushed|minced|chopped|finely|coarsely|roughly|thinly|thickly|lightly|drained|squeezed|juiced|peeled|seeded|deveined|trimmed|halved|quartered|diced|sliced|softened|melted|cooled|room\s*temperature|few|very|well|extra|large|medium|small|skin-on|skin\s*on|bone-in|bone\s*in|boneless|skinless|to serve|to taste|for serving|for garnish|for drizzling|garnish|garnishing|drizzling|serving|of|the|and|or|for|x)\b/g, '');
   // "zest of 1 lemon" / "juice of 1 lemon" -> "lemon"
   s = s.replace(/\b(zest|juice)\b/g, '');
-  // Strip anything after a comma (prep notes)
-  s = s.split(',')[0];
+  // Keep the first NON-EMPTY comma-separated segment (prep notes after a comma
+  // get dropped) — but skip past any segment left empty by the word-stripping
+  // above, rather than blindly taking index 0 and ending up with nothing.
+  const commaParts = s.split(',');
+  s = commaParts.find(part => part.trim().length > 0) || '';
   // Strip parentheticals
   s = s.replace(/\([^)]*\)/g, '');
   // Collapse whitespace and stray punctuation (keep Unicode letters like ñ, é, and
@@ -4522,12 +4539,15 @@ function parseIngredientParts(raw) {
   if (!raw) return { amount: '', name: '' };
   // Strip leading markdown bullets / list markers (* - •) and whitespace
   const full = raw.replace(/^[\s*\-•·]+/, '').trim();
-  const matchName = normalizeIngredient(full);   // used only to locate where the name starts
-  const displayCore = cleanIngredientDisplay(full); // used for what's actually shown
-  // Amount = the portion of the original before the clean name's first word
+  const displayCore = cleanIngredientDisplay(full); // used for what's actually shown AND to locate where it starts
+  // Amount = the portion of the original before the display name's first word.
+  // Deliberately uses displayCore, NOT the library-mapped normalizeIngredient() —
+  // the library can remap a phrase to a different canonical word for matching
+  // purposes ("granulated sugar" -> "sugar"), which would no longer correspond
+  // to where the actual displayed text starts in the raw string.
   let amount = '';
-  if (matchName) {
-    const firstWord = matchName.split(' ')[0];
+  if (displayCore) {
+    const firstWord = displayCore.split(' ')[0];
     const idx = full.toLowerCase().indexOf(firstWord);
     if (idx > 0) amount = full.slice(0, idx).trim().replace(/[,]+$/, '').replace(/\s+(of|a|an)$/i, '').trim();
   }
