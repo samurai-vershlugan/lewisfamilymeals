@@ -3892,11 +3892,12 @@ function planIngredients(key) {
   // Returns an ARRAY since a combined line like "Kosher salt and black pepper"
   // needs to become two separate grocery items, not one merged one.
   function cleanDisplayName(rawNameOrItem) {
-    const cleaned = normalizeIngredient(rawNameOrItem || '');
+    const cleaned = cleanIngredientDisplay(rawNameOrItem || '');
     return cleaned ? cleaned.charAt(0).toUpperCase() + cleaned.slice(1) : (rawNameOrItem || '');
   }
   function resolveIngredientPartsList(ing) {
     const raw = ing.item || ing.name || '';
+    if (isOptionalIngredient(raw)) return []; // skip "(optional)" ingredients entirely
     if (ing.amount) {
       // Amount already given separately — still clean the descriptive name text,
       // don't try to re-extract an amount from it (that part's already correct).
@@ -4342,24 +4343,6 @@ function ingCleanName(ing) {
   return p.name;
 }
 
-function parseIngredientParts(raw) {
-  // Returns { amount, name } — amount is the measurement prefix, name is the clean shopping name
-  if (!raw) return { amount: '', name: '' };
-  // Strip leading markdown bullets / list markers (* - •) and whitespace
-  const full = raw.replace(/^[\s*\-•·]+/, '').trim();
-  const name = normalizeIngredient(full);
-  // Amount = the portion of the original before the clean name's first word
-  let amount = '';
-  if (name) {
-    const firstWord = name.split(' ')[0];
-    const idx = full.toLowerCase().indexOf(firstWord);
-    if (idx > 0) amount = full.slice(0, idx).trim().replace(/[,]+$/, '');
-  }
-  // Capitalize the clean name nicely for display
-  const displayName = name ? name.charAt(0).toUpperCase() + name.slice(1) : full;
-  return { amount: amount, name: displayName };
-}
-
 // Words ending in s/es/us that are NOT plurals — never stem these
 const NO_STEM_WORDS = new Set([
   'hummus','asparagus','couscous','citrus','swiss','bass','watercress','molasses',
@@ -4377,21 +4360,27 @@ function stemWord(w) {
   return w;
 }
 
-function normalizeIngredient(name) {
+// Shared cleaning steps used by BOTH the matching key and the display name —
+// they only diverge on whether the result gets stemmed afterward.
+function cleanIngredientCore(name) {
   if (!name) return '';
   let s = name.toLowerCase().trim();
   // Strip leading bullet/list markers
   s = s.replace(/^[\s*\-•·]+/, '');
   // Strip fused number+unit tokens anywhere: 120g, 14oz, 2lb, 400ml, 1.5kg
   s = s.replace(/\b\d+(\.\d+)?\s*(g|kg|mg|oz|lb|lbs|ml|l|cl)\b/g, ' ');
-  // Remove leading quantities and fractions: "1½", "2", "3 tbsp", "½ cup", "2 x 14oz"
-  s = s.replace(/^[\d\s\/¼½¾⅓⅔⅛.,x×-]+/, '');
+  // Remove leading quantities/fractions, now also swallowing "N to N" ranges
+  // (e.g. "3 to 4 tablespoons") instead of stopping at "to" and leaving it
+  // stuck as the first word of the name.
+  s = s.replace(/^[\d\s\/¼½¾⅓⅔⅛.,x×-]+(to[\d\s\/¼½¾⅓⅔⅛.,x×-]+)?/, '');
   // Remove standalone measurement-range artifacts like "- 120" or leftover dashes
   s = s.replace(/^[\s\-–—]+/, '');
+  // Strip a leading "a"/"an" filler article (e.g. "A pinch of kosher salt")
+  s = s.replace(/^(a|an)\s+/, '');
   // Remove common units and measurement words (now also catches stray single letters)
-  s = s.replace(/\b(tsp|teaspoon|teaspoons|tbsp|tablespoon|tablespoons|cup|cups|oz|ounce|ounces|lb|lbs|pound|pounds|g|gram|grams|kg|ml|l|liter|litre|tin|tins|can|cans|clove|cloves|cube|cubes|inch|inches|pinch|handful|bunch|sprig|sprigs|slice|slices|stick|sticks|piece|pieces|fillet|fillets)\b/g, '');
+  s = s.replace(/\b(tsp|teaspoon|teaspoons|tbsp|tablespoon|tablespoons|cup|cups|oz|ounce|ounces|lb|lbs|pound|pounds|g|gram|grams|kg|ml|l|liter|litre|tin|tins|can|cans|clove|cloves|cube|cubes|inch|inches|pinch|drop|drops|dash|dashes|handful|bunch|sprig|sprigs|slice|slices|stick|sticks|piece|pieces|fillet|fillets)\b/g, '');
   // Remove prep / descriptor words
-  s = s.replace(/\b(fresh|freshly|dried|ground|crushed|minced|chopped|finely|coarsely|roughly|thinly|thickly|lightly|drained|squeezed|juiced|peeled|seeded|deveined|trimmed|halved|quartered|diced|sliced|softened|melted|cooled|room\s*temperature|very|well|extra|large|medium|small|skin-on|skin\s*on|bone-in|bone\s*in|boneless|skinless|to serve|to taste|for serving|for garnish|for drizzling|garnish|garnishing|drizzling|serving|of|the|and|or|for|x)\b/g, '');
+  s = s.replace(/\b(fresh|freshly|dried|ground|crushed|minced|chopped|finely|coarsely|roughly|thinly|thickly|lightly|drained|squeezed|juiced|peeled|seeded|deveined|trimmed|halved|quartered|diced|sliced|softened|melted|cooled|room\s*temperature|few|very|well|extra|large|medium|small|skin-on|skin\s*on|bone-in|bone\s*in|boneless|skinless|to serve|to taste|for serving|for garnish|for drizzling|garnish|garnishing|drizzling|serving|of|the|and|or|for|x)\b/g, '');
   // "zest of 1 lemon" / "juice of 1 lemon" -> "lemon"
   s = s.replace(/\b(zest|juice)\b/g, '');
   // Strip anything after a comma (prep notes)
@@ -4401,9 +4390,45 @@ function normalizeIngredient(name) {
   // Collapse whitespace and stray punctuation (keep Unicode letters like ñ, é, and
   // apostrophes so brand names like "TJ's" don't get mangled into "tj s")
   s = s.replace(/[^\p{L}\s'’]/gu, ' ').replace(/\s+/g, ' ').trim();
-  // Stem each word to a singular match-form so plural/singular match (display is unaffected)
-  s = s.split(' ').map(stemWord).join(' ').trim();
   return s;
+}
+
+// For MATCHING ONLY (pantry checks, grocery dedup keys) — stemmed so plural and
+// singular forms group together. Never shown to the user directly.
+function normalizeIngredient(name) {
+  const s = cleanIngredientCore(name);
+  if (!s) return '';
+  return s.split(' ').filter(Boolean).map(stemWord).join(' ').trim();
+}
+
+// For DISPLAY in the grocery list — cleaned the same way but NOT stemmed, so
+// plurals stay natural ("chocolate chips" stays "chocolate chips", not "chip").
+function cleanIngredientDisplay(name) {
+  return cleanIngredientCore(name);
+}
+
+// Ingredients marked "(optional)" shouldn't clutter the grocery list
+function isOptionalIngredient(raw) {
+  return /\(\s*optional\s*\)/i.test(raw || '');
+}
+
+function parseIngredientParts(raw) {
+  // Returns { amount, name } — amount is the measurement prefix, name is the clean shopping name
+  if (!raw) return { amount: '', name: '' };
+  // Strip leading markdown bullets / list markers (* - •) and whitespace
+  const full = raw.replace(/^[\s*\-•·]+/, '').trim();
+  const matchName = normalizeIngredient(full);   // used only to locate where the name starts
+  const displayCore = cleanIngredientDisplay(full); // used for what's actually shown
+  // Amount = the portion of the original before the clean name's first word
+  let amount = '';
+  if (matchName) {
+    const firstWord = matchName.split(' ')[0];
+    const idx = full.toLowerCase().indexOf(firstWord);
+    if (idx > 0) amount = full.slice(0, idx).trim().replace(/[,]+$/, '').replace(/\s+(of|a|an)$/i, '').trim();
+  }
+  // Capitalize the clean name nicely for display
+  const displayName = displayCore ? displayCore.charAt(0).toUpperCase() + displayCore.slice(1) : full;
+  return { amount: amount, name: displayName };
 }
 
 const CHEESE_TYPE_WORDS = ['cheddar','mozzarella','parmesan','parmigiano','swiss','provolone','gouda','brie','feta','colby','muenster','havarti','gruyere','pepperjack','montereyjack','american','ricotta','pepper jack','monterey jack'];
