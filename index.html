@@ -3722,7 +3722,7 @@ function renderWeek() {
           <div class="meal-card-mid">
             <div class="meal-tags">
               ${recipeCuisines(liveMeal).map(c => `<span class="tag tag-cuisine">${c}</span>`).join('')}
-              ${recipeTypes(liveMeal).map(p => `<span class="tag tag-protein">${p}</span>`).join('')}
+              ${mealProteinTags(meal, liveMeal).map(p => `<span class="tag tag-protein">${p}</span>`).join('')}
               ${getDisplayTags(liveMeal).map(t => `<span class="tag tag-${t}">${BUILTIN_TAGS.find(b=>b.id===t)?.label || t}</span>`).join('')}
             </div>
           </div>
@@ -5494,6 +5494,18 @@ function normalizeProteinLabel(label) {
   }
   // Unknown/genuinely custom — keep as-is (capitalized)
   return label.trim();
+}
+
+function mealProteinTags(meal, liveMeal) {
+  // If a specific protein was chosen for THIS planned meal (e.g. "Steak" for
+  // Burrito Bowls), show only that — not every protein option the recipe
+  // happens to offer. recipeTypes() auto-derives from ALL of r.proteins,
+  // which is right for library/browse views but wrong here.
+  if (meal && meal.selectedProtein && meal.selectedProtein.label) {
+    const np = normalizeProteinLabel(meal.selectedProtein.label);
+    if (np) return [np];
+  }
+  return recipeTypes(liveMeal);
 }
 
 function recipeTypes(r) {
