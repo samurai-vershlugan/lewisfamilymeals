@@ -2401,6 +2401,20 @@
     border-radius: 10px; padding: 1px 7px; font-size: 9px;
   }
   .grocery-done-body { opacity: 0.7; }
+  .grocery-done-controls { display: flex; gap: 6px; align-items: center; margin: 8px 0; }
+  .grocery-done-sort-group { display: flex; gap: 4px; flex-shrink: 0; }
+  .grocery-done-sort-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 6px 9px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .grocery-done-sort-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 
   /* Recipe browser card grid */
   .recipe-card-grid {
@@ -3871,6 +3885,8 @@ function shopName(s) {
 // groceryLists[weekKey] = { items: [ {key, item, name, amount, store, qty, checked, sources:[], pinned} ] }
 let groceryLists = {};
 let groceryDoneExpanded = false; // crossed-off section collapsed by default
+let groceryDoneSort = 'recent'; // 'recent' or 'az'
+let groceryDoneSearchVal = '';
 try { const _gl = localStorage.getItem('mealos-grocery-lists'); if (_gl) groceryLists = JSON.parse(_gl); } catch(e) {}
 
 function persistGroceryLists() {
@@ -4092,7 +4108,10 @@ function renderGroceryList() {
 
   // Apply pantry auto-check (still connected to pantry)
   list.items.forEach(it => {
-    if (havePantryItem(it.item || it.name) && !it.manualUnchecked) it.checked = true;
+    if (havePantryItem(it.item || it.name) && !it.manualUnchecked) {
+      if (!it.checked) it.doneAt = Date.now();
+      it.checked = true;
+    }
   });
 
   // Build a single grocery row element (shared by active + done sections)
@@ -4180,10 +4199,57 @@ function renderGroceryList() {
     doneWrap.appendChild(header);
 
     if (groceryDoneExpanded) {
+      const controls = document.createElement('div');
+      controls.className = 'grocery-done-controls';
+
+      const searchInput = document.createElement('input');
+      searchInput.type = 'text';
+      searchInput.id = 'groceryDoneSearch';
+      searchInput.className = 'text-input';
+      searchInput.placeholder = 'Search crossed off...';
+      searchInput.value = groceryDoneSearchVal;
+      searchInput.style.cssText = 'flex:1;font-size:12px;padding:6px 10px';
+      searchInput.addEventListener('input', (e) => {
+        groceryDoneSearchVal = e.target.value;
+        const cursorPos = e.target.selectionStart;
+        renderGroceryList();
+        // Re-render rebuilds the whole list, which would otherwise steal focus
+        // away from the search box on every keystroke — restore it.
+        requestAnimationFrame(() => {
+          const freshInput = document.getElementById('groceryDoneSearch');
+          if (freshInput) { freshInput.focus(); freshInput.setSelectionRange(cursorPos, cursorPos); }
+        });
+      });
+      controls.appendChild(searchInput);
+
+      const sortGroup = document.createElement('div');
+      sortGroup.className = 'grocery-done-sort-group';
+      [['recent', 'Recent'], ['az', 'A–Z']].forEach(([val, label]) => {
+        const btn = document.createElement('button');
+        btn.className = 'grocery-done-sort-btn' + (groceryDoneSort === val ? ' active' : '');
+        btn.textContent = label;
+        btn.onclick = () => { groceryDoneSort = val; renderGroceryList(); };
+        sortGroup.appendChild(btn);
+      });
+      controls.appendChild(sortGroup);
+      doneWrap.appendChild(controls);
+
       const body = document.createElement('div');
       body.className = 'grocery-done-body';
-      doneItems.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-      doneItems.forEach(it => body.appendChild(buildGroceryRow(it, it.store || 'tj')));
+      let filtered = doneItems;
+      const q = groceryDoneSearchVal.trim().toLowerCase();
+      if (q) filtered = filtered.filter(it => it.name.toLowerCase().includes(q));
+      filtered = filtered.slice();
+      if (groceryDoneSort === 'recent') {
+        filtered.sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+      } else {
+        filtered.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+      }
+      if (!filtered.length) {
+        body.innerHTML = `<div style="color:var(--text-muted);font-size:12px;padding:8px 4px">No matches</div>`;
+      } else {
+        filtered.forEach(it => body.appendChild(buildGroceryRow(it, it.store || 'tj')));
+      }
       doneWrap.appendChild(body);
     }
     el.appendChild(doneWrap);
@@ -4214,6 +4280,7 @@ function deleteGroceryItem(it) {
 async function toggleGroceryItem(it) {
   it.checked = !it.checked;
   it.manualUnchecked = !it.checked;
+  if (it.checked) it.doneAt = Date.now();
   // Stay connected to pantry
   const itemNorm = normalizeIngredient(it.name);
   // Reuse an existing normalized-matching pantry key if there is one (no new variant)
@@ -7257,6 +7324,20 @@ function printSnapshot() {
     border-radius: 10px; padding: 1px 7px; font-size: 9px;
   }
   .grocery-done-body { opacity: 0.7; }
+  .grocery-done-controls { display: flex; gap: 6px; align-items: center; margin: 8px 0; }
+  .grocery-done-sort-group { display: flex; gap: 4px; flex-shrink: 0; }
+  .grocery-done-sort-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 6px 9px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .grocery-done-sort-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 
   /* Recipe browser card grid */
   .recipe-card-grid {
