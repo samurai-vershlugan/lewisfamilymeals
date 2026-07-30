@@ -3003,6 +3003,13 @@
         Find What I Can Make
       </button>
     </div>
+    <div class="discover-modal-overlay" id="robotModalOverlay">
+      <div class="discover-loading">
+        <div class="discover-loading-dots"><span>🤖</span></div>
+        <div class="discover-loading-primary" id="robotModalOverlayPrimary">Scanning your kitchen</div>
+        <div class="discover-loading-secondary" id="robotModalOverlayText"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -7841,17 +7848,34 @@ function robotRemoveItem(item) {
 // Analyze library locally first
 function analyzeLibraryLocally() {
   // Pantry from Supabase (persistent) + extra items tapped in Robot (session)
-  const pantry = Object.keys(haveIngredients)
-    .filter(k => haveIngredients[k])
-    .map(s => s.toLowerCase());
-  const extra = [...robotSelected].map(s => s.toLowerCase());
-  const have = [...new Set([...pantry, ...extra])];
-  // Exclude prep recipes, friday specials, and no-cook easy meals
+  const extra = [...robotSelected];
+  function robotHaveItem(itemName) {
+    if (havePantryItem(itemName)) return true;
+    // Also check session-only extras selected within this Robot visit (not yet
+    // persisted to the pantry), using the same normalized/cheese-aware matching.
+    const norm = normalizeIngredient(itemName);
+    if (!norm) return false;
+    for (const ex of extra) {
+      const en = normalizeIngredient(ex);
+      if (en && (en === norm || cheeseTypeEquivalent(en, norm))) return true;
+    }
+    return false;
+  }
+
+  // Recipes already planned this week shouldn't be suggested again
+  const plannedNames = new Set(
+    (weekPlans[getWeekKey(currentWeekOffset)] || [])
+      .filter(m => m && m.name)
+      .map(m => m.name)
+  );
+
+  // Exclude prep recipes, friday specials, no-cook easy meals, and anything already planned this week
   const NO_COOK = new Set(['Leftovers Night','Freezer Dive','Takeout','Pizza Night','Frozen Pizza','Passover Seder']);
   let library = getAllRecipes().filter(r =>
     !(r.tags||[]).includes('prep') &&
     !r.friday &&
     !NO_COOK.has(r.name) &&
+    !plannedNames.has(r.name) &&
     (r.ingredients||[]).length > 0
   );
 
@@ -7868,10 +7892,8 @@ function analyzeLibraryLocally() {
     if (recipe.proteins?.length) {
       recipe.proteins.forEach(p => { if (p.item) allIngs.push({item: p.item}); });
     }
-    const needed = allIngs.map(i => (i.item||'').toLowerCase());
-    const missing = needed.filter(ing => {
-      return !have.some(h => ing.includes(h) || h.includes(ing));
-    });
+    const needed = allIngs.map(i => i.item || '').filter(Boolean);
+    const missing = needed.filter(ing => !robotHaveItem(ing));
 
     if (missing.length === 0) {
       results.now.push({ recipe, missing: [] });
@@ -7890,6 +7912,32 @@ function extractClaudeText(data) {
   return (data.content || []).filter(c => c && c.type === 'text').map(c => c.text).join('\n');
 }
 
+let robotModalSavedScroll = 0;
+function showRobotOverlay(secondary) {
+  const modal = document.querySelector('#robotModal .modal');
+  const overlay = document.getElementById('robotModalOverlay');
+  const textEl = document.getElementById('robotModalOverlayText');
+  if (textEl) textEl.textContent = secondary || '';
+  if (!modal || !overlay) return;
+  robotModalSavedScroll = modal.scrollTop;
+  const rect = modal.getBoundingClientRect();
+  overlay.style.top = rect.top + 'px';
+  overlay.style.left = rect.left + 'px';
+  overlay.style.width = rect.width + 'px';
+  overlay.style.height = rect.height + 'px';
+  overlay.style.display = 'flex';
+  modal.style.overflowY = 'hidden';
+}
+function hideRobotOverlay() {
+  const modal = document.querySelector('#robotModal .modal');
+  const overlay = document.getElementById('robotModalOverlay');
+  if (overlay) overlay.style.display = 'none';
+  if (modal) {
+    modal.style.overflowY = '';
+    modal.scrollTop = robotModalSavedScroll;
+  }
+}
+
 async function runRobot() {
   await ensureFreshToken();
   var pantrySize = Object.keys(haveIngredients).filter(function(k) { return haveIngredients[k]; }).length;
@@ -7898,18 +7946,20 @@ async function runRobot() {
   const btn = document.getElementById('robotRunBtn');
   const resultsEl = document.getElementById('robotResults');
   btn.disabled = true;
-  resultsEl.innerHTML = `
-    <div class="discover-loading">
-      <div class="discover-loading-dots"><span>🤖</span></div>
-      <div style="margin-top:12px">Scanning your kitchen...</div>
-    </div>`;
+  showRobotOverlay('Checking your pantry and library...');
 
   // First — analyze library locally
   const local = analyzeLibraryLocally();
 
   // Build prompt for Claude to suggest new recipes + validate
-  const haveList = [...robotSelected].join(', ');
+  // haveList must include the REAL saved pantry, not just this session's quick-tap
+  // grid selections (robotSelected) — those are two separate things, and only
+  // including robotSelected meant Claude was effectively blind to the real pantry.
+  const realPantryItems = Object.keys(haveIngredients).filter(k => haveIngredients[k]);
+  const haveList = [...new Set([...realPantryItems, ...robotSelected])].join(', ');
   const libraryNames = getAllRecipes().filter(r => !(r.tags||[]).includes('prep')).map(r => r.name).join(', ');
+  const plannedThisWeek = (weekPlans[getWeekKey(currentWeekOffset)] || [])
+    .filter(m => m && m.name).map(m => m.name).join(', ');
 
   const prompt = `You are a recipe matching engine for a family meal app.
 
@@ -7918,7 +7968,7 @@ ${haveList}
 
 Their existing recipe library (don't suggest these):
 ${libraryNames}
-
+${plannedThisWeek ? `\nAlready planned for this week (don't suggest these either):\n${plannedThisWeek}\n` : ''}
 Family profile: Family with kids, shops at Costco and Trader Joes, enjoys Mediterranean, Mexican, American comfort food.
 ${robotProtein ? `Protein focus: All 3 recipes MUST feature ${robotProtein} as the main protein.` : ''}
 
@@ -7953,6 +8003,7 @@ Only suggest recipes where missing ingredients are common, cheap, and easy to fi
   } catch(e) { console.warn('Robot new recipe fetch failed:', e); }
 
   btn.disabled = false;
+  hideRobotOverlay();
   document.getElementById('robotSetupView').style.display = 'none';
   document.getElementById('robotResultsView').style.display = 'block';
   document.getElementById('robotModal').querySelector('.modal').scrollTop = 0;
