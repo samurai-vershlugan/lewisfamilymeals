@@ -645,6 +645,17 @@
     color: var(--bg);
   }
   .ing-name { flex: 1; }
+  .grocery-inline-rename-input {
+    flex: 1;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 4px 8px;
+    min-width: 0;
+  }
   .store-select {
     flex-shrink: 0;
     font-size: 10px;
@@ -4136,7 +4147,7 @@ function renderGroceryList() {
       amt.textContent = it.amount;
       nameSpan.appendChild(amt);
     }
-    nameSpan.onclick = (e) => { e.stopPropagation(); renameGroceryListItem(it); };
+    nameSpan.onclick = (e) => { e.stopPropagation(); startGroceryInlineRename(it, div); };
     div.appendChild(nameSpan);
 
     div.appendChild(makeGroceryQtyStepper(it));
@@ -4144,13 +4155,32 @@ function renderGroceryList() {
     const sel = document.createElement('select');
     sel.className = `store-select store-select-${it.store || 'tj'}`;
     sel.onclick = (e) => e.stopPropagation();
-    sel.onchange = () => { it.store = sel.value; it.pinned = true; persistGroceryLists(); persistWeekPlans(); renderGroceryList(); renderAlexaCommands(); };
+    sel.onchange = () => {
+      if (sel.value === '__add_new_store__') {
+        const name = prompt('New store name:');
+        const newId = addNewGroceryStore(name);
+        if (newId) {
+          it.store = newId;
+          it.pinned = true;
+          persistGroceryLists();
+          persistWeekPlans();
+          renderAlexaCommands();
+        }
+        renderGroceryList(); // re-render regardless, to reset the dropdown if cancelled
+        return;
+      }
+      it.store = sel.value; it.pinned = true; persistGroceryLists(); persistWeekPlans(); renderGroceryList(); renderAlexaCommands();
+    };
     STORES.forEach(s => {
       const opt = document.createElement('option');
       opt.value = s.id; opt.textContent = s.label;
       if ((it.store || 'tj') === s.id) opt.selected = true;
       sel.appendChild(opt);
     });
+    const addStoreOpt = document.createElement('option');
+    addStoreOpt.value = '__add_new_store__';
+    addStoreOpt.textContent = '+ Add new store';
+    sel.appendChild(addStoreOpt);
     div.appendChild(sel);
 
     const delBtn = document.createElement('button');
@@ -4311,18 +4341,38 @@ async function toggleGroceryItem(it) {
   persistWeekPlans();
 }
 
-function renameGroceryListItem(it) {
-  const newName = prompt('Rename grocery item:', it.name);
-  if (newName === null) return;
-  const trimmed = newName.trim();
-  if (!trimmed || trimmed === it.name) return;
-  it.name = trimmed;
-  it.pinned = true; // editing pins it so recipe sync won't clobber
-  persistGroceryLists();
-  renderGroceryList();
-  renderAlexaCommands();
-  persistWeekPlans();
-  showToast('Renamed to "' + trimmed + '"');
+function startGroceryInlineRename(it, rowDiv) {
+  const nameSpan = rowDiv.querySelector('.ing-name');
+  if (!nameSpan) return;
+  let cancelled = false;
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'grocery-inline-rename-input';
+  input.value = it.name;
+  nameSpan.replaceWith(input);
+  input.focus();
+  input.select();
+
+  const commit = () => {
+    if (cancelled) return;
+    const trimmed = input.value.trim();
+    if (trimmed && trimmed !== it.name) {
+      it.name = trimmed;
+      it.pinned = true; // editing pins it so recipe sync won't clobber
+      persistGroceryLists();
+      persistWeekPlans();
+      renderAlexaCommands();
+    }
+    renderGroceryList();
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { input.blur(); }
+    else if (e.key === 'Escape') { cancelled = true; renderGroceryList(); }
+  });
+  input.addEventListener('click', (e) => e.stopPropagation());
 }
 
 function makeGroceryQtyStepper(it) {
@@ -4367,6 +4417,21 @@ const STORE_CYCLE = STORES.map(s => s.id);
 const STORE_LABELS = STORES.reduce((o,s)=>{ o[s.id]=s.label; return o; }, {});
 const STORE_CLASSES = STORES.reduce((o,s)=>{ o[s.id]=s.cls; return o; }, {});
 const DEFAULT_STORE = STORES[0].id;
+
+function addNewGroceryStore(name) {
+  const trimmed = (name || '').trim();
+  if (!trimmed) return null;
+  // Reuse an existing store if this name already exists (case-insensitive)
+  const existing = STORES.find(s => s.label.toLowerCase() === trimmed.toLowerCase() || s.full.toLowerCase() === trimmed.toLowerCase());
+  if (existing) return existing.id;
+  let id = trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  if (!id || STORES.find(s => s.id === id)) id = 'store' + Date.now();
+  const entry = { id, label: trimmed, full: trimmed, short: trimmed, cls: 'custom' };
+  STORES.push(entry);
+  STORE_LABELS[id] = trimmed;
+  STORE_CLASSES[id] = 'custom';
+  return id;
+}
 
 function changeStore(itemKey, newStore) {
   storeOverrides[itemKey] = newStore;
