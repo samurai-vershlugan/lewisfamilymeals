@@ -4640,12 +4640,12 @@ function cleanIngredientCore(name) {
   // Strip a leading "a"/"an" filler article (e.g. "A pinch of kosher salt")
   s = s.replace(/^(a|an)\s+/, '');
   // Remove common units and measurement words (now also catches stray single letters)
-  s = s.replace(/\b(tsp|teaspoon|teaspoons|tbsp|tablespoon|tablespoons|cup|cups|oz|ounce|ounces|lb|lbs|pound|pounds|g|gram|grams|kg|ml|l|liter|litre|tin|tins|can|cans|clove|cloves|cube|cubes|inch|inches|pinch|drop|drops|dash|dashes|handful|bunch|sprig|sprigs|slice|slices|stick|sticks|piece|pieces|fillet|fillets)\b/g, '');
+  s = s.replace(/\b(tsp|teaspoon|teaspoons|tbsp|tablespoon|tablespoons|cup|cups|oz|ounce|ounces|lb|lbs|pound|pounds|g|gram|grams|kg|ml|l|liter|litre|tin|tins|can|cans|clove|cloves|cube|cubes|inch|inches|pinch|drop|drops|dash|dashes|pack|packs|package|packages|handful|bunch|sprig|sprigs|slice|slices|stick|sticks|piece|pieces|fillet|fillets)\b/g, '');
   // Remove prep / descriptor words. Note: some of these ("bone-in", "skin-on")
   // commonly sit directly before a comma in real ingredient lines ("bone-in,
   // skin-on chicken thighs") — removing them can leave a leading comma behind,
   // which the comma-split step below has to be careful not to choke on.
-  s = s.replace(/\b(fresh|freshly|dried|ground|crushed|minced|chopped|finely|coarsely|roughly|thinly|thickly|lightly|drained|squeezed|juiced|peeled|seeded|deveined|trimmed|halved|quartered|diced|sliced|softened|melted|cooled|room\s*temperature|few|very|well|extra|large|medium|small|skin-on|skin\s*on|bone-in|bone\s*in|boneless|skinless|to serve|to taste|for serving|for garnish|for drizzling|garnish|garnishing|drizzling|serving|of|the|and|or|for|x)\b/g, '');
+  s = s.replace(/\b(fresh|freshly|dried|ground|crushed|minced|chopped|finely|coarsely|roughly|thinly|thickly|lightly|drained|squeezed|juiced|peeled|seeded|deveined|trimmed|halved|quartered|diced|sliced|softened|melted|cooled|room\s*temperature|few|plus|very|well|extra|large|medium|small|skin-on|skin\s*on|bone-in|bone\s*in|boneless|skinless|to serve|to taste|to season|for serving|for garnish|to garnish|for drizzling|garnish|garnishing|drizzling|serving|of|the|and|or|in|from|for|x)\b/g, '');
   // "zest of 1 lemon" / "juice of 1 lemon" -> "lemon"
   s = s.replace(/\b(zest|juice)\b/g, '');
   // Keep the first NON-EMPTY comma-separated segment (prep notes after a comma
@@ -4653,8 +4653,11 @@ function cleanIngredientCore(name) {
   // above, rather than blindly taking index 0 and ending up with nothing.
   const commaParts = s.split(',');
   s = commaParts.find(part => part.trim().length > 0) || '';
-  // Strip parentheticals
-  s = s.replace(/\([^)]*\)/g, '');
+  // Strip parentheticals — but if doing so would leave nothing (the parens
+  // sometimes wrap the actual ingredient itself, e.g. "boneless (skinless
+  // chicken thighs)"), keep their content instead of discarding it.
+  const withoutParens = s.replace(/\([^)]*\)/g, '').replace(/\s+/g, ' ').trim();
+  s = withoutParens ? withoutParens : s.replace(/[()]/g, '');
   // Collapse whitespace and stray punctuation (keep Unicode letters like ñ, é, and
   // apostrophes so brand names like "TJ's" don't get mangled into "tj s")
   s = s.replace(/[^\p{L}\s'’]/gu, ' ').replace(/\s+/g, ' ').trim();
