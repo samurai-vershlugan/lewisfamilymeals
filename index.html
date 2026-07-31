@@ -4411,7 +4411,7 @@ const STORES = [
   { id:'tj',      label:"TJ's",     full:'Trader Joes', short:"TJ's",   cls:'tj' },
   { id:'costco',  label:'Costco',   full:'Costco',      short:'Costco', cls:'costco' },
   { id:'wf',      label:'WF',       full:'Whole Foods', short:'WF',     cls:'wf' },
-  { id:'safeway', label:'Safeway',  full:'Safeway',     short:'Sfwy',   cls:'safeway' },
+  { id:'safeway', label:'Safeway',  full:'Safeway',     short:'Safe',   cls:'safeway' },
 ];
 const STORE_CYCLE = STORES.map(s => s.id);
 const STORE_LABELS = STORES.reduce((o,s)=>{ o[s.id]=s.label; return o; }, {});
@@ -9184,7 +9184,7 @@ function openDiscoverEditModal(r) {
     modal.innerHTML = `
       <div class="modal" style="position:relative;max-width:500px;width:95%;max-height:90vh;display:flex;flex-direction:column">
         <button class="modal-close" onclick="closeDiscoverEditModal()">×</button>
-        <h3 style="flex:0 0 auto">Review Before Adding</h3>
+        <h3 style="flex:0 0 auto">Edit Recipe</h3>
         <div class="de-scroll" style="overflow-y:auto;flex:1;min-height:0;padding-right:4px">
         <p style="color:var(--text-muted);font-size:12px;margin-bottom:12px;line-height:1.5">
           Verify the ingredients match the actual recipe. Edit anything before saving to your library.
@@ -9225,7 +9225,7 @@ function openDiscoverEditModal(r) {
         <textarea id="deSteps" style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:10px;min-height:120px;resize:vertical;outline:none;margin-bottom:10px"></textarea>
         <div class="import-section">
           <div class="import-section-header">
-            <span class="import-section-title">✨ Quick Import</span>
+            <span class="import-section-title">✨ Import</span>
             <span class="import-section-sub">Fill the recipe automatically from a photo or a link</span>
           </div>
           <input type="file" id="deScreenshotInput" accept="image/*" style="display:none" onchange="importRecipeFromScreenshot(event)" />
@@ -9239,12 +9239,17 @@ function openDiscoverEditModal(r) {
             <button class="confirm-btn" id="deImportBtn" onclick="importRecipeFromUrl()" style="flex:0 0 auto;padding:8px 14px;white-space:nowrap;display:none">Import</button>
           </div>
         </div>
-        <label class="input-label">Image <span style="opacity:0.5;font-size:9px">(upload a photo, paste a URL, or auto-filled from recipe URL)</span></label>
-        <input type="file" id="deImageFileInput" accept="image/*" style="display:none" onchange="uploadRecipeImage(event)" />
-        <button type="button" class="confirm-btn" id="deImageUploadBtn" onclick="document.getElementById('deImageFileInput').click()" style="width:100%;padding:9px;margin-bottom:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text)">⬆ Upload a photo</button>
-        <input id="deImage" class="text-input" type="text" placeholder="or paste https://...image.jpg" style="margin-bottom:8px" oninput="updateDeImagePreview()" />
-        <div id="deImagePreview" style="display:none;margin-bottom:16px">
-          <img id="deImagePreviewImg" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px" alt="preview" />
+        <div class="import-section">
+          <div class="import-section-header">
+            <span class="import-section-title">📷 Photo</span>
+            <span class="import-section-sub">Upload a photo, paste a URL, or auto-filled from a recipe URL</span>
+          </div>
+          <input type="file" id="deImageFileInput" accept="image/*" style="display:none" onchange="uploadRecipeImage(event)" />
+          <button type="button" class="confirm-btn" id="deImageUploadBtn" onclick="document.getElementById('deImageFileInput').click()" style="width:100%;padding:9px;margin-bottom:8px;background:var(--surface);border:1px solid var(--border);color:var(--text)">⬆ Upload a photo</button>
+          <input id="deImage" class="text-input" type="text" placeholder="or paste https://...image.jpg" style="margin-bottom:8px" oninput="updateDeImagePreview()" />
+          <div id="deImagePreview" style="display:none">
+            <img id="deImagePreviewImg" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px" alt="preview" />
+          </div>
         </div>
         </div>
         <div style="display:flex;gap:6px;justify-content:space-between;align-items:center;flex:0 0 auto;padding-top:12px;border-top:1px solid var(--border);margin-top:4px;flex-wrap:nowrap">
