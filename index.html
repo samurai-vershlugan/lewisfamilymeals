@@ -4109,6 +4109,23 @@ function populateManualStoreDropdown() {
     opt.value = s.id; opt.textContent = s.short;
     sel.appendChild(opt);
   });
+  const addOpt = document.createElement('option');
+  addOpt.value = '__add_new_store__';
+  addOpt.textContent = '+ Add';
+  sel.appendChild(addOpt);
+  sel.onchange = () => {
+    if (sel.value !== '__add_new_store__') return;
+    const name = prompt('New store name:');
+    const newId = addNewGroceryStore(name);
+    if (newId) {
+      const newOpt = document.createElement('option');
+      newOpt.value = newId; newOpt.textContent = name.trim();
+      sel.insertBefore(newOpt, sel.lastElementChild);
+      sel.value = newId;
+    } else {
+      sel.selectedIndex = 0;
+    }
+  };
 }
 
 function renderGroceryList() {
