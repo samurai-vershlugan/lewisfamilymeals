@@ -2737,8 +2737,7 @@
       </div>
       <div style="display:flex;gap:5px;margin-bottom:10px;align-items:center">
         <input id="manualGroceryInput" class="login-input" type="text" placeholder="Add an item..." style="margin-bottom:0;flex:1 1 auto;min-width:0;font-size:12px;padding:6px 10px" onkeydown="if(event.key==='Enter'){addManualGroceryItem(this.value.trim(), document.getElementById('manualGroceryStore').value);this.value='';}" />
-        <select id="manualGroceryStore" class="login-input" style="margin-bottom:0;flex:0 0 64px;width:64px;font-size:11px;padding:6px 4px;background:var(--surface2);color:var(--text)"></select>
-        <button class="confirm-btn" onclick="var i=document.getElementById('manualGroceryInput');addManualGroceryItem(i.value.trim(), document.getElementById('manualGroceryStore').value);i.value='';" style="flex:0 0 auto;padding:6px 10px">Add</button>
+        <select id="manualGroceryStore" class="store-select"></select>
       </div>
       <div id="groceryList"></div>
     </div>
@@ -4106,9 +4105,29 @@ function populateManualStoreDropdown() {
   if (!sel || sel.options.length) return;
   STORES.forEach(s => {
     const opt = document.createElement('option');
-    opt.value = s.id; opt.textContent = s.short;
+    opt.value = s.id; opt.textContent = s.label;
     sel.appendChild(opt);
   });
+  const addOpt = document.createElement('option');
+  addOpt.value = '__add_new_store__';
+  addOpt.textContent = '+ Add new store';
+  sel.appendChild(addOpt);
+  sel.className = `store-select store-select-${sel.value}`;
+  sel.onchange = () => {
+    if (sel.value === '__add_new_store__') {
+      const name = prompt('New store name:');
+      const newId = addNewGroceryStore(name);
+      if (newId) {
+        const newOpt = document.createElement('option');
+        newOpt.value = newId; newOpt.textContent = name.trim();
+        sel.insertBefore(newOpt, sel.lastElementChild);
+        sel.value = newId;
+      } else {
+        sel.selectedIndex = 0;
+      }
+    }
+    sel.className = `store-select store-select-${sel.value}`;
+  };
 }
 
 function renderGroceryList() {
@@ -9230,8 +9249,8 @@ function openDiscoverEditModal(r) {
           </div>
           <input type="file" id="deScreenshotInput" accept="image/*" style="display:none" onchange="importRecipeFromScreenshot(event)" />
           <button class="import-method-btn" id="deScreenshotBtn" onclick="document.getElementById('deScreenshotInput').click()">
-            <span class="import-method-icon">📷</span>
-            <span class="import-method-text"><b>From screenshot</b><small>Read a recipe photo or social post</small></span>
+            <span class="import-method-icon">📱</span>
+            <span class="import-method-text"><b>Recipe Screenshot</b><small>Read a recipe photo or social post</small></span>
           </button>
           <div class="import-or"><span>or</span></div>
           <div class="import-url-row">
@@ -9245,7 +9264,10 @@ function openDiscoverEditModal(r) {
             <span class="import-section-sub">Upload a photo, paste a URL, or auto-filled from a recipe URL</span>
           </div>
           <input type="file" id="deImageFileInput" accept="image/*" style="display:none" onchange="uploadRecipeImage(event)" />
-          <button type="button" class="confirm-btn" id="deImageUploadBtn" onclick="document.getElementById('deImageFileInput').click()" style="width:100%;padding:9px;margin-bottom:8px;background:var(--surface);border:1px solid var(--border);color:var(--text)">⬆ Upload a photo</button>
+          <button type="button" class="import-method-btn" id="deImageUploadBtn" onclick="document.getElementById('deImageFileInput').click()" style="margin-bottom:8px">
+            <span class="import-method-icon">📷</span>
+            <span class="import-method-text"><b>Upload Photo</b><small>Choose a photo from your device</small></span>
+          </button>
           <input id="deImage" class="text-input" type="text" placeholder="or paste https://...image.jpg" style="margin-bottom:8px" oninput="updateDeImagePreview()" />
           <div id="deImagePreview" style="display:none">
             <img id="deImagePreviewImg" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px" alt="preview" />
@@ -9332,8 +9354,8 @@ async function uploadRecipeImage(event) {
   await ensureFreshToken();
 
   const btn = document.getElementById('deImageUploadBtn');
-  const orig = btn.textContent;
-  btn.textContent = 'Uploading...';
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span class="import-method-text"><b>Uploading...</b></span>';
   btn.disabled = true;
 
   try {
@@ -9367,7 +9389,7 @@ async function uploadRecipeImage(event) {
     console.error('uploadRecipeImage error:', e);
     showToast('Could not upload that image');
   } finally {
-    btn.textContent = orig;
+    btn.innerHTML = orig;
     btn.disabled = false;
     event.target.value = '';
   }
