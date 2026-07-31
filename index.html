@@ -3758,7 +3758,7 @@ function renderWeek() {
           <span class="day-date">${formatDayDate(dates[i])}</span>
         </div>
         <div class="day-meal empty-day">
-          <div class="empty-day-prompt" onclick="openSwapModal(${i})">＋ Add a meal</div>
+          <div class="empty-day-prompt" onclick="openSwapModal(${i})">Choose Meal</div>
           <button class="empty-day-new-link" onclick="event.stopPropagation();openAddLibraryModal(${i})">or create a new recipe</button>
         </div>
       `;
@@ -4206,7 +4206,7 @@ function renderGroceryList() {
       searchInput.type = 'text';
       searchInput.id = 'groceryDoneSearch';
       searchInput.className = 'text-input';
-      searchInput.placeholder = 'Search crossed off...';
+      searchInput.placeholder = 'Search...';
       searchInput.value = groceryDoneSearchVal;
       searchInput.style.cssText = 'flex:1;font-size:12px;padding:6px 10px';
       searchInput.addEventListener('input', (e) => {
@@ -4241,7 +4241,11 @@ function renderGroceryList() {
       if (q) filtered = filtered.filter(it => it.name.toLowerCase().includes(q));
       filtered = filtered.slice();
       if (groceryDoneSort === 'recent') {
-        filtered.sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+        filtered.sort((a, b) => {
+          const diff = (b.doneAt || 0) - (a.doneAt || 0);
+          if (diff !== 0) return diff;
+          return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+        });
       } else {
         filtered.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
       }
