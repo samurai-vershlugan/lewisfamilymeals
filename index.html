@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Recipe Robot</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Zilla+Slab:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -5645,6 +5645,7 @@ function isMobileNavLayout() {
 function mobileGoToTab(tab) {
   if (tab === 'pantry') { openPantryModal(); return; }
   if (!isMobileNavLayout()) return; // desktop never switches — all sections stay visible
+  closePantryModal(); // don't leave it open behind whichever section is now showing
   mobileActiveTab = tab;
   const sections = {
     plan: document.getElementById('mobilePlanSection'),
