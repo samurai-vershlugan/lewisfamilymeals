@@ -961,6 +961,25 @@
   }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
 
+  @media (max-width: 900px) {
+    #pantryModal { align-items: flex-end; }
+    #pantryModal .modal {
+      max-width: 100% !important;
+      width: 100% !important;
+      max-height: 85vh !important;
+      margin: 0;
+      border-radius: 20px 20px 0 0 !important;
+      transform: translateY(30px);
+      opacity: 0;
+      transition: transform 0.25s ease, opacity 0.2s ease;
+      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    }
+    #pantryModal.open .modal {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
   .modal {
     background: var(--surface);
     border: 1px solid var(--border);
