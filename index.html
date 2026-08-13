@@ -3083,7 +3083,13 @@
         <span class="toggle-slider"></span>
       </label>
     </div>
-    <div class="settings-note">Weekend days are never auto-filled by Generate — they're always planned manually.</div>
+    <div class="settings-note" style="margin-bottom:18px">Weekend days are never auto-filled by Generate — they're always planned manually.</div>
+
+    <div class="settings-row-text" style="margin-bottom:8px">
+      <b>Restore Deleted Recipes</b>
+      <span>Bring back a built-in recipe you removed from your library</span>
+    </div>
+    <div id="restoreRecipeList" style="display:flex;flex-direction:column;gap:6px"></div>
   </div>
 </div>
 
@@ -3401,6 +3407,12 @@ const RECIPES = {
 };
 
 function getAllRecipes() { return Object.values(RECIPES).flat(); }
+
+// Snapshot of every built-in recipe name, taken before any deletion filtering
+// ever runs. Used to tell "deleted a built-in recipe" (restorable — the
+// hardcoded definition still exists, just suppressed) apart from "deleted a
+// custom recipe" (not restorable — its data is actually gone from Supabase).
+const HARDCODED_RECIPE_NAMES = new Set(getAllRecipes().map(r => r.name));
 
 const WEEKLY_TEMPLATE = [
   // Each week slot: [Mon, Tue, Wed, Thu, Fri]
@@ -7735,7 +7747,35 @@ async function saveFamilySettings() {
 
 function openSettingsModal() {
   document.getElementById('weekendMealsToggle').checked = !!familySettings.weekendMealsEnabled;
+  renderRestoreRecipeList();
   document.getElementById('settingsModal').classList.add('open');
+}
+
+function renderRestoreRecipeList() {
+  const el = document.getElementById('restoreRecipeList');
+  if (!el) return;
+  const restorable = deletedRecipeNames.filter(n => HARDCODED_RECIPE_NAMES.has(n));
+  if (!restorable.length) {
+    el.innerHTML = `<div style="color:var(--text-muted);font-size:12px">No deleted recipes to restore right now.</div>`;
+    return;
+  }
+  el.innerHTML = '';
+  restorable.forEach(name => {
+    const row = document.createElement('div');
+    row.className = 'settings-row';
+    row.innerHTML = `
+      <div class="settings-row-text"><b>${name}</b></div>
+      <button class="discover-action-btn" style="flex-shrink:0">Restore</button>
+    `;
+    row.querySelector('button').onclick = () => restoreDeletedRecipe(name);
+    el.appendChild(row);
+  });
+}
+
+function restoreDeletedRecipe(name) {
+  unmarkRecipeDeleted(name);
+  showToast(`"${name}" restored — reloading...`);
+  setTimeout(() => location.reload(), 600);
 }
 
 function closeSettingsModal() {
