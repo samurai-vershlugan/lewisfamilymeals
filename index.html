@@ -1629,7 +1629,40 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+  .mobile-quick-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 900;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    justify-content: space-around;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+  }
+  .mobile-quick-nav button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    cursor: pointer;
+    flex: 1;
+  }
+  .mobile-quick-nav button span:first-child { font-size: 18px; line-height: 1; }
+  .mobile-quick-nav button:active { color: var(--accent); }
+
   @media (max-width: 900px) {
+    .mobile-quick-nav { display: flex; }
+    .main { padding-bottom: 64px; }
+  }
     header {
       padding: 12px 16px;
       flex-direction: column;
@@ -2578,9 +2611,7 @@
 
   .nav-more-wrap { position: relative; display: inline-flex; }
   .nav-more-menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
+    position: fixed;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -3094,6 +3125,13 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="mobile-quick-nav" id="mobileQuickNav">
+  <button onclick="mobileScrollToSection('.planner')"><span>📅</span><span>Plan</span></button>
+  <button onclick="mobileJumpToRecipes()"><span>📖</span><span>Recipes</span></button>
+  <button onclick="mobileScrollToSection('#groceryList')"><span>🛒</span><span>Groceries</span></button>
+  <button onclick="openPantryModal()"><span>🥫</span><span>Pantry</span></button>
+</div>
 
 <script>
 // ─── DATA ───────────────────────────────────────────────────────────────────
@@ -5593,6 +5631,15 @@ function getMealDisplayName(meal) {
   return `${meal.name} (${meal.selectedProtein.label})`;
 }
 
+function mobileScrollToSection(selector) {
+  const el = document.querySelector(selector);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function mobileJumpToRecipes() {
+  toggleRotationLibrary(true); // make sure it's expanded, not just scrolled to a collapsed section
+  setTimeout(() => mobileScrollToSection('#recipeBrowser'), 60);
+}
+
 function toggleRotationLibrary(forceOpen) {
   const browser = document.getElementById('recipeBrowser');
   const btn = document.getElementById('rotationToggle');
@@ -5939,6 +5986,20 @@ function toggleNavMore(event) {
   if (isOpen) { menu.classList.remove('open'); }
   else {
     menu.classList.add('open');
+    // Position via the button's real on-screen rect rather than CSS right:0 —
+    // on mobile the button can end up wrapped/positioned in ways that made the
+    // absolute-positioned menu get clipped off the edge of the screen.
+    const btn = event && event.target ? event.target.closest('.more-btn') : null;
+    if (btn) {
+      const rect = btn.getBoundingClientRect();
+      const menuWidth = Math.max(menu.offsetWidth, 170);
+      let left = rect.right - menuWidth;
+      if (left < 8) left = 8;
+      if (left + menuWidth > window.innerWidth - 8) left = window.innerWidth - menuWidth - 8;
+      menu.style.left = left + 'px';
+      menu.style.top = (rect.bottom + 6) + 'px';
+      menu.style.right = 'auto';
+    }
     setTimeout(function(){
       const handler = function(e){
         if (!menu.contains(e.target) && !e.target.classList.contains('more-btn')) {
@@ -7593,9 +7654,7 @@ function printSnapshot() {
 
   .nav-more-wrap { position: relative; display: inline-flex; }
   .nav-more-menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
+    position: fixed;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 10px;
