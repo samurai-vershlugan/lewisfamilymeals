@@ -1658,6 +1658,7 @@
   }
   .mobile-quick-nav button span:first-child { font-size: 18px; line-height: 1; }
   .mobile-quick-nav button:active { color: var(--accent); }
+  .mobile-quick-nav button.active-tab { color: var(--accent); }
 
   @media (max-width: 900px) {
     .mobile-quick-nav { display: flex; }
@@ -2731,6 +2732,7 @@
 
 <div class="main" id="appMain" style="display:none">
   <div class="planner">
+    <div id="mobilePlanSection">
     <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:16px">
       <div class="section-label" style="margin-bottom:0;flex:1">This Week's Plan</div>
       <div class="week-view-toggle" id="weekViewToggle">
@@ -2739,6 +2741,8 @@
       </div>
     </div>
     <div class="week-grid" id="weekGrid"></div>
+    </div>
+    <div id="mobileRecipesSection">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
       <button class="rotation-toggle" id="rotationToggle" onclick="toggleRotationLibrary()">
         <span>My Recipes</span>
@@ -2752,9 +2756,10 @@
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px" id="recipeProteinFilters"></div>
       <div class="rotation-grid" id="rotationGrid"></div>
     </div>
+    </div>
   </div>
 
-  <div class="sidebar">
+  <div class="sidebar" id="mobileGroceriesSection">
     <div class="sidebar-section">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
         <h3 style="margin:0">🛒 Grocery List</h3>
@@ -3126,10 +3131,10 @@
 <div class="toast" id="toast"></div>
 
 <div class="mobile-quick-nav" id="mobileQuickNav">
-  <button onclick="mobileScrollToSection('.planner')"><span>📅</span><span>Plan</span></button>
-  <button onclick="mobileJumpToRecipes()"><span>📖</span><span>Recipes</span></button>
-  <button onclick="mobileScrollToSection('#groceryList')"><span>🛒</span><span>Groceries</span></button>
-  <button onclick="openPantryModal()"><span>🥫</span><span>Pantry</span></button>
+  <button data-tab="plan" class="active-tab" onclick="mobileGoToTab('plan')"><span>📅</span><span>Plan</span></button>
+  <button data-tab="recipes" onclick="mobileGoToTab('recipes')"><span>📖</span><span>Recipes</span></button>
+  <button data-tab="groceries" onclick="mobileGoToTab('groceries')"><span>🛒</span><span>Groceries</span></button>
+  <button data-tab="pantry" onclick="mobileGoToTab('pantry')"><span>🥫</span><span>Pantry</span></button>
 </div>
 
 <script>
@@ -5630,14 +5635,45 @@ function getMealDisplayName(meal) {
   return `${meal.name} (${meal.selectedProtein.label})`;
 }
 
-function mobileScrollToSection(selector) {
-  const el = document.querySelector(selector);
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+const MOBILE_NAV_BREAKPOINT = 900;
+let mobileActiveTab = 'plan';
+
+function isMobileNavLayout() {
+  return window.innerWidth <= MOBILE_NAV_BREAKPOINT;
 }
-function mobileJumpToRecipes() {
-  toggleRotationLibrary(true); // make sure it's expanded, not just scrolled to a collapsed section
-  setTimeout(() => mobileScrollToSection('#recipeBrowser'), 60);
+
+function mobileGoToTab(tab) {
+  if (tab === 'pantry') { openPantryModal(); return; }
+  if (!isMobileNavLayout()) return; // desktop never switches — all sections stay visible
+  mobileActiveTab = tab;
+  const sections = {
+    plan: document.getElementById('mobilePlanSection'),
+    recipes: document.getElementById('mobileRecipesSection'),
+    groceries: document.getElementById('mobileGroceriesSection')
+  };
+  Object.keys(sections).forEach(key => {
+    if (sections[key]) sections[key].style.display = (key === tab) ? '' : 'none';
+  });
+  if (tab === 'recipes') toggleRotationLibrary(true); // never land on a collapsed section
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.querySelectorAll('.mobile-quick-nav button[data-tab]').forEach(b => {
+    b.classList.toggle('active-tab', b.dataset.tab === tab);
+  });
 }
+
+function applyMobileNavLayout() {
+  if (isMobileNavLayout()) {
+    mobileGoToTab(mobileActiveTab || 'plan');
+  } else {
+    // Safety net: if the window is resized from mobile to desktop width, make sure
+    // nothing is left hidden from the mobile tab state — desktop always shows everything.
+    ['mobilePlanSection', 'mobileRecipesSection', 'mobileGroceriesSection'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = '';
+    });
+  }
+}
+window.addEventListener('resize', applyMobileNavLayout);
 
 function toggleRotationLibrary(forceOpen) {
   const browser = document.getElementById('recipeBrowser');
@@ -6765,6 +6801,7 @@ async function bootApp() {
   initTagUI();
   initDarkMode();
   initDiscoverFilterListeners();
+  applyMobileNavLayout();
 }
 
 // Legacy Store helper (window.storage / localStorage fallback)
