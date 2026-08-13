@@ -962,6 +962,31 @@
   .modal-overlay.open { opacity: 1; pointer-events: all; }
 
   @media (max-width: 900px) {
+    #pantryModal.pantry-as-tab {
+      position: static;
+      background: none;
+      display: block;
+      opacity: 1;
+      pointer-events: all;
+      inset: auto;
+    }
+    #pantryModal.pantry-as-tab .modal {
+      position: static !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      max-height: none !important;
+      margin: 0;
+      border-radius: 0 !important;
+      transform: none !important;
+      opacity: 1 !important;
+      box-shadow: none;
+      border: none;
+      padding: 16px;
+    }
+    #pantryModal.pantry-as-tab .modal-close { display: none; }
+  }
+
+  @media (max-width: 900px) {
     #pantryModal { align-items: flex-end; }
     #pantryModal .modal {
       max-width: 100% !important;
@@ -1704,6 +1729,7 @@
     .day-card { padding: 10px 12px; }
     .meal-name { font-size: 13px; }
     .week-view-toggle { display: none; }
+    .pantry-btn { display: none; }
     .sidebar { padding: 0 16px 16px; }
     .sidebar-section { margin-bottom: 16px; }
     .rotation-grid { gap: 10px; }
@@ -5667,27 +5693,41 @@ function isMobileNavLayout() {
 }
 
 function mobileGoToTab(tab) {
-  if (tab === 'pantry') { openPantryModal(); return; }
-  if (!isMobileNavLayout()) return; // desktop never switches — all sections stay visible
-  closePantryModal(); // don't leave it open behind whichever section is now showing
+  if (!isMobileNavLayout()) {
+    if (tab === 'pantry') openPantryModal();
+    return; // desktop never switches — all sections stay visible, Pantry stays a normal modal
+  }
   mobileActiveTab = tab;
   const sections = {
     plan: document.getElementById('mobilePlanSection'),
     recipes: document.getElementById('mobileRecipesSection'),
     groceries: document.getElementById('mobileGroceriesSection')
   };
+  const pantryEl = document.getElementById('pantryModal');
   Object.keys(sections).forEach(key => {
     if (sections[key]) sections[key].style.display = (key === tab) ? '' : 'none';
   });
-  if (tab === 'recipes') toggleRotationLibrary(true); // never land on a collapsed section
+  if (tab === 'pantry') {
+    renderPantryItems();
+    pantryEl.classList.add('open', 'pantry-as-tab');
+  } else {
+    pantryEl.classList.remove('open', 'pantry-as-tab');
+    if (tab === 'recipes') toggleRotationLibrary(true); // never land on a collapsed section
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
   document.querySelectorAll('.mobile-quick-nav button[data-tab]').forEach(b => {
     b.classList.toggle('active-tab', b.dataset.tab === tab);
   });
 }
 
+let lastMobileNavState = null;
 function applyMobileNavLayout() {
-  if (isMobileNavLayout()) {
+  const isMobile = isMobileNavLayout();
+  if (isMobile === lastMobileNavState) return; // no real breakpoint crossing — e.g. iOS
+  // Safari firing resize when its address bar collapses/expands during scroll.
+  // Reapplying the tab (which scrolls to top) on every one of those was the bug.
+  lastMobileNavState = isMobile;
+  if (isMobile) {
     mobileGoToTab(mobileActiveTab || 'plan');
   } else {
     // Safety net: if the window is resized from mobile to desktop width, make sure
@@ -5696,6 +5736,8 @@ function applyMobileNavLayout() {
       const el = document.getElementById(id);
       if (el) el.style.display = '';
     });
+    const pantryEl = document.getElementById('pantryModal');
+    if (pantryEl) pantryEl.classList.remove('open', 'pantry-as-tab');
   }
 }
 window.addEventListener('resize', applyMobileNavLayout);
