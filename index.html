@@ -975,6 +975,7 @@
       max-width: 100% !important;
       width: 100% !important;
       max-height: none !important;
+      overflow-y: visible !important;
       margin: 0;
       border-radius: 0 !important;
       transform: none !important;
@@ -5726,7 +5727,8 @@ function mobileGoToTab(tab) {
   if (generateFilter) generateFilter.style.display = (tab === 'plan') ? '' : 'none';
   if (generateBtn) generateBtn.style.display = (tab === 'plan') ? '' : 'none';
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  const activeEl = (tab === 'pantry') ? pantryEl : sections[tab];
+  if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
   document.querySelectorAll('.mobile-quick-nav button[data-tab]').forEach(b => {
     b.classList.toggle('active-tab', b.dataset.tab === tab);
   });
