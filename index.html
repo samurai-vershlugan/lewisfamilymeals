@@ -2751,7 +2751,7 @@
     <button class="signout-btn" onclick="signOut()" title="Sign out">Sign out</button>
   </div>
   <div class="week-nav">
-    <div class="week-nav-group">
+    <div class="week-nav-group" id="weekNavGroup">
       <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
       <div class="week-label" id="weekLabel">Week of —</div>
       <button class="nav-btn" onclick="changeWeek(1)">›</button>
@@ -5714,6 +5714,18 @@ function mobileGoToTab(tab) {
     pantryEl.classList.remove('open', 'pantry-as-tab');
     if (tab === 'recipes') toggleRotationLibrary(true); // never land on a collapsed section
   }
+
+  // Top bar is contextual per tab — week switcher matters on Plan/Groceries
+  // (both are tied to a specific week), "Any meal"/Generate only apply to
+  // Plan, and Pantry needs none of it (so scrolling to top lands directly on
+  // Pantry's own content instead of empty space where these used to be).
+  const weekNavGroup = document.getElementById('weekNavGroup');
+  const generateFilter = document.getElementById('generateTagFilter');
+  const generateBtn = document.querySelector('.generate-btn');
+  if (weekNavGroup) weekNavGroup.style.display = (tab === 'plan' || tab === 'groceries') ? '' : 'none';
+  if (generateFilter) generateFilter.style.display = (tab === 'plan') ? '' : 'none';
+  if (generateBtn) generateBtn.style.display = (tab === 'plan') ? '' : 'none';
+
   window.scrollTo({ top: 0, behavior: 'smooth' });
   document.querySelectorAll('.mobile-quick-nav button[data-tab]').forEach(b => {
     b.classList.toggle('active-tab', b.dataset.tab === tab);
