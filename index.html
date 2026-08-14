@@ -1731,6 +1731,10 @@
     .meal-name { font-size: 13px; }
     .week-view-toggle { display: none; }
     .pantry-btn { display: none; }
+    .section-label { font-size: 13px; letter-spacing: 1.5px; color: var(--text); font-weight: 700; }
+    .rotation-toggle { font-size: 13px; letter-spacing: 1.5px; color: var(--text); font-weight: 700; }
+    #mobileGroceriesSection h3 { font-size: 19px; }
+    #pantryModal h3 { font-size: 19px; }
     .sidebar { padding: 0 16px 16px; }
     .sidebar-section { margin-bottom: 16px; }
     .rotation-grid { gap: 10px; }
@@ -5728,7 +5732,11 @@ function mobileGoToTab(tab) {
   if (generateBtn) generateBtn.style.display = (tab === 'plan') ? '' : 'none';
 
   const activeEl = (tab === 'pantry') ? pantryEl : sections[tab];
-  if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (activeEl) {
+    const headerEl = document.querySelector('header');
+    activeEl.style.scrollMarginTop = (headerEl ? headerEl.offsetHeight + 10 : 80) + 'px';
+    activeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   document.querySelectorAll('.mobile-quick-nav button[data-tab]').forEach(b => {
     b.classList.toggle('active-tab', b.dataset.tab === tab);
   });
