@@ -5757,6 +5757,19 @@ function mobileGoToTab(tab) {
     if (tab === 'pantry') openPantryModal();
     return; // desktop never switches — all sections stay visible, Pantry stays a normal modal
   }
+  // Any open popover/dialog should close when jumping to a different tab —
+  // otherwise it just sits there, overlapping or hidden behind the new content.
+  closeNavMore();
+  if (typeof hideHistoryPage === 'function') hideHistoryPage();
+  if (typeof closeInviteModal === 'function') closeInviteModal();
+  if (typeof closeSettingsModal === 'function') closeSettingsModal();
+  if (typeof closeDiscoverModal === 'function') closeDiscoverModal();
+  if (typeof closeRobotModal === 'function') closeRobotModal();
+  const openRecipeModal_ = document.getElementById('recipeModal');
+  if (openRecipeModal_) openRecipeModal_.classList.remove('open');
+  if (typeof closeDiscoverEditModal === 'function') closeDiscoverEditModal();
+  if (typeof closeModalDirect === 'function') closeModalDirect();
+
   mobileActiveTab = tab;
   const sections = {
     plan: document.getElementById('mobilePlanSection'),
