@@ -1737,7 +1737,18 @@
     .meal-name { font-size: 13px; }
     .week-view-toggle { display: none; }
     .pantry-btn { display: none; }
-    .discover-btn-mobile, .robot-btn-mobile { display: inline-flex; flex: 0 1 auto; min-width: 0; }
+    .discover-btn-mobile, .robot-btn-mobile {
+      display: inline-flex;
+      flex: 0 1 auto;
+      min-width: 0;
+      padding-left: 8px;
+      padding-right: 8px;
+      font-size: 9px;
+    }
+    .nav-row-top { flex-wrap: nowrap; }
+    #mobileGroceriesSection .sidebar-section:first-child { padding-top: 16px; }
+    #pantryModal.pantry-as-tab .modal { padding-top: 16px !important; }
+    .section-label, .rotation-toggle, #mobileGroceriesSection h3, #pantryModal h3 { margin-top: 0; }
     .more-desktop-only { display: none; }
     #generateControlsGroup { flex-direction: column; align-items: stretch; }
     #generateBtnRow { display: flex; gap: 8px; flex-wrap: nowrap; }
@@ -1761,7 +1772,7 @@
       cursor: default;
     }
     #rotationToggleIcon { display: none; }
-    #mobileGroceriesSection h3 { font-family: var(--font-display); font-size: 19px; font-weight: 700; text-transform: none; letter-spacing: normal; color: var(--text); }
+    #mobileGroceriesSection h3 { font-family: var(--font-display); font-size: 19px; font-weight: 700; text-transform: none; letter-spacing: normal; color: var(--text); border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
     #pantryModal h3 { font-size: 19px; }
     .text-input, #deIngredients, #deSteps { font-size: 16px !important; }
     .sidebar { padding: 0 16px 16px; }
