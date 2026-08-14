@@ -1749,8 +1749,10 @@
       text-transform: none;
       letter-spacing: normal;
       color: var(--text);
+      cursor: default;
     }
-    #mobileGroceriesSection h3 { font-size: 19px; }
+    #rotationToggleIcon { display: none; }
+    #mobileGroceriesSection h3 { font-family: var(--font-display); font-size: 19px; font-weight: 700; }
     #pantryModal h3 { font-size: 19px; }
     .text-input, #deIngredients, #deSteps { font-size: 16px !important; }
     .sidebar { padding: 0 16px 16px; }
@@ -2807,7 +2809,7 @@
   <div class="planner">
     <div id="mobilePlanSection">
     <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:16px">
-      <div class="section-label" style="margin-bottom:0;flex:1">This Week's Plan</div>
+      <div class="section-label" style="margin-bottom:0;flex:1">📅 This Week's Plan</div>
       <div class="week-view-toggle" id="weekViewToggle">
         <button class="view-toggle-btn" data-view="stack" onclick="setWeekView('stack')" title="Stacked cards">☰</button>
         <button class="view-toggle-btn" data-view="grid" onclick="setWeekView('grid')" title="Wrapping grid">▦</button>
@@ -2818,7 +2820,7 @@
     <div id="mobileRecipesSection">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
       <button class="rotation-toggle" id="rotationToggle" onclick="toggleRotationLibrary()">
-        <span>My Recipes</span>
+        <span>📖 My Recipes</span>
         <span id="rotationToggleIcon">▾</span>
       </button>
       <button class="add-library-btn" onclick="openAddLibraryModal()">＋ Add Recipe</button>
@@ -5785,6 +5787,10 @@ window.addEventListener('resize', applyMobileNavLayout);
 function toggleRotationLibrary(forceOpen) {
   const browser = document.getElementById('recipeBrowser');
   const btn = document.getElementById('rotationToggle');
+  // On mobile, Recipes is its own dedicated tab — manually collapsing it away
+  // serves no purpose there (it would just hide the whole tab's content).
+  // Only an explicit forceOpen (used when switching to the tab) is honored.
+  if (isMobileNavLayout() && forceOpen === undefined) return;
   const isOpen = browser.style.display !== 'none';
   const shouldOpen = forceOpen !== undefined ? forceOpen : !isOpen;
   browser.style.display = shouldOpen ? '' : 'none';
