@@ -969,6 +969,7 @@
       opacity: 1;
       pointer-events: all;
       inset: auto;
+      transition: none !important;
     }
     #pantryModal.pantry-as-tab .modal {
       position: static !important;
@@ -983,6 +984,7 @@
       box-shadow: none;
       border: none;
       padding: 16px;
+      transition: none !important;
     }
     #pantryModal.pantry-as-tab .modal-close { display: none; }
   }
@@ -1735,6 +1737,7 @@
     .rotation-toggle { font-size: 13px; letter-spacing: 1.5px; color: var(--text); font-weight: 700; }
     #mobileGroceriesSection h3 { font-size: 19px; }
     #pantryModal h3 { font-size: 19px; }
+    .text-input, #deIngredients, #deSteps { font-size: 16px !important; }
     .sidebar { padding: 0 16px 16px; }
     .sidebar-section { margin-bottom: 16px; }
     .rotation-grid { gap: 10px; }
@@ -9506,7 +9509,7 @@ function openDiscoverEditModal(r) {
           </div>
           <div style="display:flex;gap:6px;flex:0 0 auto">
             <button class="confirm-btn" style="background:#333;color:#ccc;padding:7px 12px" onclick="closeDiscoverEditModal()">Cancel</button>
-            <button class="confirm-btn" style="white-space:nowrap;padding:7px 14px" onclick="confirmDiscoverEdit()">Save to Library</button>
+            <button class="confirm-btn" style="white-space:nowrap;padding:7px 14px" onclick="confirmDiscoverEdit()">Save</button>
           </div>
         </div>
       </div>
