@@ -1737,11 +1737,11 @@
     .meal-name { font-size: 13px; }
     .week-view-toggle { display: none; }
     .pantry-btn { display: none; }
-    .discover-btn-mobile, .robot-btn-mobile { display: inline-flex; }
+    .discover-btn-mobile, .robot-btn-mobile { display: inline-flex; flex: 0 1 auto; min-width: 0; }
     .more-desktop-only { display: none; }
     #generateControlsGroup { flex-direction: column; align-items: stretch; }
-    #generateBtnRow { display: flex; gap: 8px; }
-    #generateBtnRow .nav-action { flex: 1; }
+    #generateBtnRow { display: flex; gap: 8px; flex-wrap: nowrap; }
+    #generateBtnRow .nav-action { flex: 1; min-width: 0; font-size: 9px; padding-left: 4px; padding-right: 4px; }
     .section-label {
       font-family: var(--font-display);
       font-size: 19px;
@@ -2781,12 +2781,10 @@
 </div>
 
 <header style="display:none" id="appHeader">
-  <div class="logo">
+  <div class="logo" style="display:flex;align-items:center;gap:10px">
     <div class="logo-title">🍽 Recipe Robot</div>
     <div class="logo-sub" id="familyNameLabel">v2026</div>
-  </div>
-  <div style="display:flex;align-items:center;gap:4px;margin-left:auto;margin-right:12px">
-    <button class="signout-btn" onclick="toggleDarkMode()" id="darkToggleBtn" title="Toggle dark mode">🌙</button>
+    <button class="signout-btn" onclick="toggleDarkMode()" id="darkToggleBtn" title="Toggle dark mode" style="margin-left:4px">🌙</button>
   </div>
   <div class="week-nav">
     <div class="week-nav-group" id="weekNavGroup">
@@ -2802,6 +2800,7 @@
         <div class="nav-row-top" id="generateBtnRow">
           <button class="nav-action generate-btn" onclick="generateWeek()">↻ Generate</button>
           <button class="nav-action" id="saveWeekBtnMobile" onclick="saveWeekSnapshot()" style="display:none">💾 Save Week</button>
+          <button class="nav-action" id="shareBtnMobile" onclick="sharePlan()" style="display:none">↗ Share</button>
         </div>
       </div>
       <div class="nav-row-top">
@@ -2810,13 +2809,13 @@
         <div class="nav-more-wrap">
           <button class="nav-action more-btn" onclick="toggleNavMore(event)" title="More" aria-label="More">☰</button>
           <div class="nav-more-menu" id="navMoreMenu">
-            <button class="more-desktop-only" onclick="openDiscoverModal(); closeNavMore()">✦ Discover</button>
-            <button class="more-desktop-only" onclick="openRobotModal(); closeNavMore()">🤖 Robot</button>
+            <button class="more-desktop-only" onclick="openDiscoverModal(); closeNavMore()">Discover</button>
+            <button class="more-desktop-only" onclick="openRobotModal(); closeNavMore()">Robot</button>
             <button onclick="openInviteModal(); closeNavMore()">Invite</button>
-            <button class="more-desktop-only" onclick="saveWeekSnapshot(); closeNavMore()">💾 Save Week</button>
-            <button onclick="showHistoryPage(); closeNavMore()">📅 Saved Weeks</button>
-            <button class="more-desktop-only" onclick="sharePlan(); closeNavMore()">↗ Share</button>
-            <button onclick="openSettingsModal(); closeNavMore()">⚙ Settings</button>
+            <button class="more-desktop-only" onclick="saveWeekSnapshot(); closeNavMore()">Save Week</button>
+            <button onclick="showHistoryPage(); closeNavMore()">Saved Weeks</button>
+            <button class="more-desktop-only" onclick="sharePlan(); closeNavMore()">Share</button>
+            <button onclick="openSettingsModal(); closeNavMore()">Settings</button>
             <button onclick="signOut(); closeNavMore()">Sign Out</button>
           </div>
         </div>
@@ -5771,6 +5770,7 @@ function mobileGoToTab(tab) {
   const weekNavGroup = document.getElementById('weekNavGroup');
   const generateGroup = document.getElementById('generateControlsGroup');
   const saveWeekBtn = document.getElementById('saveWeekBtnMobile');
+  const shareBtn = document.getElementById('shareBtnMobile');
   const planSlot = document.getElementById('planTopControls');
   const groceriesSlot = document.getElementById('groceriesTopControls');
 
@@ -5784,6 +5784,7 @@ function mobileGoToTab(tab) {
     generateGroup.style.display = (tab === 'plan') ? '' : 'none';
   }
   if (saveWeekBtn) saveWeekBtn.style.display = (tab === 'plan') ? '' : 'none';
+  if (shareBtn) shareBtn.style.display = (tab === 'plan') ? '' : 'none';
 
   const activeEl = (tab === 'pantry') ? pantryEl : sections[tab];
   if (activeEl) {
@@ -5821,6 +5822,7 @@ function applyMobileNavLayout() {
     const weekNavGroup2 = document.getElementById('weekNavGroup');
     const generateGroup2 = document.getElementById('generateControlsGroup');
     const saveWeekBtn2 = document.getElementById('saveWeekBtnMobile');
+    const shareBtn2 = document.getElementById('shareBtnMobile');
     if (weekNavGroup2 && weekNavRow) {
       weekNavRow.insertBefore(weekNavGroup2, weekNavRow.firstChild);
       weekNavGroup2.style.display = '';
@@ -5830,6 +5832,7 @@ function applyMobileNavLayout() {
       generateGroup2.style.display = '';
     }
     if (saveWeekBtn2) saveWeekBtn2.style.display = 'none';
+    if (shareBtn2) shareBtn2.style.display = 'none';
   }
 }
 window.addEventListener('resize', applyMobileNavLayout);
