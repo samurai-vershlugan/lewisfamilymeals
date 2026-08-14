@@ -965,19 +965,25 @@
 
   @media (max-width: 900px) {
     #pantryModal.pantry-as-tab {
-      position: static;
+      position: static !important;
       background: none;
-      display: block;
+      display: block !important;
       opacity: 1;
       pointer-events: all;
-      inset: auto;
+      inset: auto !important;
       transition: none !important;
+      min-height: 0 !important;
+      height: auto !important;
+      align-items: normal !important;
+      justify-content: normal !important;
     }
     #pantryModal.pantry-as-tab .modal {
       position: static !important;
       max-width: 100% !important;
       width: 100% !important;
       max-height: none !important;
+      min-height: 0 !important;
+      height: auto !important;
       overflow-y: visible !important;
       margin: 0;
       border-radius: 0 !important;
@@ -1741,9 +1747,13 @@
       display: inline-flex !important;
       flex: 0 1 auto !important;
       min-width: 0 !important;
-      padding-left: 12px !important;
-      padding-right: 12px !important;
+      padding-left: 10px !important;
+      padding-right: 10px !important;
       font-size: 11px !important;
+      background: var(--surface2) !important;
+      color: var(--accent) !important;
+      border: 1.5px solid var(--accent) !important;
+      font-weight: 600 !important;
     }
     .nav-row-top { flex-wrap: nowrap !important; gap: 5px !important; }
     .more-btn { width: 32px !important; }
@@ -2816,8 +2826,8 @@
         </div>
       </div>
       <div class="nav-row-top">
-        <button class="nav-action discover-btn-mobile" onclick="openDiscoverModal()">Discover</button>
-        <button class="nav-action robot-btn-mobile" onclick="openRobotModal()">Robot</button>
+        <button class="nav-action discover-btn-mobile" onclick="openDiscoverModal()">✦ Discover</button>
+        <button class="nav-action robot-btn-mobile" onclick="openRobotModal()">🤖 Robot</button>
         <div class="nav-more-wrap">
           <button class="nav-action more-btn" onclick="toggleNavMore(event)" title="More" aria-label="More">☰</button>
           <div class="nav-more-menu" id="navMoreMenu">
