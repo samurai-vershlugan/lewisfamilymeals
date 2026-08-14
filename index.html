@@ -1733,8 +1733,23 @@
     .meal-name { font-size: 13px; }
     .week-view-toggle { display: none; }
     .pantry-btn { display: none; }
-    .section-label { font-size: 13px; letter-spacing: 1.5px; color: var(--text); font-weight: 700; }
-    .rotation-toggle { font-size: 13px; letter-spacing: 1.5px; color: var(--text); font-weight: 700; }
+    .section-label {
+      font-family: var(--font-display);
+      font-size: 19px;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: normal;
+      color: var(--text);
+    }
+    .section-label::after { display: none; }
+    .rotation-toggle {
+      font-family: var(--font-display);
+      font-size: 19px;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: normal;
+      color: var(--text);
+    }
     #mobileGroceriesSection h3 { font-size: 19px; }
     #pantryModal h3 { font-size: 19px; }
     .text-input, #deIngredients, #deSteps { font-size: 16px !important; }
@@ -5738,7 +5753,7 @@ function mobileGoToTab(tab) {
   if (activeEl) {
     const headerEl = document.querySelector('header');
     activeEl.style.scrollMarginTop = (headerEl ? headerEl.offsetHeight + 10 : 80) + 'px';
-    activeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    activeEl.scrollIntoView({ behavior: 'instant', block: 'start' });
   }
   document.querySelectorAll('.mobile-quick-nav button[data-tab]').forEach(b => {
     b.classList.toggle('active-tab', b.dataset.tab === tab);
@@ -9544,6 +9559,8 @@ function openDiscoverEditModal(r) {
   if (_imp) _imp.style.display = 'none';
 
   modal.classList.add('open');
+  const deScroll = modal.querySelector('.de-scroll');
+  if (deScroll) deScroll.scrollTop = 0;
 }
 
 function closeDiscoverEditModal() {
