@@ -115,6 +115,7 @@
     padding-left: 16px;
     border-left: 1px solid var(--border);
   }
+  #generateControlsGroup { display: flex; align-items: center; gap: 8px; }
 
   .week-label {
     font-family: 'DM Mono', monospace;
@@ -1676,6 +1677,8 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+  .discover-btn-mobile, .robot-btn-mobile { display: none; }
+
   .mobile-quick-nav {
     display: none;
     position: fixed;
@@ -1733,6 +1736,10 @@
     .meal-name { font-size: 13px; }
     .week-view-toggle { display: none; }
     .pantry-btn { display: none; }
+    .discover-btn-mobile, .robot-btn-mobile { display: inline-flex; }
+    #generateControlsGroup { flex-direction: column; align-items: stretch; }
+    #generateBtnRow { display: flex; gap: 8px; }
+    #generateBtnRow .nav-action { flex: 1; }
     .section-label {
       font-family: var(--font-display);
       font-size: 19px;
@@ -2788,11 +2795,18 @@
       <button class="nav-btn" onclick="changeWeek(1)">›</button>
     </div>
     <div class="week-nav-actions">
-      <select id="generateTagFilter" class="wake-select" style="height:34px;padding:0 10px" title="Generate preference">
-        <option value="">Any meal</option>
-      </select>
+      <div id="generateControlsGroup">
+        <select id="generateTagFilter" class="wake-select" style="height:34px;padding:0 10px" title="Generate preference">
+          <option value="">Any meal</option>
+        </select>
+        <div class="nav-row-top" id="generateBtnRow">
+          <button class="nav-action generate-btn" onclick="generateWeek()">↻ Generate</button>
+          <button class="nav-action" id="saveWeekBtnMobile" onclick="saveWeekSnapshot()" style="display:none">💾 Save Week</button>
+        </div>
+      </div>
       <div class="nav-row-top">
-        <button class="nav-action generate-btn" onclick="generateWeek()">↻ Generate</button>
+        <button class="nav-action discover-btn-mobile" onclick="openDiscoverModal()">✦ Discover</button>
+        <button class="nav-action robot-btn-mobile" onclick="openRobotModal()">🤖 Robot</button>
         <button class="nav-action pantry-btn" onclick="openPantryModal()">🥫 Pantry</button>
         <div class="nav-more-wrap">
           <button class="nav-action more-btn" onclick="toggleNavMore(event)">⋯ More</button>
@@ -2821,6 +2835,7 @@
         <button class="view-toggle-btn" data-view="grid" onclick="setWeekView('grid')" title="Wrapping grid">▦</button>
       </div>
     </div>
+    <div id="planTopControls" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px"></div>
     <div class="week-grid" id="weekGrid"></div>
     </div>
     <div id="mobileRecipesSection">
@@ -2849,6 +2864,7 @@
           <button class="login-back" onclick="regenerateGroceryList()" title="Rebuild from planned recipes" style="font-size:10px">↻ Regenerate</button>
         </div>
       </div>
+      <div id="groceriesTopControls" style="margin-bottom:10px"></div>
       <div style="display:flex;gap:5px;margin-bottom:10px;align-items:center">
         <input id="manualGroceryInput" class="login-input" type="text" placeholder="Add an item..." style="margin-bottom:0;flex:1 1 auto;min-width:0;font-size:12px;padding:6px 10px" onkeydown="if(event.key==='Enter'){addManualGroceryItem(this.value.trim(), document.getElementById('manualGroceryStore').value);this.value='';}" />
         <select id="manualGroceryStore" class="store-select"></select>
@@ -5746,16 +5762,26 @@ function mobileGoToTab(tab) {
     if (tab === 'recipes') toggleRotationLibrary(true); // never land on a collapsed section
   }
 
-  // Top bar is contextual per tab — week switcher matters on Plan/Groceries
-  // (both are tied to a specific week), "Any meal"/Generate only apply to
-  // Plan, and Pantry needs none of it (so scrolling to top lands directly on
-  // Pantry's own content instead of empty space where these used to be).
+  // Week switcher and Generate controls physically move into whichever tab
+  // they're relevant to, instead of sitting in a shared header area that
+  // changes contents per tab. The header itself stays uniform across all
+  // four tabs — only Discover/Robot/Pantry/More live there now.
   const weekNavGroup = document.getElementById('weekNavGroup');
-  const generateFilter = document.getElementById('generateTagFilter');
-  const generateBtn = document.querySelector('.generate-btn');
-  if (weekNavGroup) weekNavGroup.style.display = (tab === 'plan' || tab === 'groceries') ? '' : 'none';
-  if (generateFilter) generateFilter.style.display = (tab === 'plan') ? '' : 'none';
-  if (generateBtn) generateBtn.style.display = (tab === 'plan') ? '' : 'none';
+  const generateGroup = document.getElementById('generateControlsGroup');
+  const saveWeekBtn = document.getElementById('saveWeekBtnMobile');
+  const planSlot = document.getElementById('planTopControls');
+  const groceriesSlot = document.getElementById('groceriesTopControls');
+
+  if (weekNavGroup) {
+    if (tab === 'plan' && planSlot) planSlot.appendChild(weekNavGroup);
+    else if (tab === 'groceries' && groceriesSlot) groceriesSlot.appendChild(weekNavGroup);
+    weekNavGroup.style.display = (tab === 'plan' || tab === 'groceries') ? '' : 'none';
+  }
+  if (generateGroup) {
+    if (tab === 'plan' && planSlot) planSlot.appendChild(generateGroup);
+    generateGroup.style.display = (tab === 'plan') ? '' : 'none';
+  }
+  if (saveWeekBtn) saveWeekBtn.style.display = (tab === 'plan') ? '' : 'none';
 
   const activeEl = (tab === 'pantry') ? pantryEl : sections[tab];
   if (activeEl) {
@@ -5784,8 +5810,24 @@ function applyMobileNavLayout() {
       const el = document.getElementById(id);
       if (el) el.style.display = '';
     });
-    const pantryEl = document.getElementById('pantryModal');
-    if (pantryEl) pantryEl.classList.remove('open', 'pantry-as-tab');
+    const pantryEl2 = document.getElementById('pantryModal');
+    if (pantryEl2) pantryEl2.classList.remove('open', 'pantry-as-tab');
+    // Move the week-nav and generate controls back to their original header
+    // home, and restore their normal (always-visible) desktop display.
+    const weekNavActions = document.querySelector('.week-nav-actions');
+    const weekNavRow = document.querySelector('.week-nav');
+    const weekNavGroup2 = document.getElementById('weekNavGroup');
+    const generateGroup2 = document.getElementById('generateControlsGroup');
+    const saveWeekBtn2 = document.getElementById('saveWeekBtnMobile');
+    if (weekNavGroup2 && weekNavRow) {
+      weekNavRow.insertBefore(weekNavGroup2, weekNavRow.firstChild);
+      weekNavGroup2.style.display = '';
+    }
+    if (generateGroup2 && weekNavActions) {
+      weekNavActions.insertBefore(generateGroup2, weekNavActions.firstChild);
+      generateGroup2.style.display = '';
+    }
+    if (saveWeekBtn2) saveWeekBtn2.style.display = 'none';
   }
 }
 window.addEventListener('resize', applyMobileNavLayout);
