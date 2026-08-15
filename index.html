@@ -7048,6 +7048,40 @@ async function refreshSessionIfNeeded(session) {
   }
 }
 
+// ─── SYNC ON RETURN ─────────────────────────────────────────────────────────────
+// Data only loads from Supabase at boot — if the person's spouse adds a meal or
+// favorites a recipe elsewhere, nothing pulls that in automatically. Rather than
+// build full realtime sync (a much bigger project, and overkill for a family that
+// mostly checks in separately rather than having the app open simultaneously),
+// just refresh the shared data whenever the app comes back into view.
+let lastFocusRefresh = Date.now();
+const FOCUS_REFRESH_MIN_INTERVAL = 15000; // avoid refetching on rapid app-switching
+
+async function refreshSharedDataOnFocus() {
+  const now = Date.now();
+  if (now - lastFocusRefresh < FOCUS_REFRESH_MIN_INTERVAL) return;
+  if (document.querySelector('.modal-overlay.open')) return; // don't disrupt an active edit
+  lastFocusRefresh = now;
+
+  try {
+    await loadFamilySettings();
+    await loadHaveIngredients();
+    await loadWeekPlans();
+    renderWeek();
+    renderRecipeFilters();
+    renderRotationGrid();
+    const key = getWeekKey(currentWeekOffset);
+    if (weekPlans[key]) syncGroceryList(key);
+    renderGroceryList();
+    if (document.getElementById('pantryModal')?.classList.contains('open')) renderPantryItems();
+  } catch(e) { console.warn('Focus refresh failed:', e); }
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') refreshSharedDataOnFocus();
+});
+window.addEventListener('focus', refreshSharedDataOnFocus);
+
 async function bootApp() {
   setLoginSpinner(false);
   hideLoginScreen();
