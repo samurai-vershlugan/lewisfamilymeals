@@ -2416,6 +2416,7 @@
     transition: all 0.15s;
   }
   .recipe-edit-btn:hover { border-color: var(--accent); color: var(--accent); }
+  #recipeModalFavoriteBtn.active { border-color: #e8546b; color: #e8546b; }
 
   .ing-amount {
     font-family: var(--font-mono, 'DM Mono', monospace);
@@ -2598,8 +2599,29 @@
     justify-content: center;
     font-size: 28px;
     cursor: pointer;
+    position: relative;
   }
   .mini-recipe-thumb.has-img { font-size: 0; }
+  .mini-recipe-fav {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    transition: transform 0.1s;
+  }
+  .mini-recipe-fav:active { transform: scale(0.9); }
+  .mini-recipe-fav.active { color: #e8546b; }
   .mini-recipe-name {
     font-family: var(--font-display, serif);
     font-size: 13px;
@@ -2871,6 +2893,7 @@
     </div>
     <div id="recipeBrowser">
       <input id="recipeSearchInput" class="text-input" type="text" placeholder="Search recipes..." style="width:100%;box-sizing:border-box;margin-bottom:8px" oninput="renderRotationGrid()" />
+      <button id="recipeFavoritesToggle" class="cat-btn" style="font-size:10px;padding:5px 12px;margin-bottom:8px" onclick="toggleFavoritesFilter()">♡ Favorites</button>
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px" id="recipeCuisineFilters"></div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px" id="recipeProteinFilters"></div>
       <div class="rotation-grid" id="rotationGrid"></div>
@@ -2949,6 +2972,7 @@
       <div id="recipeModalTitle" class="recipe-modal-name"></div>
       <div id="recipeModalTags" class="recipe-modal-tags"></div>
       <div style="display:flex;gap:8px;align-items:center">
+        <button class="recipe-edit-btn" id="recipeModalFavoriteBtn" onclick="toggleFavoriteRecipe(currentRecipeModalName, event)">♡</button>
         <button class="recipe-edit-btn" id="recipeModalEditBtn" onclick="editSavedRecipe()">✎ Edit recipe</button>
         <button class="recipe-edit-btn" id="recipeModalDeleteBtn" onclick="deleteCurrentRecipe()" style="display:none;border-color:#c0392b;color:#c0392b">🗑 Delete</button>
       </div>
@@ -5911,6 +5935,7 @@ function toggleRotationLibrary(forceOpen) {
 let recipeSearchProtein = null;
 let recipeSearchCuisine = null;
 let recipeSearchType = null;
+let recipeSearchFavoritesOnly = false;
 let recipeBrowserExpanded = false;
 
 // Two clean axes. Cuisine = regional style. Type = dish format / protein.
@@ -6018,6 +6043,16 @@ function getActiveProteinOptions() {
     });
   });
   return opts.sort((a, b) => a.localeCompare(b));
+}
+
+function toggleFavoritesFilter() {
+  recipeSearchFavoritesOnly = !recipeSearchFavoritesOnly;
+  const btn = document.getElementById('recipeFavoritesToggle');
+  if (btn) {
+    btn.classList.toggle('active', recipeSearchFavoritesOnly);
+    btn.textContent = recipeSearchFavoritesOnly ? '♥ Favorites' : '♡ Favorites';
+  }
+  renderRotationGrid();
 }
 
 function renderRecipeFilters() {
@@ -6150,6 +6185,8 @@ function renderRotationGrid() {
   if (recipeSearchCuisine) all = all.filter(r => recipeCuisines(r).includes(recipeSearchCuisine));
   // Filter by type/protein
   if (recipeSearchType) all = all.filter(r => recipeTypes(r).includes(recipeSearchType));
+  // Filter by favorites
+  if (recipeSearchFavoritesOnly) all = all.filter(r => isFavoriteRecipe(r.name));
 
   all.sort((a,b) => a.name.localeCompare(b.name));
 
@@ -6166,7 +6203,7 @@ function renderRotationGrid() {
   el.appendChild(count);
 
   // Limit to a preview count unless expanded (or actively searching/filtering)
-  const isFiltering = !!(q || recipeSearchCuisine || recipeSearchType);
+  const isFiltering = !!(q || recipeSearchCuisine || recipeSearchType || recipeSearchFavoritesOnly);
   const PREVIEW = 6;
   const showAll = recipeBrowserExpanded || isFiltering;
   const shown = showAll ? all : all.slice(0, PREVIEW);
@@ -6180,6 +6217,7 @@ function renderRotationGrid() {
     // Image or emoji
     const thumb = document.createElement('div');
     thumb.className = 'mini-recipe-thumb';
+    thumb.style.position = 'relative';
     if (r.image) {
       thumb.style.backgroundImage = `url('${r.image}')`;
       thumb.classList.add('has-img');
@@ -6188,6 +6226,14 @@ function renderRotationGrid() {
     }
     thumb.addEventListener('click', () => openRecipeModal(r.name));
     card.appendChild(thumb);
+
+    // Favorite toggle
+    const favBtn = document.createElement('button');
+    favBtn.className = 'mini-recipe-fav' + (isFavoriteRecipe(r.name) ? ' active' : '');
+    favBtn.textContent = isFavoriteRecipe(r.name) ? '♥' : '♡';
+    favBtn.title = isFavoriteRecipe(r.name) ? 'Remove from favorites' : 'Add to favorites';
+    favBtn.addEventListener('click', (e) => toggleFavoriteRecipe(r.name, e));
+    thumb.appendChild(favBtn);
 
     // Name
     const nameSpan = document.createElement('div');
@@ -6389,6 +6435,7 @@ function renderRecipeIngredients(recipe, selectedProtein) {
 
 let currentRecipeProtein = null; // tracks selected protein for current modal
 let currentRecipeModalDayIndex = null; // which day card opened the modal
+let currentRecipeModalName = null; // which recipe is currently shown, for the favorite button
 
 function openRecipeModal(recipeName, fromDayIndex = null) {
   currentRecipeModalDayIndex = fromDayIndex;
@@ -6427,6 +6474,12 @@ function openRecipeModal(recipeName, fromDayIndex = null) {
   }
   // Title + tags
   document.getElementById('recipeModalTitle').textContent = recipe.name;
+  currentRecipeModalName = recipe.name;
+  const favBtn = document.getElementById('recipeModalFavoriteBtn');
+  if (favBtn) {
+    favBtn.textContent = isFavoriteRecipe(recipe.name) ? '♥' : '♡';
+    favBtn.classList.toggle('active', isFavoriteRecipe(recipe.name));
+  }
   var _mDel = document.getElementById('recipeModalDeleteBtn');
   if (_mDel) _mDel.style.display = 'inline-block';
   document.getElementById('recipeModalTags').innerHTML =
@@ -7784,8 +7837,29 @@ function printSnapshot() {
     justify-content: center;
     font-size: 28px;
     cursor: pointer;
+    position: relative;
   }
   .mini-recipe-thumb.has-img { font-size: 0; }
+  .mini-recipe-fav {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    transition: transform 0.1s;
+  }
+  .mini-recipe-fav:active { transform: scale(0.9); }
+  .mini-recipe-fav.active { color: #e8546b; }
   .mini-recipe-name {
     font-family: var(--font-display, serif);
     font-size: 13px;
@@ -8024,7 +8098,7 @@ function closePantryModal() {
 
 // ─── FAMILY SETTINGS ──────────────────────────────────────────────────────────
 
-let familySettings = { weekendMealsEnabled: false };
+let familySettings = { weekendMealsEnabled: false, favoriteRecipeNames: [] };
 
 async function loadFamilySettings() {
   if (!FAMILY_ID) return;
@@ -8038,7 +8112,7 @@ async function loadFamilySettings() {
     });
     const rows = await res.json();
     if (rows && rows.length && rows[0].settings_json) {
-      familySettings = { weekendMealsEnabled: false, ...rows[0].settings_json };
+      familySettings = { weekendMealsEnabled: false, favoriteRecipeNames: [], ...rows[0].settings_json };
     }
   } catch(e) { console.warn('loadFamilySettings error:', e); }
 }
@@ -8101,6 +8175,30 @@ async function onWeekendMealsToggle(checked) {
   await saveFamilySettings();
   showToast(checked ? 'Weekend meals enabled' : 'Weekend meals disabled');
   renderWeek();
+}
+
+function isFavoriteRecipe(name) {
+  return (familySettings.favoriteRecipeNames || []).includes(name);
+}
+
+async function toggleFavoriteRecipe(name, event) {
+  if (event) event.stopPropagation(); // don't also trigger the card's own click/assign behavior
+  if (!familySettings.favoriteRecipeNames) familySettings.favoriteRecipeNames = [];
+  const idx = familySettings.favoriteRecipeNames.indexOf(name);
+  if (idx === -1) {
+    familySettings.favoriteRecipeNames.push(name);
+    showToast(`♥ Added "${name}" to favorites`);
+  } else {
+    familySettings.favoriteRecipeNames.splice(idx, 1);
+    showToast(`Removed "${name}" from favorites`);
+  }
+  await saveFamilySettings();
+  renderRotationGrid();
+  const modalHeart = document.getElementById('recipeModalFavoriteBtn');
+  if (modalHeart) {
+    modalHeart.textContent = isFavoriteRecipe(name) ? '♥' : '♡';
+    modalHeart.classList.toggle('active', isFavoriteRecipe(name));
+  }
 }
 
 function renderPantryItems() {
