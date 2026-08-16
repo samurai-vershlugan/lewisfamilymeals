@@ -69,6 +69,9 @@
     margin: 0 auto;
     width: 100%;
     box-sizing: border-box;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: transform;
   }
 
   .logo {
@@ -2508,6 +2511,7 @@
     background-position: center;
     cursor: pointer;
     border-radius: 12px 12px 0 0;
+    position: relative;
   }
 
   .import-section {
@@ -2750,6 +2754,7 @@
     background-position: center;
     border-radius: 12px;
     margin-bottom: 12px;
+    position: relative;
   }
 
   .meal-note {
@@ -3031,11 +3036,12 @@
   <div class="modal recipe-modal" style="position:relative;max-width:460px;width:94%;max-height:90vh;display:flex;flex-direction:column">
     <button class="modal-close" onclick="document.getElementById('recipeModal').classList.remove('open')">×</button>
     <div class="recipe-modal-header">
-      <div id="recipeModalImage" class="recipe-modal-image" style="display:none"></div>
+      <div id="recipeModalImage" class="recipe-modal-image" style="display:none">
+        <button class="mini-recipe-fav" id="recipeModalFavoriteBtn" onclick="toggleFavoriteRecipe(currentRecipeModalName, event)">♡</button>
+      </div>
       <div id="recipeModalTitle" class="recipe-modal-name"></div>
       <div id="recipeModalTags" class="recipe-modal-tags"></div>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="recipe-edit-btn" id="recipeModalFavoriteBtn" onclick="toggleFavoriteRecipe(currentRecipeModalName, event)">♡</button>
         <button class="recipe-edit-btn" id="recipeModalEditBtn" onclick="editSavedRecipe()">✎ Edit recipe</button>
         <button class="recipe-edit-btn" id="recipeModalDeleteBtn" onclick="deleteCurrentRecipe()" style="display:none;border-color:#c0392b;color:#c0392b">🗑 Delete</button>
       </div>
@@ -3967,7 +3973,7 @@ function renderWeek() {
           </div>
         </div>
         <div class="day-meal">
-          ${liveMeal.image ? `<div class="meal-photo meal-name-tappable" style="background-image:url('${liveMeal.image}')"></div>` : ''}
+          ${liveMeal.image ? `<div class="meal-photo meal-name-tappable" style="background-image:url('${liveMeal.image}')"><button class="mini-recipe-fav meal-fav-btn${isFavoriteRecipe(liveMeal.name) ? ' active' : ''}">${isFavoriteRecipe(liveMeal.name) ? '♥' : '♡'}</button></div>` : ''}
           <div class="meal-card-top">
             ${liveMeal.image ? '' : `<div class="meal-thumb meal-name-tappable">${mealEmoji(meal)}</div>`}
             <div class="meal-name meal-name-tappable">${getMealDisplayName(meal)}</div>
@@ -3990,6 +3996,8 @@ function renderWeek() {
       `;
       // Tapping the meal name opens the recipe modal
       card.querySelectorAll('.meal-name-tappable').forEach(function(elt){ elt.addEventListener('click', () => openRecipeModal(meal.name, i)); });
+      const favBtn = card.querySelector('.meal-fav-btn');
+      if (favBtn) favBtn.addEventListener('click', (e) => toggleFavoriteRecipe(liveMeal.name, e));
     } else {
       card.innerHTML = `
         <div class="day-header">
@@ -7792,6 +7800,7 @@ function printSnapshot() {
     background-position: center;
     cursor: pointer;
     border-radius: 12px 12px 0 0;
+    position: relative;
   }
 
   .import-section {
@@ -8034,6 +8043,7 @@ function printSnapshot() {
     background-position: center;
     border-radius: 12px;
     margin-bottom: 12px;
+    position: relative;
   }
 
   .meal-note {
@@ -8264,6 +8274,7 @@ async function toggleFavoriteRecipe(name, event) {
   }
   await saveFamilySettings();
   renderRotationGrid();
+  renderWeek();
   const modalHeart = document.getElementById('recipeModalFavoriteBtn');
   if (modalHeart) {
     modalHeart.textContent = isFavoriteRecipe(name) ? '♥' : '♡';
