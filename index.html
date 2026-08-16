@@ -7187,6 +7187,7 @@ async function refreshSharedDataOnFocus() {
   const now = Date.now();
   if (now - lastFocusRefresh < FOCUS_REFRESH_MIN_INTERVAL) return;
   if (document.querySelector('.modal-overlay.open')) return; // don't disrupt an active edit
+  if (window._savingWeekPlans) return; // a save is in flight — don't clobber it with stale server data
   lastFocusRefresh = now;
 
   try {
@@ -7287,6 +7288,7 @@ function buildGroceryByStore(weekKey, plan) {
 
 async function persistWeekPlans() {
   if (!FAMILY_ID) { console.warn('persistWeekPlans: FAMILY_ID not set'); return; }
+  window._savingWeekPlans = (window._savingWeekPlans || 0) + 1;
   const key = getWeekKey(currentWeekOffset);
   const plan = weekPlans[key] || [];
   const label = document.getElementById('weekLabel')?.textContent || '';
@@ -7329,6 +7331,7 @@ async function persistWeekPlans() {
   } catch(e) { console.error('persistWeekPlans error:', e); }
 
   try { localStorage.setItem('mealos-weekplans', JSON.stringify(weekPlans)); } catch(e) {}
+  window._savingWeekPlans = Math.max(0, (window._savingWeekPlans || 1) - 1);
 }
 
 async function loadWeekPlans() {
