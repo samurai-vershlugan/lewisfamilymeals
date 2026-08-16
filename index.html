@@ -1029,6 +1029,7 @@
     width: 420px;
     max-height: 80vh;
     overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .modal h3 {
@@ -5975,6 +5976,16 @@ function applyMobileNavLayout() {
   }
 }
 window.addEventListener('resize', applyMobileNavLayout);
+
+// ─── MODAL SCROLL LOCK ──────────────────────────────────────────────────────
+// Without this, the background page stays scrollable while a modal is open,
+// which on mobile lets scroll gestures inside the modal "leak through" to the
+// page behind it — especially once you hit the top/bottom of the modal's own
+// content. Feels like the modal is stuck or scrolling the wrong thing.
+new MutationObserver(() => {
+  const anyOpen = document.querySelector('.modal-overlay.open');
+  document.body.style.overflow = anyOpen ? 'hidden' : '';
+}).observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true });
 
 function toggleRotationLibrary(forceOpen) {
   const browser = document.getElementById('recipeBrowser');
