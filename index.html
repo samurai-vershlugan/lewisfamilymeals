@@ -2775,9 +2775,18 @@
     cursor: pointer;
     line-height: 1.35;
     word-break: break-word;
+    display: flex;
+    align-items: center;
+    gap: 5px;
   }
   .meal-note:hover { border-color: var(--accent2); }
-  .action-btn.btn-note { flex: 0 0 auto; }
+  .action-btn.btn-note {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 12px;
+  }
 
   .nav-more-wrap { position: relative; display: inline-flex; }
   .nav-more-menu {
@@ -3996,11 +4005,11 @@ function renderWeek() {
               ${getDisplayTags(liveMeal).map(t => `<span class="tag tag-${t}">${BUILTIN_TAGS.find(b=>b.id===t)?.label || t}</span>`).join('')}
             </div>
           </div>
-          ${meal.note ? `<div class="meal-note" onclick="editMealNote(${i})">📝 ${escapeHtml(meal.note)}</div>` : ''}
+          ${meal.note ? `<div class="meal-note" onclick="editMealNote(${i})"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg> ${escapeHtml(meal.note)}</div>` : ''}
           <div class="meal-actions">
             <button class="action-btn btn-swap" onclick="openSwapModal(${i})">⇄ Swap</button>
             <button class="action-btn btn-swap" onclick="openAddLibraryModal(${i})">＋ Add</button>
-            <button class="action-btn btn-note" onclick="editMealNote(${i})" title="${meal.note ? 'Edit note' : 'Add a note'}">${meal.note ? '📝' : '📝'}</button>
+            <button class="action-btn btn-note" onclick="editMealNote(${i})" title="${meal.note ? 'Edit note' : 'Add a note'}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="8" y1="9" x2="10" y2="9"/></svg></button>
             <button class="action-btn btn-lock${isLocked ? ' locked' : ''}" onclick="toggleLock(${i})" title="${isLocked ? 'Unlock this meal' : 'Lock this meal'}">${isLocked ? '🔒' : '🔓'}</button>
           </div>
         </div>
@@ -6385,7 +6394,14 @@ function generateWeek() {
   // Preserve locked days, unlock everything else (weekdays only — Generate never touches weekends)
   const finalPlan = newPlan.map((meal, i) => {
     const lk = getLockKey(key, i);
-    return lockedDays[lk] ? existing[i] : meal;
+    if (lockedDays[lk]) return existing[i];
+    // Recipes with multiple protein options (e.g. Tacos: Beef/Carnitas/Turkey)
+    // need ONE specific choice recorded — otherwise every option shows up as
+    // a tag on the day card instead of just the one actually being made.
+    if (meal && meal.proteins && meal.proteins.length) {
+      return { ...meal, selectedProtein: pickRandom(meal.proteins) };
+    }
+    return meal;
   });
 
   // Weekend days (index 5+) are never auto-generated, locked or not — carry
@@ -7567,7 +7583,11 @@ function assignRecipeToDay(recipeName, dayIndex) {
   if (!weekPlans[key]) weekPlans[key] = Array(currentWeekDayCount()).fill(null);
   // Store selected protein with the meal so grocery list uses it
   const mealToStore = { ...recipe };
-  if (currentRecipeProtein) mealToStore.selectedProtein = currentRecipeProtein;
+  if (currentRecipeProtein) {
+    mealToStore.selectedProtein = currentRecipeProtein;
+  } else if (recipe.proteins && recipe.proteins.length) {
+    mealToStore.selectedProtein = pickRandom(recipe.proteins);
+  }
   weekPlans[key][dayIndex] = mealToStore;
   document.getElementById('recipeModal').classList.remove('open');
   persistWeekPlans();
@@ -8123,9 +8143,18 @@ function printSnapshot() {
     cursor: pointer;
     line-height: 1.35;
     word-break: break-word;
+    display: flex;
+    align-items: center;
+    gap: 5px;
   }
   .meal-note:hover { border-color: var(--accent2); }
-  .action-btn.btn-note { flex: 0 0 auto; }
+  .action-btn.btn-note {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 12px;
+  }
 
   .nav-more-wrap { position: relative; display: inline-flex; }
   .nav-more-menu {
