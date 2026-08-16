@@ -1551,6 +1551,28 @@
   }
   .add-library-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+  .search-input-wrap { position: relative; }
+  .search-input-wrap input { padding-right: 32px !important; }
+  .search-clear-btn {
+    display: none;
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-size: 13px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+  }
+  .search-input-wrap:has(input:not(:placeholder-shown)) .search-clear-btn { display: flex; }
+
   .text-input {
     width: 100%;
     background: var(--surface);
@@ -2892,7 +2914,10 @@
       <button class="add-library-btn" onclick="openAddLibraryModal()">＋ Add Recipe</button>
     </div>
     <div id="recipeBrowser">
-      <input id="recipeSearchInput" class="text-input" type="text" placeholder="Search recipes..." style="width:100%;box-sizing:border-box;margin-bottom:8px" oninput="renderRotationGrid()" />
+      <div class="search-input-wrap">
+        <input id="recipeSearchInput" class="text-input" type="text" placeholder="Search recipes..." style="width:100%;box-sizing:border-box;margin-bottom:8px" oninput="renderRotationGrid()" />
+        <button class="search-clear-btn" onclick="clearSearchInput('recipeSearchInput')" aria-label="Clear search">✕</button>
+      </div>
       <button id="recipeFavoritesToggle" class="cat-btn" style="font-size:10px;padding:5px 12px;margin-bottom:8px" onclick="toggleFavoritesFilter()">♡ Favorites</button>
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px" id="recipeCuisineFilters"></div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px" id="recipeProteinFilters"></div>
@@ -3061,7 +3086,10 @@
       <button class="discover-action-btn primary" style="flex:1" onclick="openDiscoverFromSwap()">✦ Discover</button>
       <button class="discover-action-btn primary" style="flex:1" onclick="openRobotFromSwap()">🤖 Robot</button>
     </div>
-    <input id="swapSearchInput" class="text-input" type="text" placeholder="Search recipes..." style="width:100%;box-sizing:border-box;margin-bottom:10px" oninput="renderSwapOptions()" />
+    <div class="search-input-wrap">
+      <input id="swapSearchInput" class="text-input" type="text" placeholder="Search recipes..." style="width:100%;box-sizing:border-box;margin-bottom:10px" oninput="renderSwapOptions()" />
+      <button class="search-clear-btn" onclick="clearSearchInput('swapSearchInput')" aria-label="Clear search">✕</button>
+    </div>
     <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px" id="swapCuisineFilters"></div>
     <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px" id="swapProteinFilters"></div>
     <div class="swap-options" id="swapOptions"></div>
@@ -3231,9 +3259,12 @@
     </div>
 
     <!-- Search -->
-    <input id="pantrySearchInput" class="text-input" type="text" placeholder="Search pantry..."
-      style="margin-bottom:12px;width:100%;box-sizing:border-box"
-      oninput="renderPantryItems()" />
+    <div class="search-input-wrap">
+      <input id="pantrySearchInput" class="text-input" type="text" placeholder="Search pantry..."
+        style="margin-bottom:12px;width:100%;box-sizing:border-box"
+        oninput="renderPantryItems()" />
+      <button class="search-clear-btn" onclick="clearSearchInput('pantrySearchInput')" aria-label="Clear search">✕</button>
+    </div>
 
     <!-- Stats -->
     <div id="pantryStats" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px"></div>
@@ -4447,13 +4478,17 @@ function renderGroceryList() {
       const controls = document.createElement('div');
       controls.className = 'grocery-done-controls';
 
+      const searchWrap = document.createElement('div');
+      searchWrap.className = 'search-input-wrap';
+      searchWrap.style.cssText = 'flex:1';
+
       const searchInput = document.createElement('input');
       searchInput.type = 'text';
       searchInput.id = 'groceryDoneSearch';
       searchInput.className = 'text-input';
       searchInput.placeholder = 'Search...';
       searchInput.value = groceryDoneSearchVal;
-      searchInput.style.cssText = 'flex:1;font-size:12px;padding:6px 10px';
+      searchInput.style.cssText = 'width:100%;box-sizing:border-box;font-size:12px;padding:6px 10px';
       searchInput.addEventListener('input', (e) => {
         groceryDoneSearchVal = e.target.value;
         const cursorPos = e.target.selectionStart;
@@ -4465,7 +4500,14 @@ function renderGroceryList() {
           if (freshInput) { freshInput.focus(); freshInput.setSelectionRange(cursorPos, cursorPos); }
         });
       });
-      controls.appendChild(searchInput);
+      searchWrap.appendChild(searchInput);
+      const searchClearBtn = document.createElement('button');
+      searchClearBtn.className = 'search-clear-btn';
+      searchClearBtn.textContent = '✕';
+      searchClearBtn.setAttribute('aria-label', 'Clear search');
+      searchClearBtn.onclick = () => clearSearchInput('groceryDoneSearch');
+      searchWrap.appendChild(searchClearBtn);
+      controls.appendChild(searchWrap);
 
       const sortGroup = document.createElement('div');
       sortGroup.className = 'grocery-done-sort-group';
@@ -6043,6 +6085,14 @@ function getActiveProteinOptions() {
     });
   });
   return opts.sort((a, b) => a.localeCompare(b));
+}
+
+function clearSearchInput(id) {
+  const input = document.getElementById(id);
+  if (!input) return;
+  input.value = '';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.focus();
 }
 
 function toggleFavoritesFilter() {
