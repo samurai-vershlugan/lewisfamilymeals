@@ -5893,24 +5893,6 @@ function mobileGoToTab(tab) {
     activeEl.style.scrollMarginTop = (headerEl ? headerEl.offsetHeight + 10 : 80) + 'px';
     activeEl.scrollIntoView({ behavior: 'instant', block: 'start' });
   }
-
-  // Force all four titles to sit at the identical distance from their
-  // section's top edge. Plan is the trusted reference — measure its real
-  // rendered gap (only possible while it's visible) and forcibly apply that
-  // exact same pixel value to Groceries/Pantry, rather than guessing static
-  // CSS numbers that kept not matching in practice.
-  if (tab === 'plan') {
-    const planLabel = document.querySelector('#mobilePlanSection .section-label');
-    if (planLabel && sections.plan) {
-      window._planTitleGap = Math.round(planLabel.getBoundingClientRect().top - sections.plan.getBoundingClientRect().top);
-    }
-  }
-  if (window._planTitleGap !== undefined) {
-    const groceriesFirst = document.querySelector('#mobileGroceriesSection .sidebar-section:first-child');
-    if (groceriesFirst) groceriesFirst.style.setProperty('padding-top', window._planTitleGap + 'px', 'important');
-    const pantryModalInner = document.querySelector('#pantryModal .modal');
-    if (pantryModalInner) pantryModalInner.style.setProperty('padding-top', window._planTitleGap + 'px', 'important');
-  }
   document.querySelectorAll('.mobile-quick-nav button[data-tab]').forEach(b => {
     b.classList.toggle('active-tab', b.dataset.tab === tab);
   });
