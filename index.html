@@ -2925,7 +2925,7 @@
         <input id="recipeSearchInput" class="text-input" type="text" placeholder="Search recipes..." style="width:100%;box-sizing:border-box;margin-bottom:8px" oninput="renderRotationGrid()" />
         <button class="search-clear-btn" onclick="clearSearchInput('recipeSearchInput')" aria-label="Clear search">✕</button>
       </div>
-      <button id="recipeFavoritesToggle" class="cat-btn" style="font-size:10px;padding:5px 12px;margin-bottom:8px" onclick="toggleFavoritesFilter()">♡ Favorites</button>
+      <button id="recipeFavoritesToggle" class="cat-btn" style="font-size:10px;padding:5px 12px;margin-bottom:8px" onclick="toggleFavoritesFilter()">♥ Favorites</button>
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px" id="recipeCuisineFilters"></div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px" id="recipeProteinFilters"></div>
       <div class="rotation-grid" id="rotationGrid"></div>
@@ -3037,7 +3037,7 @@
     <button class="modal-close" onclick="document.getElementById('recipeModal').classList.remove('open')">×</button>
     <div class="recipe-modal-header">
       <div id="recipeModalImage" class="recipe-modal-image" style="display:none">
-        <button class="mini-recipe-fav" id="recipeModalFavoriteBtn" onclick="toggleFavoriteRecipe(currentRecipeModalName, event)">♡</button>
+        <button class="mini-recipe-fav" id="recipeModalFavoriteBtn" onclick="toggleFavoriteRecipe(currentRecipeModalName, event)">♥</button>
       </div>
       <div id="recipeModalTitle" class="recipe-modal-name"></div>
       <div id="recipeModalTags" class="recipe-modal-tags"></div>
@@ -3977,7 +3977,7 @@ function renderWeek() {
           </div>
         </div>
         <div class="day-meal">
-          ${liveMeal.image ? `<div class="meal-photo meal-name-tappable" style="background-image:url('${liveMeal.image}')"><button class="mini-recipe-fav meal-fav-btn${isFavoriteRecipe(liveMeal.name) ? ' active' : ''}">${isFavoriteRecipe(liveMeal.name) ? '♥' : '♡'}</button></div>` : ''}
+          ${liveMeal.image ? `<div class="meal-photo meal-name-tappable" style="background-image:url('${liveMeal.image}')"><button class="mini-recipe-fav meal-fav-btn${isFavoriteRecipe(liveMeal.name) ? ' active' : ''}">♥</button></div>` : ''}
           <div class="meal-card-top">
             ${liveMeal.image ? '' : `<div class="meal-thumb meal-name-tappable">${mealEmoji(meal)}</div>`}
             <div class="meal-name meal-name-tappable">${getMealDisplayName(meal)}</div>
@@ -6098,7 +6098,7 @@ function toggleFavoritesFilter() {
   const btn = document.getElementById('recipeFavoritesToggle');
   if (btn) {
     btn.classList.toggle('active', recipeSearchFavoritesOnly);
-    btn.textContent = recipeSearchFavoritesOnly ? '♥ Favorites' : '♡ Favorites';
+    btn.textContent = '♥ Favorites';
   }
   renderRotationGrid();
 }
@@ -6278,7 +6278,7 @@ function renderRotationGrid() {
     // Favorite toggle
     const favBtn = document.createElement('button');
     favBtn.className = 'mini-recipe-fav' + (isFavoriteRecipe(r.name) ? ' active' : '');
-    favBtn.textContent = isFavoriteRecipe(r.name) ? '♥' : '♡';
+    favBtn.textContent = '♥';
     favBtn.title = isFavoriteRecipe(r.name) ? 'Remove from favorites' : 'Add to favorites';
     favBtn.addEventListener('click', (e) => toggleFavoriteRecipe(r.name, e));
     thumb.appendChild(favBtn);
@@ -6525,7 +6525,7 @@ function openRecipeModal(recipeName, fromDayIndex = null) {
   currentRecipeModalName = recipe.name;
   const favBtn = document.getElementById('recipeModalFavoriteBtn');
   if (favBtn) {
-    favBtn.textContent = isFavoriteRecipe(recipe.name) ? '♥' : '♡';
+    favBtn.textContent = '♥';
     favBtn.classList.toggle('active', isFavoriteRecipe(recipe.name));
   }
   var _mDel = document.getElementById('recipeModalDeleteBtn');
@@ -8330,7 +8330,7 @@ async function toggleFavoriteRecipe(name, event) {
   renderWeek();
   const modalHeart = document.getElementById('recipeModalFavoriteBtn');
   if (modalHeart) {
-    modalHeart.textContent = isFavoriteRecipe(name) ? '♥' : '♡';
+    modalHeart.textContent = '♥';
     modalHeart.classList.toggle('active', isFavoriteRecipe(name));
   }
 }
