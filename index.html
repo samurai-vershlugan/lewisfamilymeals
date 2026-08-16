@@ -3163,6 +3163,10 @@
       <button class="confirm-btn" style="background:#333;color:#ccc" onclick="closeInviteModal()">Cancel</button>
       <button class="confirm-btn" id="inviteBtn" onclick="sendInvite()">Send Invite</button>
     </div>
+    <div id="memberList" style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;display:none">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Family Members</div>
+      <div id="memberListItems"></div>
+    </div>
     <div id="inviteList" style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;display:none">
       <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Pending Invites</div>
       <div id="inviteListItems"></div>
@@ -6862,6 +6866,7 @@ async function openInviteModal() {
     document.getElementById('familyNameLabel').textContent;
   document.getElementById('inviteModal').classList.add('open');
   await loadPendingInvites();
+  await loadFamilyMembers();
   setTimeout(() => document.getElementById('inviteEmailInput').focus(), 100);
 }
 
@@ -6950,6 +6955,54 @@ async function revokeInvite(inviteId) {
   await sb.delete('family_invites', { id: inviteId });
   await loadPendingInvites();
   showToast('Invite revoked');
+}
+
+async function loadFamilyMembers() {
+  const listEl = document.getElementById('memberList');
+  const itemsEl = document.getElementById('memberListItems');
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/family-members`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${AUTH_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'list', familyId: FAMILY_ID })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.members) throw new Error(data.error || 'Failed to load members');
+
+    listEl.style.display = 'block';
+    itemsEl.innerHTML = '';
+    data.members.forEach(m => {
+      const isMe = m.user_id === currentUser.id;
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)';
+      row.innerHTML = `
+        <span style="font-size:13px;color:var(--text)">${m.email}${isMe ? ' <span style="color:var(--text-muted);font-size:11px">(you)</span>' : ''}</span>
+        ${isMe ? '' : `<button style="background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;font-family:'DM Mono',monospace">Revoke</button>`}
+      `;
+      if (!isMe) row.querySelector('button').addEventListener('click', () => revokeMember(m.user_id, m.email));
+      itemsEl.appendChild(row);
+    });
+  } catch(e) {
+    console.warn('loadFamilyMembers error:', e);
+    listEl.style.display = 'none';
+  }
+}
+
+async function revokeMember(userId, email) {
+  if (!confirm(`Remove ${email} from your family? They'll lose access to the shared plan, groceries, and pantry.`)) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/family-members`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${AUTH_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'revoke', familyId: FAMILY_ID, userId, requesterId: currentUser.id })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to revoke access');
+    showToast(`Removed ${email} from your family`);
+    await loadFamilyMembers();
+  } catch(e) {
+    showToast(e.message);
+  }
 }
 
 async function createFamily() {
