@@ -2904,10 +2904,6 @@
     <div id="mobilePlanSection">
     <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:16px">
       <div class="section-label" style="margin-bottom:0;flex:1">📅 Weekly Plan</div>
-      <div class="week-view-toggle" id="weekViewToggle">
-        <button class="view-toggle-btn" data-view="stack" onclick="setWeekView('stack')" title="Stacked cards">☰</button>
-        <button class="view-toggle-btn" data-view="grid" onclick="setWeekView('grid')" title="Wrapping grid">▦</button>
-      </div>
     </div>
     <div id="planTopControls" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px"></div>
     <div class="week-grid" id="weekGrid"></div>
@@ -3869,12 +3865,12 @@ function setWeekView(view) {
   applyWeekView();
 }
 function applyWeekView() {
-  const view = localStorage.getItem('mealos-week-view') || 'grid';
+  // Grid is now the only view — clear any stale "stack" preference from before
+  // the toggle was removed, so it can never resurface for someone who'd
+  // previously switched to it.
+  localStorage.removeItem('mealos-week-view');
   const grid = document.getElementById('weekGrid');
-  if (grid) grid.classList.toggle('view-stack', view === 'stack');
-  document.querySelectorAll('.view-toggle-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.view === view);
-  });
+  if (grid) grid.classList.remove('view-stack');
 }
 
 function initDarkMode() {
