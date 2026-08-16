@@ -5918,6 +5918,8 @@ function mobileGoToTab(tab) {
 
 let lastMobileNavState = null;
 function applyMobileNavLayout() {
+  const active = document.activeElement;
+  if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return; // keyboard open/close, not a real resize
   const isMobile = isMobileNavLayout();
   if (isMobile === lastMobileNavState) return; // no real breakpoint crossing — e.g. iOS
   // Safari firing resize when its address bar collapses/expands during scroll.
