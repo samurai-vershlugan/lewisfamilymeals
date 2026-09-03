@@ -2847,18 +2847,19 @@
     transition: opacity 0.4s ease;
   }
   #splashScreen.hidden { opacity: 0; pointer-events: none; }
-  .splash-slices { display: flex; gap: 10px; font-size: 42px; }
-  .splash-slices span {
-    display: inline-block;
-    animation: splashPizzaFade 1.4s ease-in-out infinite;
+  .splash-pizza { width: 92px; height: 92px; }
+  .splash-pizza .crust { fill: none; stroke: #d9a441; stroke-width: 3; }
+  .splash-pizza .slice {
+    fill: #e8b84b;
+    stroke: var(--bg);
+    stroke-width: 1.5;
+    animation: splashSliceFade 1.6s ease-in-out infinite;
+    transform-origin: 50px 50px;
   }
-  .splash-slices span:nth-child(1) { animation-delay: 0s; }
-  .splash-slices span:nth-child(2) { animation-delay: 0.15s; }
-  .splash-slices span:nth-child(3) { animation-delay: 0.3s; }
-  .splash-slices span:nth-child(4) { animation-delay: 0.45s; }
-  @keyframes splashPizzaFade {
-    0%, 100% { opacity: 0.2; transform: scale(0.8) translateY(0); }
-    50% { opacity: 1; transform: scale(1.15) translateY(-10px); }
+  .splash-pizza .pepperoni { fill: #c1442e; animation: splashSliceFade 1.6s ease-in-out infinite; }
+  @keyframes splashSliceFade {
+    0%, 100% { opacity: 0.15; }
+    50% { opacity: 1; }
   }
   .splash-text {
     font-family: var(--font-display);
@@ -2870,9 +2871,22 @@
 
 <!-- ─── SPLASH SCREEN ────────────────────────────────────────────────────── -->
 <div id="splashScreen">
-  <div class="splash-slices">
-    <span>🍕</span><span>🍕</span><span>🍕</span><span>🍕</span>
-  </div>
+  <svg class="splash-pizza" viewBox="0 0 100 100">
+    <path class="slice" style="animation-delay:0.0s" d="M50,50 L50.00,8.00 A42,42 0 0,1 79.70,20.30 Z"/>
+    <path class="slice" style="animation-delay:0.1s" d="M50,50 L79.70,20.30 A42,42 0 0,1 92.00,50.00 Z"/>
+    <path class="slice" style="animation-delay:0.2s" d="M50,50 L92.00,50.00 A42,42 0 0,1 79.70,79.70 Z"/>
+    <path class="slice" style="animation-delay:0.3s" d="M50,50 L79.70,79.70 A42,42 0 0,1 50.00,92.00 Z"/>
+    <path class="slice" style="animation-delay:0.4s" d="M50,50 L50.00,92.00 A42,42 0 0,1 20.30,79.70 Z"/>
+    <path class="slice" style="animation-delay:0.5s" d="M50,50 L20.30,79.70 A42,42 0 0,1 8.00,50.00 Z"/>
+    <path class="slice" style="animation-delay:0.6s" d="M50,50 L8.00,50.00 A42,42 0 0,1 20.30,20.30 Z"/>
+    <path class="slice" style="animation-delay:0.7s" d="M50,50 L20.30,20.30 A42,42 0 0,1 50.00,8.00 Z"/>
+    <circle class="pepperoni" cx="50" cy="26" r="4" style="animation-delay:0.0s"/>
+    <circle class="pepperoni" cx="70" cy="38" r="4" style="animation-delay:0.2s"/>
+    <circle class="pepperoni" cx="65" cy="65" r="4" style="animation-delay:0.4s"/>
+    <circle class="pepperoni" cx="35" cy="65" r="4" style="animation-delay:0.5s"/>
+    <circle class="pepperoni" cx="30" cy="38" r="4" style="animation-delay:0.7s"/>
+    <circle class="crust" cx="50" cy="50" r="42"/>
+  </svg>
   <div class="splash-text">Cooking up something good…</div>
 </div>
 <script>
