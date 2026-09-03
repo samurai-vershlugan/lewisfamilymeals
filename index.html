@@ -2460,6 +2460,20 @@
     opacity: 0.55;
     margin-top: 2px;
   }
+  .ing-pantry-badge {
+    display: inline-block;
+    font-family: var(--font-mono, 'DM Mono', monospace);
+    font-size: 9px;
+    letter-spacing: 0.3px;
+    color: #3a7a5a;
+    background: rgba(58,122,90,0.12);
+    border: 1px solid rgba(58,122,90,0.35);
+    border-radius: 20px;
+    padding: 2px 8px;
+    margin-top: 3px;
+    cursor: pointer;
+  }
+  .ing-pantry-badge:active { background: rgba(58,122,90,0.22); }
 
   .ing-edit-btn {
     background: none; border: none; color: var(--text-muted);
@@ -4393,14 +4407,11 @@ function renderGroceryList() {
   populateManualStoreDropdown();
   syncGroceryList(key);
   const list = groceryLists[key];
-
-  // Apply pantry auto-check (still connected to pantry)
-  list.items.forEach(it => {
-    if (havePantryItem(it.item || it.name) && !it.manualUnchecked) {
-      if (!it.checked) it.doneAt = Date.now();
-      it.checked = true;
-    }
-  });
+  // Pantry matches no longer auto-check items — a stale "have it" pantry flag
+  // used to silently hide ingredients you actually needed to buy. Instead,
+  // pantry-matched items show a badge (buildGroceryRow, below) that lets you
+  // directly confirm ("still have it" — crosses it off) or correct ("don't
+  // have it" — removes the stale pantry entry) right from the grocery list.
 
   // Build a single grocery row element (shared by active + done sections)
   function buildGroceryRow(it, sk) {
@@ -4429,6 +4440,19 @@ function renderGroceryList() {
       src.className = 'ing-source';
       src.textContent = 'from ' + it.sources.join(', ');
       nameSpan.appendChild(src);
+    }
+    if (!it.checked && havePantryItem(it.item || it.name)) {
+      const pantryBadge = document.createElement('button');
+      pantryBadge.className = 'ing-pantry-badge';
+      pantryBadge.textContent = '🥫 In Pantry';
+      pantryBadge.title = "Tap if you don't actually have this anymore";
+      pantryBadge.onclick = async (e) => {
+        e.stopPropagation();
+        if (!confirm(`Remove "${it.name}" from your pantry? It'll stay here to buy.`)) return;
+        await pantryRemoveItem(it.item || it.name);
+        renderGroceryList();
+      };
+      nameSpan.appendChild(pantryBadge);
     }
     nameSpan.onclick = (e) => { e.stopPropagation(); startGroceryInlineRename(it, div); };
     div.appendChild(nameSpan);
