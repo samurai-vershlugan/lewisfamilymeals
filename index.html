@@ -2847,10 +2847,10 @@
     transition: opacity 0.4s ease;
   }
   #splashScreen.hidden { opacity: 0; pointer-events: none; }
-  .splash-pan-wrap { position: relative; width: 130px; height: 130px; }
+  .splash-pan-wrap { position: relative; width: 120px; height: 120px; }
   .splash-pan {
     position: absolute;
-    inset: 10px;
+    inset: 27px;
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #f5f5f6, #cfd1d4 55%, #9a9da2 100%);
     border: 3px solid #b4b6ba;
@@ -2858,17 +2858,19 @@
   }
   .splash-slice-pos {
     position: absolute;
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
+    font-size: 30px;
   }
-  .splash-slice-pos.p1 { top: -4px; left: 50%; margin-left: -18px; transform: rotate(0deg); }
-  .splash-slice-pos.p2 { top: 50%; right: -12px; margin-top: -18px; transform: rotate(-90deg); }
-  .splash-slice-pos.p3 { bottom: -4px; left: 50%; margin-left: -18px; transform: rotate(180deg); }
-  .splash-slice-pos.p4 { top: 50%; left: -12px; margin-top: -18px; transform: rotate(90deg); }
+  .splash-slice-pos.p1 { top: 2px;  left: 43px; transform: rotate(-35deg); }
+  .splash-slice-pos.p2 { top: 22px; left: 79px; transform: rotate(25deg); }
+  .splash-slice-pos.p3 { top: 64px; left: 79px; transform: rotate(85deg); }
+  .splash-slice-pos.p4 { top: 84px; left: 43px; transform: rotate(145deg); }
+  .splash-slice-pos.p5 { top: 64px; left: 7px;  transform: rotate(205deg); }
+  .splash-slice-pos.p6 { top: 22px; left: 7px;  transform: rotate(265deg); }
   .splash-slice-anim {
     display: inline-block;
     animation: splashSliceCircleFade 1.6s ease-in-out infinite;
@@ -2889,10 +2891,12 @@
 <div id="splashScreen">
   <div class="splash-pan-wrap">
     <div class="splash-pan"></div>
-    <div class="splash-slice-pos p1"><span class="splash-slice-anim" style="animation-delay:0s">🍕</span></div>
-    <div class="splash-slice-pos p2"><span class="splash-slice-anim" style="animation-delay:0.2s">🍕</span></div>
-    <div class="splash-slice-pos p3"><span class="splash-slice-anim" style="animation-delay:0.4s">🍕</span></div>
-    <div class="splash-slice-pos p4"><span class="splash-slice-anim" style="animation-delay:0.6s">🍕</span></div>
+    <div class="splash-slice-pos p1"><span class="splash-slice-anim" style="animation-delay:0.00s">🍕</span></div>
+    <div class="splash-slice-pos p2"><span class="splash-slice-anim" style="animation-delay:0.13s">🍕</span></div>
+    <div class="splash-slice-pos p3"><span class="splash-slice-anim" style="animation-delay:0.26s">🍕</span></div>
+    <div class="splash-slice-pos p4"><span class="splash-slice-anim" style="animation-delay:0.39s">🍕</span></div>
+    <div class="splash-slice-pos p5"><span class="splash-slice-anim" style="animation-delay:0.52s">🍕</span></div>
+    <div class="splash-slice-pos p6"><span class="splash-slice-anim" style="animation-delay:0.65s">🍕</span></div>
   </div>
   <div class="splash-text">Cooking up something good…</div>
 </div>
