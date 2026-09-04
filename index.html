@@ -2847,19 +2847,45 @@
     transition: opacity 0.4s ease;
   }
   #splashScreen.hidden { opacity: 0; pointer-events: none; }
-  .splash-pizza { width: 92px; height: 92px; }
-  .splash-pizza .crust { fill: none; stroke: #d9a441; stroke-width: 3; }
-  .splash-pizza .slice {
-    fill: #e8b84b;
-    stroke: var(--bg);
-    stroke-width: 1.5;
-    animation: splashSliceFade 1.6s ease-in-out infinite;
-    transform-origin: 50px 50px;
+  .splash-pot-wrap { position: relative; width: 110px; height: 110px; }
+  .splash-pot {
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 62px;
+    line-height: 1;
   }
-  .splash-pizza .pepperoni { fill: #c1442e; animation: splashSliceFade 1.6s ease-in-out infinite; }
-  @keyframes splashSliceFade {
-    0%, 100% { opacity: 0.15; }
-    50% { opacity: 1; }
+  .splash-spoon {
+    position: absolute;
+    bottom: 34px;
+    left: 50%;
+    font-size: 34px;
+    line-height: 1;
+    transform-origin: 50% 46px;
+    animation: splashStir 1.8s linear infinite;
+  }
+  @keyframes splashStir {
+    from { transform: translateX(-50%) rotate(0deg); }
+    to   { transform: translateX(-50%) rotate(360deg); }
+  }
+  .splash-steam { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); width: 60px; height: 40px; }
+  .splash-steam span {
+    position: absolute;
+    bottom: 0;
+    width: 6px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(160,160,160,0.5);
+    animation: splashSteamRise 2.2s ease-in infinite;
+  }
+  .splash-steam span:nth-child(1) { left: 8px;  animation-delay: 0s; }
+  .splash-steam span:nth-child(2) { left: 27px; animation-delay: 0.7s; }
+  .splash-steam span:nth-child(3) { left: 46px; animation-delay: 1.4s; }
+  @keyframes splashSteamRise {
+    0%   { opacity: 0; transform: translateY(0) scale(1); }
+    30%  { opacity: 0.8; }
+    100% { opacity: 0; transform: translateY(-34px) scale(1.6); }
   }
   .splash-text {
     font-family: var(--font-display);
@@ -2871,22 +2897,13 @@
 
 <!-- ─── SPLASH SCREEN ────────────────────────────────────────────────────── -->
 <div id="splashScreen">
-  <svg class="splash-pizza" viewBox="0 0 100 100">
-    <path class="slice" style="animation-delay:0.0s" d="M50,50 L50.00,8.00 A42,42 0 0,1 79.70,20.30 Z"/>
-    <path class="slice" style="animation-delay:0.1s" d="M50,50 L79.70,20.30 A42,42 0 0,1 92.00,50.00 Z"/>
-    <path class="slice" style="animation-delay:0.2s" d="M50,50 L92.00,50.00 A42,42 0 0,1 79.70,79.70 Z"/>
-    <path class="slice" style="animation-delay:0.3s" d="M50,50 L79.70,79.70 A42,42 0 0,1 50.00,92.00 Z"/>
-    <path class="slice" style="animation-delay:0.4s" d="M50,50 L50.00,92.00 A42,42 0 0,1 20.30,79.70 Z"/>
-    <path class="slice" style="animation-delay:0.5s" d="M50,50 L20.30,79.70 A42,42 0 0,1 8.00,50.00 Z"/>
-    <path class="slice" style="animation-delay:0.6s" d="M50,50 L8.00,50.00 A42,42 0 0,1 20.30,20.30 Z"/>
-    <path class="slice" style="animation-delay:0.7s" d="M50,50 L20.30,20.30 A42,42 0 0,1 50.00,8.00 Z"/>
-    <circle class="pepperoni" cx="50" cy="26" r="4" style="animation-delay:0.0s"/>
-    <circle class="pepperoni" cx="70" cy="38" r="4" style="animation-delay:0.2s"/>
-    <circle class="pepperoni" cx="65" cy="65" r="4" style="animation-delay:0.4s"/>
-    <circle class="pepperoni" cx="35" cy="65" r="4" style="animation-delay:0.5s"/>
-    <circle class="pepperoni" cx="30" cy="38" r="4" style="animation-delay:0.7s"/>
-    <circle class="crust" cx="50" cy="50" r="42"/>
-  </svg>
+  <div class="splash-pot-wrap">
+    <div class="splash-steam">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="splash-pot">🍲</div>
+    <div class="splash-spoon">🥄</div>
+  </div>
   <div class="splash-text">Cooking up something good…</div>
 </div>
 <script>
