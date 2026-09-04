@@ -2865,10 +2865,10 @@
     justify-content: center;
     font-size: 32px;
   }
-  .splash-slice-pos.p1 { top: -4px; left: 50%; margin-left: -18px; }
-  .splash-slice-pos.p2 { top: 50%; right: -12px; margin-top: -18px; }
-  .splash-slice-pos.p3 { bottom: -4px; left: 50%; margin-left: -18px; }
-  .splash-slice-pos.p4 { top: 50%; left: -12px; margin-top: -18px; }
+  .splash-slice-pos.p1 { top: -4px; left: 50%; margin-left: -18px; transform: rotate(0deg); }
+  .splash-slice-pos.p2 { top: 50%; right: -12px; margin-top: -18px; transform: rotate(-90deg); }
+  .splash-slice-pos.p3 { bottom: -4px; left: 50%; margin-left: -18px; transform: rotate(180deg); }
+  .splash-slice-pos.p4 { top: 50%; left: -12px; margin-top: -18px; transform: rotate(90deg); }
   .splash-slice-anim {
     display: inline-block;
     animation: splashSliceCircleFade 1.6s ease-in-out infinite;
